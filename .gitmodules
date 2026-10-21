@@ -4,3 +4,6 @@
 [submodule "modules/client-hook"]
 	path = modules/client-hook
 	url = https://github.com/WaystoneWorks/Poe2ClientHook.git
+[submodule "modules/web-admin"]
+	path = modules/web-admin
+	url = https://github.com/WaystoneWorks/Poe2WebAdmin.git
