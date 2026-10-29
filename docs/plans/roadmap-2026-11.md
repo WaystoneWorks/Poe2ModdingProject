@@ -95,6 +95,8 @@ Acceptance: a character unlocked by an admin can open M in every act but the end
 waypoint, and walk from area to area through transitions without commands.
 
 ## Track U (parallel): launcher and web admin rework
+**Done 2026-10-28**, signed off by the user per app: direction "Ash & Blood" (C) with the rune seal logo; launcher Poe2Launcher 876a05e + 1950400 ([../guides/launcher.md](../guides/launcher.md#look-and-motion)), web admin Poe2WebAdmin cf35aa5 ([../guides/server-admin.md](../guides/server-admin.md)), overlay Poe2ClientHook c74ba18 + 3360700 + dcec7f8 ([../architecture/client-dll.md](../architecture/client-dll.md)). Open: the nested web-admin pointer in modules/server (to cf35aa5).
+
 Separate agent (Opus 5.5, medium effort) in its own worktrees of `modules/launcher`,
 `modules/web-admin` and `modules/client-hook`; started 2026-10-28 alongside R1. Style: game-styled minimal.
 1. Brief and design tokens: the top 3 tasks of each app (launcher: play, pick a server, update;
