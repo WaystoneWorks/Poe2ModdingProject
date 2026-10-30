@@ -12,8 +12,7 @@ Port: `modules/server/crates/poe-world/src/{doodads,collision,tdt}.rs`; checks: 
 Order in `TerrainGen_Run` (see [README.md](README.md#phases-terraingen_run-in-order)): after the
 tile layout (and its random draws), `TerrainGen_Doodads` `0x141ff56d0` walks every region's room
 placements (the list the de-repetition pass also uses, region +0x58, 0x38-byte entries) and calls
-`TerrainGen_TileDoodads` `0x141ff3490` for each. The port places the doodads of rooms (`.arm`) only; all 303
-tile-matching exports agree with that.
+`TerrainGen_TileDoodads` `0x141ff3490` for each. This pass places the doodads of rooms (`.arm`); the tiles' own objects come from the tile-object pass ([below](#what-decides-whether-an-object-exists-r2-2026-10-30)).
 
 1. **Cell and angle** (`0x141fe7a50`). An `.arm` doodad entry has a cell `(ex, ey)` inside the
    room, an angle (`radians1`), a scale, a flip flag, an object type (`stub`, e.g.
@@ -106,6 +105,27 @@ when `flip`. Walk shapes go to layer 0, projectile shapes to layers 0 and 1 (`st
 - all writes take the minimum (5 counts as unset; 0 always writes), so the order of the doodads
   does not matter.
 
+## What decides whether an object exists (R2, 2026-10-30)
+
+Found with per-phase grid snapshots of the client (`POE_HOOK_GRID_PHASES`, below). The rules run in this order for each entry, after the `AOSet` pick and, for room doodads, after the hash:
+
+1. **Side and league filter** (`0x141ff48e0`, generator vtable `+0xa0`). A type with a side flag (`+0x2d0`: 1 `server_only`, 2 `client_only`) exists only on its own side: server mode (globals `0x1445c995c` or `0x14458c74c` set) keeps `server_only` and drops `client_only`, a client process does the opposite. A `league_category` must equal the area's. Port: `Doodad::exists(Side)`; `collision::build` takes the side. **The batch exports run in a client process, so they show client-side filtering**; the instance server builds `Side::Server`. No export shows server mode yet (below).
+2. **Angle rules** (`0x141fe8860`, `0x141fe86f0`). With `a = angle - 0.7603982` (+2pi when negative), `AntiTallWallDoodad` is dropped for `a >= 3.1915927`, the upper-tile types (`TileUpperDoodad`, `TileUpperDoodadNoOverlap`, `TileUpperDoodad_ExtendDistance`, the two `*_extend_tallwall` types) for `a < 3.1915927`. Port: `dropped_by_type`.
+3. **Suppressed by a later room** (rooms only, `0x141ff3490`). A type of the 15-type set of `0x141fe8420` whose tile lies inside a later placement of the region with flag `+0x1c & 2` is not created. That flag is `+SuppressUnderlyingDoodads` of the overlay's `.toy` entry or pass line (`Overlays::suppresses`). The doodad still counts for the hash.
+4. **No-overlap types** (`0x141fe8040`: `DoodadNoOverlap`, `TileUpperDoodadNoOverlap`; `DoodadNoOverlap3` is the listed one) are deferred (`0x141ff4a50`) to `doodads_post` (`0x141ff4cd0`, `doodads::no_overlap`): per group in descending key order (rooms key 0, tile objects the `.tdt` object group), `below(n)`, a Fisher-Yates shuffle (`uniform(n - k)`, swapping k with k + draw), then placed unless a placed cell lies in its 3 x 3 cells. The listed type comes last, in order, and also needs no other listed object in its 3 x 3 cells.
+
+The type hashes of these sets are the `ObjectHASH32` column of `Data/Balance/MiscObjects.dat` (`0x140f60fc0`).
+
+**Tile-object pass** (`0x141ff4030`, vtable `+0x28`, after the doodad pass; `doodads::tile_objects`). Row by row over tile records that are a tile's corner: the objects of the `.tmd` beside the `.tgt` (tile data `+0x178`), then of the `.tdt`'s `tmd` (`+0x180`), each through `0x141ff43d0`: the `AOSet` pick continues the doodad pass's RNG stream, then the entry's orientation mask (trailing `I R90 R180 R270 FI FR90 FR180 FR270`, entry `+0x1e`), the cell turned within the tile's size. They are not in the hash. A `.tmd` line is `x y flag [wx wy] z angle q0 q1 q2 q3 flip scale "ao" "name" "fmt" "type" n [orientations]`; the flag says whether the world `x y` is present. Checked on MapPort: all 397 bounded draws of the pass equal the client's. Not ported: the `alttiles/<env>/<env>_<name>.tmd` variant of the art list (`0x141d11c50`) and the per-sub-tile objects of tiles with data `+0x16d & 2` (`0x141d07630`).
+
+**`.tdt` fields:** the body's first u16 is tile data `+0x16c` (`Tdt::body_flags`); after the `tmd` string come a string and the object group byte (`+0x170`, sink `+0x58`). Tile data `+0x10` is the feature string's length (`0x141d161c0`).
+
+## Unwalkable corners: what changed (R2, 2026-10-30)
+
+`0x141ff7b90` (called from `TerrainGen_Layout`) runs, per region: outer fill and outer buffer, then `0x141fe1150` on the region's rectangle if the master's `RoomOcclusion` (`+0x166`) is clear (regions past the main count only with `+0x164`), and `0x141fe1020` (the map border). **The port ran `0x141fe1150` for `.tgr` graphs only**; dungeons got flag 8 only from the outer buffer's margins. `finish_dungeon` now runs it on the region, which `regions.tsv` shows is the whole buffered map. `0x141fe1150` returns at once for area kinds 0x20 and 0x21 (world-map panels).
+
+The tail of `0x141fe1150`: the enclosed-fill test requires an **empty feature**, not "not inheriting" (`mark_enclosed_fills`); with the master's `OuterGroundIsOutside` (`+0x165`) and an `OuterGroundType` (`+0x230`), tiles with body flag 0x40, first sub-tile flag 8, all corner grounds the outer ground and only empty or wildcard edges get their footprint marked (`mark_outside_tiles`). Master offsets: `DisableDoors` is `+0x167`, so the keys parsed by `0x142928820` line up as `OuterGroundIsOutside` `+0x165`, `RoomOcclusion` `+0x166`.
+
 ## Tools and checks
 
 - `check_doodads <export or run dirs> [--only forced.tsv]`: generates each export's job and
@@ -114,6 +134,9 @@ when `flip`. Walk shapes go to layer 0, projectile shapes to layers 0 and 1 (`st
 - `check_grids <dirs> [--only F] [--blame] [--dump DIR]`: compares the four layers with `grids.bin`
   (differing cells per layer, bounding box of the first difference; `--blame` attributes cells
   to the tile or doodad that wrote them; `--dump` writes the port's `PWG1` bytes).
+- `check_lattice <dirs> [--list N]`: compares the port's corner flags with `lattice.bin` (`LATTICE_MAP=1` draws the differences, `LATTICE_COL=x`, `LATTICE_ROW=y` print grounds and flags). `check_grids` reports `LAYOUT` when the tile or doodad hash already differs.
+- Batch exports also write `entities.tsv` (objects with cells), `tiledata.tsv` (tile data `+0x16c..`), `lattice.bin` (final corners), `regions.tsv` (region rectangles and master flags). `POE_HOOK_GRID_PHASES=<Z: dir>` with `POE_HOOK_GEN_TRACE=1` (one thread) writes the grids at each generator phase.
+- More debug variables: `POE_DBG_TILEONLY` (the grid after the tile stage), `POE_DBG_CELL=x,y,l` (the object that lowers a cell), `POE_DBG_FLOOD=x|all`, `POE_DBG_TMD_DRAWS`, `POE_DBG_TMD_LIST`, `POE_NO_TILE_OBJECTS`, `POE_NO_COVERS`, `POE_NO_ANGLE_DROP`, `POE_NO_DGR_UNWALKABLE`.
 - `forced_verify` reports `doodads match|differ` after the tile hash.
 - Debug variables: `POE_DBG_DOODADS`, `POE_DBG_DOODAD_ORDER` (picks and draws), `POE_DBG_HULLS`,
   `POE_DBG_GRID_TILE=x,y` (one tile's flags, corners and plane).
@@ -142,7 +165,10 @@ see [../../architecture/instance-world.md](../../architecture/instance-world.md#
   (1,600 of 1,600). Type flags are read once per process; reading them through `GameData` took its
   bundle lock on every layout and made the batch threads run one at a time.
 
-### Open: the 30 grid failures (all differ in layer 0 unless noted)
+- **2026-10-30 (R2), all 5,237 client grid exports on disk** (earlier failure runs included, so a biased sample): 3,000 equal before this work, **4,864 now**, 367 differ, 6 differ in the layout already. Largest open families: `G2_5_1` (81), `G2_5_2` (38), `MapVaalCity` (32), `G2_2` (23), `MapPlantation` (18), `G3_8` (16), `G3_14` (15), `G3_1` (15), `MapRazedFields` (14).
+- **Open, `MapRazedFields`:** 1,386 corners flagged by the client only, a connected network around `woods_trim` and road grounds (`check_lattice`). They look like the impassable flood entering at (81, 94), but the same `EdgeInTheWay` (`0x141fe0990`, checked against the disassembly) stops at the first tile boundary in the port, and the strip tiles are placed before the pass runs (trace `tdiff`), so what lets the client through is not known.
+
+### Open: the 30 grid failures of 2026-10-22 (all differ in layer 0 unless noted; not rechecked one by one)
 
 Found with `check_grids --blame` (tile flags of the differing cells, `WORST` lines: the tiles with
 most differing cells), `POE_DBG_GRID_TILE=x,y` (a tile's sub-tile flags, corner count and plane),
