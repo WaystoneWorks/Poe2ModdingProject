@@ -13,7 +13,8 @@ Checks `[text](target)` links outside code blocks and inline code:
 - http(s) and mailto links are not checked.
 Targets under git-ignored or submodule directories (dumps/, runtime/, third_party/, GameFiles/,
 modules/) that are missing only give a warning, because a fresh clone does not have them.
-Exit status 1 when a link is broken, 0 otherwise.
+Also enforces word limits so the docs stay small: WORD_LIMITS by path, otherwise DEFAULT_WORD_LIMIT.
+Exit status 1 when a link is broken or a limit is exceeded, 0 otherwise.
 """
 import re
 import sys
@@ -29,6 +30,28 @@ SERVER_DEFAULTS = [
     "modules/server/SECURITY.md",
     "modules/server/docs",
 ]
+DEFAULT_WORD_LIMIT = 6000
+WORD_LIMITS = {
+    "README.md": 400,
+    "CLAUDE.md": 700,
+    "docs/PLAN.md": 1500,
+    "docs/decisions.md": 1000,
+    "docs/index.md": 1500,
+    "docs/guides/agent-workflow.md": 2000,
+}
+# Docs still above the default, each to be condensed; lower or delete an entry when it shrinks.
+WORD_LIMITS.update({
+    "docs/re/terrain/dungeon.md": 14500,
+    "docs/protocol/movement.md": 14500,
+    "docs/guides/launcher.md": 9500,
+    "docs/re/update-compatibility.md": 9500,
+    "docs/re/terrain/tgr.md": 8500,
+    "docs/protocol/entities.md": 8500,
+    "docs/architecture/client-dll.md": 8000,
+    "docs/architecture/web-api.md": 7000,
+    "docs/re/addresses.md": 6500,
+    "docs/protocol/login.md": 6500,
+})
 SOFT_DIRS = {"dumps", "runtime", "third_party", "GameFiles", "modules"}
 
 LINK_RE = re.compile(r"(?<!\!)\[((?:[^\[\]]|\[[^\]]*\])*)\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
@@ -123,6 +146,12 @@ def main():
                 if anchor and dest.is_file() and dest.suffix == ".md":
                     if anchor.lower() not in anchors(dest):
                         errors.append(f"{where}: no heading with this anchor in {dest.name}")
+    for path in sorted(ROOT.glob("docs/**/*.md")) + [ROOT / "README.md", ROOT / "CLAUDE.md"]:
+        rel = path.relative_to(ROOT).as_posix()
+        words = len(path.read_text(encoding="utf-8").split())
+        limit = WORD_LIMITS.get(rel, DEFAULT_WORD_LIMIT)
+        if words > limit:
+            errors.append(f"{rel}: {words} words, limit {limit}")
     for w in warnings:
         print("warning:", w)
     for e in errors:

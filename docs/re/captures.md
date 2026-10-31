@@ -27,8 +27,8 @@ optional blocks and `AddInventory` items.
 Click-to-move in this session (local player, `f8667-9183`, 7 presses and 189 held repeats): two single-click walks reached their target with no message at arrival (`f8988` 44.6 cells in 34 frames, `f9027` 32 cells in 26 frames: 1.2-1.3 cells per frame; the next click's `StartAction` starts exactly at the previous target); a held-click's server restarts (`StartAction` Move, flags 0, header `(self, 9, n)`) came 13-17 frames and 13.6-17.7 cells apart. These findings are not yet merged into [../protocol/movement.md](../protocol/movement.md) (gap 2).
 
 ## Planned: capture for R4 (world map, waypoints, transitions) and the open movement cases
-For [../plans/roadmap-2026-11.md](../plans/roadmap-2026-11.md) R4 (and R3's open cases). The user records it (read-only official session); Claude only prepares and reverts the client.
-Before: Claude stops any client batch, turns the KWin Agents desktop rules off (`scripts/agent-desktop.sh off`), runs `cargo xtask deploy-client --official` with the DLL's movement and actions logs on.
+For R4 of [PLAN.md](../PLAN.md) (and R3's open cases). The user records it (read-only official session); Claude only prepares and reverts the client.
+Before: Claude stops any client batch, runs `cargo xtask deploy-client --official` with the DLL's movement and actions logs on.
 In the game (a character with at least two acts' waypoints; about 15 minutes; wait about 2 s between steps):
 1. In a town: open the world map (M), switch to another act, switch back, close it.
 2. Use the town waypoint: open it, travel to another waypoint, then back to the town.

@@ -18,7 +18,6 @@ mod check_build;
 mod fingerprint;
 mod server;
 mod terrain_matrix;
-mod tracker;
 mod versions;
 
 /// The client DLL workspace (Poe2ClientHook submodule), relative to the repo root.
@@ -120,12 +119,6 @@ enum Cmd {
     /// Only rewrite the DLL's name tables in `GameFiles/poe-hook-data/` (stats, action types,
     /// areas); leaves the gateway and installed DLLs as they are.
     DllData,
-    /// Render docs/status/tracker.toml into the README.md tracker block.
-    Tracker {
-        /// Only check; exit 1 if README.md is out of date.
-        #[arg(long)]
-        check: bool,
-    },
     /// What a game build breaks: scans an exe for every entry of the client DLL's signature
     /// table, checks the build identity against modules/protocol/versions/<version>.toml, the opcode tables
     /// (HNC table, deserializer fingerprints), the strings the tools need and the game data the
@@ -206,9 +199,6 @@ fn main() -> Result<()> {
     let root = repo_root();
     std::env::set_current_dir(&root)?;
     // Needs no server config (and must work while that is being edited).
-    if let Cmd::Tracker { check } = cli.cmd {
-        return tracker::run(&root, check);
-    }
     if let Cmd::Openapi { check } = cli.cmd {
         return openapi(&root, check);
     }
@@ -268,8 +258,7 @@ fn main() -> Result<()> {
         Cmd::DeployCore { no_build } => deploy_core(&root, &config, !no_build),
         Cmd::RevertClient => revert_client(&config),
         Cmd::DllData => export_dll_data(&config),
-        Cmd::Tracker { .. }
-        | Cmd::Openapi { .. }
+        Cmd::Openapi { .. }
         | Cmd::Server { .. }
         | Cmd::LoginToken { .. }
         | Cmd::TerrainMatrix { .. }

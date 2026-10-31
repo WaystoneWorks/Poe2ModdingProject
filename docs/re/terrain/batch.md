@@ -4,7 +4,7 @@ How the client DLL runs the client's own terrain generator in a loop, for any `W
 seed, forced topology and forced orientation, with no login and no session, and reads back the tile
 hash, doodad hash and map size. This is the data source of the 1:1 terrain port's acceptance test
 (every area, every topology and orientation, 50 random seeds:
-[../../plans/terrain-all-areas.md](../../plans/terrain-all-areas.md), WP7.16). Findings from
+the old plan terrain-all-areas, WP7.16). Findings from
 2026-10-22; addresses are Ghidra addresses of 0.5.5e Hotfix 1 (image base `0x140000000`) and are found by
 signature at run time (`modules/client-hook/signatures/0.5.5e.hotfix1.toml`, feature `gen_batch`). Private
 mode only: the feature is refused when `poe-hook.toml` says `mode = "official"` and again before

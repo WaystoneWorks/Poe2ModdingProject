@@ -1,33 +1,35 @@
 # CLAUDE.md
 
-A private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (version `0.5.5e.hotfix1`, the only supported build since 2026-10-29; 0.5.5e was dropped), written in Rust and built for future client and server modding (personal and educational use).
-This repo is the **hub** (docs, plans, RE notes, scripts, `xtask` dev tooling, the tracker); the code is in submodules under `modules/`: the server (`modules/server`, Poe2Server), the shared protocol (`modules/protocol`, Poe2Protocol: opcodes and the version files), the client hook, web admin, launcher, mod SDK, mod index and server list. Which repo does what: [docs/overview.md](docs/overview.md).
-Progress and the current task: the tracker in [README.md](README.md).
+A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.hotfix1`, the only supported build), for personal and educational modding. This repo is the hub (docs, RE notes, scripts, `xtask`); the code is in submodules under `modules/` ([docs/overview.md](docs/overview.md)).
+
+**Start here:** [docs/PLAN.md](docs/PLAN.md) is the only plan and status. Read only what your task needs: [docs/index.md](docs/index.md) maps the rest, [agent-workflow.md](docs/guides/agent-workflow.md) has working rules, [decisions.md](docs/decisions.md) has settled choices.
 
 ## Hard rules
-- **Never touch the Steam install** (`~/.local/share/Steam/steamapps/common/Path of Exile 2`) or its Proton prefix (`compatdata/2694490`). Use only `GameFiles/`, the provided copy.
-- `GameFiles/` changes only through `cargo xtask deploy-client` / `revert-client` / `deploy-core` (they back files up first). Never hand-edit it.
-- **Official servers: read-only.** The DLL may observe and log official sessions the user plays (GameFiles copy with `deploy-client --official`, or the launcher's "Official (read-only)" version entry, which deploys the same config); it never sends, alters or injects anything there (read-only latch). Claude never logs in to official servers; captures are the user's.
-- The user's live `Client.txt` in the Steam install is a read-only reference: never modify it, never commit its contents (copy excerpts into `runtime/`).
-- No hardcoding: opcodes in `modules/protocol/opcodes/<version>/*.toml`; ports, leagues, start areas in `modules/server/config/server.toml`; supported client builds in `modules/protocol/versions/<version>.toml`; classes, areas, items from game data (`poe-data`); subsystems behind traits.
-- External tools go in `third_party/` (`third_party/fetch-tools.sh`); generated/datamined data in git-ignored `dumps/<version>/`; local runtime files in `runtime/`.
-- Docs go in `docs/` and are updated in the same commit as the code; RE findings and addresses go in `docs/re/`. Run `python3 scripts/check-links.py` after doc changes.
-- Commit and push after each working step (`origin main`). Submodules: commit and push inside the submodule first, then bump the pointer in the hub (the server's own submodules first inside `modules/server`).
-- Ghidra: work in `/0.5.5e.hotfix1/PathOfExileSteam.exe`. Every RE address in docs and code comments is a 0.5.5e Hotfix 1 address (older 0.5.5e ones were moved on 2026-10-29 with `scripts/re/convert_addrs.py`; [docs/re/README.md](docs/re/README.md)).
-- Ask the user for x64dbg/dynamic debugging and for official captures. Steam may be used and started for private-server tests without asking; never log in to official servers.
+- **Never touch the Steam install** (`~/.local/share/Steam/steamapps/common/Path of Exile 2`) or its Proton prefix (`compatdata/2694490`). Use only `GameFiles/`.
+- `GameFiles/` changes only through `cargo xtask deploy-client` / `revert-client` / `deploy-core`. Never hand-edit it.
+- **Official servers are read-only.** The DLL may observe and log official sessions the user plays; it never sends, alters or injects anything there. Claude never logs in; captures are the user's.
+- The Steam install's live `Client.txt` is a read-only reference: never modify or commit it (copy excerpts into `runtime/`).
+- No hardcoding: opcodes in `modules/protocol/opcodes/<version>/*.toml`; ports, leagues, start areas in `modules/server/config/server.toml`; client builds in `modules/protocol/versions/<version>.toml`; game data from `poe-data`; subsystems behind traits.
+- External tools in `third_party/`; generated data in git-ignored `dumps/<version>/`; local files in `runtime/`.
+- Commit and push after each working step (`origin main`), submodules first, then the hub pointer.
+- Ghidra: `/0.5.5e.hotfix1/PathOfExileSteam.exe`. Every RE address in docs and comments is a Hotfix 1 address.
+- Allowed without asking: Steam, the server and the client for private-server tests; x64dbg on the `GameFiles/` client in private sessions. Ask for official captures.
 
-## Roadmap (details: [docs/plans/orchestration-2026-10.md](docs/plans/orchestration-2026-10.md), status: README tracker)
-Done (2026-10-20/21): foundation (restructure, dumps, repo split, docs, config, tracker); server-authoritative movement from official captures; accounts with the standalone login; remote hosting; shared instance world with two-client multiplayer; web API + web admin; launcher (end-to-end test with a depot download pending); consistency pass.
-**Current state and next steps:** [docs/plans/handoff-agent-15.md](docs/plans/handoff-agent-15.md) (2026-10-29: R1 done; **R1.5 done** (Hotfix 1 only, launcher/web admin cleanup, several hosted servers, accounts on the web, the game's Create account button opens the server's register page); released server-v0.4.0, launcher v0.6.0 then v0.7.0 (no launcher login: sign in on the game's login screen), hook-v0.5.0; next: R2 server-side collision of [docs/plans/roadmap-2026-11.md](docs/plans/roadmap-2026-11.md); read [handoff-agent-7.md](docs/plans/handoff-agent-7.md) first for preferences and method).
-Open elsewhere: movement gaps #11/#12 (docs/protocol/movement.md), party/trade replies, remote equipment visuals.
+## Session rules
+- **One task per session, 300k context at most.** At the limit or the end of the task: commit, update PLAN.md and the topic doc, stop, and give the user a one-line prompt for the next session. No handoff files.
+- Sonnet by default, Opus for hard RE and design. Script the analysis: print summaries, keep raw output in `runtime/`.
+
+## Doc rules (`python3 scripts/check-links.py` enforces links and word limits)
+- One owner per topic; link, never copy. Docs state what is true now, not what happened. Keep every address, offset, opcode and format.
+- A failed theory stays only as a short "ruled out" line, when it would otherwise be retried.
+- New work goes in PLAN.md and is deleted when done. No new plan, handoff or status files. RE findings go in `docs/re/`. Docs change in the same commit as the code.
+
+## Memory rules
+- Memory holds only durable user preferences and pointers to things outside the repo: never progress, status, plans, commit hashes or anything the docs or git record.
+- One fact per file, about 100 words at most, 15 files at most. Update or delete before adding.
+- Project facts go in the docs. User decisions go in [decisions.md](docs/decisions.md).
 
 ## Where things are
-- Repositories and how they depend on each other: [docs/overview.md](docs/overview.md)
-- Commands, logs, unattended in-game tests: [docs/guides/setup.md](docs/guides/setup.md)
-- Server: build and run it from the hub with `cargo xtask server build|run|test` (working directory = the hub, so `GameFiles/`, `dumps/`, `runtime/` and `modules/web-admin/dist` resolve; `run` rebuilds the web admin when its sources are newer than `dist/build.json`). Binary: `modules/server/target/debug/poe-server`. Hosting and release docs: `modules/server/docs/`
-- Dev config: the committed `modules/server/config/server.toml` is safe (loopback, no dev tools; there is no password-less login, tests sign in with a Remember Me token). For in-game tests run `python3 scripts/dev-config.py` and start the server with `cargo xtask server run --config runtime/server.dev.toml` (or `POE_CONFIG=runtime/server.dev.toml`) ([setup.md](docs/guides/setup.md#developer-config))
-- Server commands and admins: [docs/guides/server-admin.md](docs/guides/server-admin.md)
-- Architecture and crates: [docs/architecture/](docs/architecture/overview.md)
-- Protocol: [docs/protocol/](docs/protocol/framing.md); RE how-to (Ghidra MCP, `scripts/re/`): [docs/re/README.md](docs/re/README.md)
-- Terrain status: [docs/status/terrain.md](docs/status/terrain.md); history: [docs/status/history.md](docs/status/history.md)
-- Everything else: [docs/index.md](docs/index.md)
+- Commands, logs, unattended tests, dev config: [docs/guides/setup.md](docs/guides/setup.md). Build and run the server from the hub: `cargo xtask server build|run|test`.
+- Server commands and admins: [docs/guides/server-admin.md](docs/guides/server-admin.md). Hosting and releases: `modules/server/docs/`.
+- Architecture: [docs/architecture/](docs/architecture/overview.md). Protocol: [docs/protocol/](docs/protocol/framing.md). RE how-to: [docs/re/README.md](docs/re/README.md). Terrain status: [docs/status/terrain.md](docs/status/terrain.md).

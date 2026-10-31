@@ -4,7 +4,7 @@
 
 ## Checks
 
-- [ ] I ran: `cargo build && cargo test`, `python3 scripts/check-links.py`, `cargo xtask openapi --check` (when the web API changed), `cargo xtask tracker --check`
+- [ ] I ran: `cargo build && cargo test`, `python3 scripts/check-links.py`, `cargo xtask openapi --check` (when the web API changed)
 - [ ] Docs updated in the same change (`docs/`, READMEs, `docs/re/` for reverse-engineering findings)
 - [ ] No game files, official-server captures, `Client.txt` excerpts, secrets or personal data in the change
 - [ ] Nothing in the change sends, alters or injects anything on official servers (the read-only rule)

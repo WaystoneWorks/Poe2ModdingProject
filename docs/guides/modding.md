@@ -1,6 +1,6 @@
 # Modding
 
-One mod system for the client and the server: a mod is **one package** with a `mod.toml` that says where it runs (`side = "client" | "server" | "both"`), built and packed with the public SDK. The decisions behind it are in [../plans/server-modding-analysis.md](../plans/server-modding-analysis.md) ("Decisions (user, 2026-10-22)"): native Rust server mods (a `cdylib` with a versioned C ABI) plus data-only mods, never hot-reloaded, no install guard, exact version and SHA-256 pinning.
+One mod system for the client and the server: a mod is **one package** with a `mod.toml` that says where it runs (`side = "client" | "server" | "both"`), built and packed with the public SDK. The decisions behind it are in the old plan server-modding-analysis ("Decisions (user, 2026-10-22)"): native Rust server mods (a `cdylib` with a versioned C ABI) plus data-only mods, never hot-reloaded, no install guard, exact version and SHA-256 pinning.
 
 ## What exists now and what is coming
 

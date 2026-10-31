@@ -46,8 +46,6 @@ jobs:
       # Tests that read the game files skip themselves when GameFiles/ is absent. The server's own
       # build and tests run in the Poe2Server repository's CI.
       - run: cargo test --locked
-      - name: The README tracker is current
-        run: cargo xtask tracker --check
       - name: The launcher's version files are current
         run: cargo xtask versions --check
 

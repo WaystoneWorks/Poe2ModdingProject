@@ -1,6 +1,6 @@
 # Update compatibility: what breaks when GGG ships a new client build
 
-Assessment for WP A1 of [../plans/orchestration-2026-10b.md](../plans/orchestration-2026-10b.md). Analysis only: no code changed. Measured on `GameFiles/PathOfExileSteam.exe` (client 0.5.5e Hotfix 1, 2026-10-21). The proposals feed WP A2 (signatures), A3 (`cargo xtask check-build`) and A4 (version plumbing).
+Assessment for WP A1 of the old plan orchestration-2026-10b. Analysis only: no code changed. Measured on `GameFiles/PathOfExileSteam.exe` (client 0.5.5e Hotfix 1, 2026-10-21). The proposals feed WP A2 (signatures), A3 (`cargo xtask check-build`) and A4 (version plumbing).
 
 **Status (2026-10-21): WP A2, A3 and A4 are done** (A3 and A4: [What WP A3 and A4 did](#what-wp-a3-and-a4-did)). **WP A2 is done** (S1 to S3 and the redaction fix; see [What WP A2 did](#what-wp-a2-did)). Rows 1, 2, 3, 4, 5, 9, 17 and 18 of the ranked table are implemented (marked **A2 done** below); rows 15 (partly), 6 to 8, 10 to 14 and 16 to 26 are still open. The sections below are the original assessment and are kept as written, except where a line says what A2 did.
 

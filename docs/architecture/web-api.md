@@ -2,7 +2,7 @@
 
 The server's HTTP and WebSocket API, for the web admin site ([Poe2WebAdmin](#the-web-admin-spa)) and the launcher ([../guides/launcher.md](../guides/launcher.md)). It is the crate `modules/server/crates/poe-web-api` (axum 0.8), started by `poe-server` next to the login and instance servers. The machine-readable description is [openapi.json](../../modules/server/docs/openapi.json), generated from the code (`cargo xtask openapi`) and also served live at `GET /api/v1/openapi.json`.
 
-Related: accounts, tokens and hashing in [accounts.md](accounts.md); the commands the admin endpoints run in [../guides/server-admin.md](../guides/server-admin.md); the plan in [../plans/orchestration-2026-10.md](../plans/orchestration-2026-10.md) (phase 4).
+Related: accounts, tokens and hashing in [accounts.md](accounts.md); the commands the admin endpoints run in [../guides/server-admin.md](../guides/server-admin.md); the plan in the old plan orchestration-2026-10 (phase 4).
 
 ## Running it
 

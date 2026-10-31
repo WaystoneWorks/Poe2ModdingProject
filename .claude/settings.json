@@ -1,0 +1,25 @@
+{
+  "model": "sonnet",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/context-guard.py\"" }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cargo xtask server:*)",
+      "Bash(cargo xtask run-client:*)",
+      "Bash(cargo xtask login-token:*)",
+      "Bash(cargo xtask deploy-client --no-build --login-mode standalone)",
+      "Bash(cargo xtask deploy-core:*)",
+      "Bash(scripts/test-run.sh:*)",
+      "Bash(scripts/test-mp.sh:*)",
+      "Bash(python3 scripts/re/send_dev.py:*)",
+      "Bash(python3 scripts/dev-config.py:*)"
+    ]
+  }
+}

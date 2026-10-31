@@ -63,34 +63,15 @@ Contributing, security reports and the legal notice: [../CONTRIBUTING.md](../CON
 | [re/terrain/shared-passes.md](re/terrain/shared-passes.md) | Passes both kinds share: topology choice, lattice, fill, de-repetition, outer buffer |
 | [../dumps/README.md](../dumps/README.md) | `dumps/<version>/` (git-ignored): what produces each file and `scripts/dumps/migrate.sh` |
 
-## Status, research, plans
+## Plan, status, research
 | Document | Contents |
 |---|---|
+| [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
+| [decisions.md](decisions.md) | The user's settled decisions |
+| [guides/agent-workflow.md](guides/agent-workflow.md) | How agents work: session limits, checks, testing, terrain method |
 | [status/terrain.md](status/terrain.md) | The only terrain status: results per area, where work stopped, next steps |
 | [status/terrain-matrix.tsv](status/terrain-matrix.tsv) | Generated table: every area x topology x orientation as match, fail or untested (`cargo xtask terrain-matrix`) |
 | [status/history.md](status/history.md) | What was built when, and the open items |
-| [status/tracker.toml](status/tracker.toml) | Data for the README status tables: current task, subsystems and items with done/partial/missing/planned; edit it, then run `cargo xtask tracker` ([guides/setup.md](guides/setup.md#run)) |
 | [research/poe1-prior-art.md](research/poe1-prior-art.md) | What public PoE1 research says about the protocol |
 | [research/tools.md](research/tools.md) | Survey of datamining and RE tools |
-| [plans/orchestration-2026-10.md](plans/orchestration-2026-10.md) | Orchestration plan (2026-10-20): restructure, repo split, movement rewrite, accounts and multiplayer, web admin, launcher, docs cleanup, terrain handoff |
-| [plans/orchestration-2026-10b.md](plans/orchestration-2026-10b.md) | Orchestration plan 2 (2026-10-21): game-update resilience, login/accounts completion, public release, launcher releases with auto-update, server setup in the launcher, plan-1 leftovers |
-| [plans/handoff-orchestrator-3.md](plans/handoff-orchestrator-3.md) | Orchestrator handoff (2026-10-22): how to work, user preferences, the repos and releases, what is left (launcher release, end-to-end test, G-PARTY and problem 5, Windows, open items), the user's decisions |
-| [plans/handoff-agent-7.md](plans/handoff-agent-7.md) | Handoff for a single working agent (2026-10-25): built from the orchestrator handoffs 3-6 and the wave 4-6 agent handoffs; user preferences, commit rules, terrain state, the unmerged wave 6 branches, leads, start-up checklist |
-| [plans/handoff-agent-12.md](plans/handoff-agent-12.md) | Handoff 12 (2026-10-28): BossRush_Area1 fix (subgraph queue order) committed, not gated; natural topology choice needs the object stage (user chose to build it first); next steps |
-| [plans/handoff-agent-13.md](plans/handoff-agent-13.md) | Handoff 13 (2026-10-28): client 0.5.5e Hotfix 1 (version, signatures, Ghidra), BossRush gate merged (218,702), world-map pins RE'd and ported (acts 1, 2, 4 exact); next: the client's node walk for the pins, the direction layout, the natural choice |
-| [plans/handoff-agent-11.md](plans/handoff-agent-11.md) | Handoff 11 (2026-10-27): full gate 218,653 of 218,705 merged (0 lost), Chayula, G2_12, G1_13_2, RitualLeagueBoss fixed, new trace checkpoints, BossRush_Area1 findings, natural topology choice RE and port plan |
-| [plans/handoff-agent-10.md](plans/handoff-agent-10.md) | Handoff 10 (2026-10-27): full gate 218,490 of 218,705 merged (0 lost), second 50-seed client batch 218,585 of 218,802, remaining failures and leads |
-| [plans/handoff-agent-9.md](plans/handoff-agent-9.md) | Handoff 9 (2026-10-26): full gate 213,860 of 218,705 merged (0 lost), the session's fixes, remaining failures by area and leads (door-edge walkway pass, sub-dungeon window fill, G1_11 overlay heights) |
-| [plans/handoff-agent-8.md](plans/handoff-agent-8.md) | Handoff 8 (2026-10-25): wave 6 merged (206,746), three later fixes pushed (one WIP not gated), full gate pending, leads by class from the w7-1 client traces |
-| [plans/handoff-orchestrator-6.md](plans/handoff-orchestrator-6.md) | Orchestrator handoff (2026-10-24): terrain wave 6 stopped at a safe point with agent handoffs; how to resume, merge and gate it |
-| [plans/handoff-orchestrator-5.md](plans/handoff-orchestrator-5.md) | Orchestrator handoff (2026-10-24): launcher v0.4.1, terrain waves 4 and 5 (196,094 of 218,705 client layouts), wave 6 plan, working-method additions (CPU limits, symlink guard, fresh agents from handoffs) |
-| [plans/handoff-orchestrator-4.md](plans/handoff-orchestrator-4.md) | Orchestrator handoff (2026-10-23): what is left from the original plan, the terrain 1:1 port state (108,545 of 218,705 client layouts), wave 4 and the rest of the terrain work, working method additions |
-| [plans/handoff-agent-15.md](plans/handoff-agent-15.md) | Handoff 15 (2026-10-29): R1.5 done and released (server-v0.4.0, launcher v0.6.0, hook-v0.5.0); next: R2 server-side collision |
-| [plans/r1.5-ui-cleanup.md](plans/r1.5-ui-cleanup.md) | R1.5 (user, 2026-10-29, before R2): launcher and web admin cleanup, multiple hosted servers, registration on the web, 0.5.5e removed; decisions and scope |
-| [plans/handoff-agent-14.md](plans/handoff-agent-14.md) | Handoff 14 (2026-10-29): R1 done (generator matches all three client batches), UI rework done, releases server-v0.3.0 / launcher v0.5.0 / hook-v0.4.0; next: R2 server-side collision |
-| [plans/roadmap-2026-11.md](plans/roadmap-2026-11.md) | Roadmap agreed with the user (2026-10-28): generator complete (batch 3), server collision, movement 1:1, entities/transitions/waypoints/world map, launcher and web admin rework in parallel |
-| [plans/open-items.md](plans/open-items.md) | Open items outside the terrain port (2026-10-22): what needs the user, what can be done without, what waits for items and entities |
-| [plans/public-release-audit.md](plans/public-release-audit.md) | Public release audit (WP D1, 2026-10-21): secrets, personal data, game data and security findings across the 5 repos, the git filter-repo scrub lists, D3 hygiene items, open questions |
-| [plans/server-modding-analysis.md](plans/server-modding-analysis.md) | Server modding at the level of client modding (analysis, 2026-10-22): client versus server mod gap list, tier options (data-only, WebAssembly, Lua, native), mod classification (`side`), server-advertised required client mods and launcher mod sync, open questions, work packages |
-| [plans/terrain-all-areas.md](plans/terrain-all-areas.md) | Terrain port to all areas (2026-10-21): scope matrix (`cargo xtask terrain-matrix`), verification at scale, blockers, unported systems ranked, work packages |
 | [../modules/client-hook/docs/mod-manifest.md](../modules/client-hook/docs/mod-manifest.md) | `mod.toml` spec, mod ABI and loader rules for client mods (Poe2ClientHook submodule) |

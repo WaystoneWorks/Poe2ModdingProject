@@ -188,8 +188,8 @@ tiles and doodad hulls: [doodads.md](doodads.md).
     by unported system with `scripts/re/probe_classes.py`.
   - `cargo xtask terrain-matrix`: writes `docs/status/terrain-matrix.tsv` (area x topology x
     orientation -> untested/fail/match) from the game data, `area_vectors` output, forced-layout
-    results and the probe; the README tracker renders it. Plan:
-    [../../plans/terrain-all-areas.md](../../plans/terrain-all-areas.md).
+    results and the probe; status:
+    [../../status/terrain.md](../../status/terrain.md).
   - `forced_verify <batch-results.tsv> [--out forced-results.tsv] [--threads N]`: replays the
     client batch's rows (area, seed, topology, orientation, hashes) with the same forced choice
     and writes `match|fail` plus the first difference per row, the input of the matrix's seed

@@ -6,7 +6,7 @@ The work is spread over several repositories (the overview with a dependency dia
 
 | Repo | Submodule | Checks |
 |---|---|---|
-| [Poe2ModdingProject](https://github.com/WaystoneWorks/Poe2ModdingProject) (this one) | `/` | `cargo build` (xtask), `cargo xtask tracker --check`, `python3 scripts/check-links.py` |
+| [Poe2ModdingProject](https://github.com/WaystoneWorks/Poe2ModdingProject) (this one) | `/` | `cargo build` (xtask), `python3 scripts/check-links.py` |
 | [Poe2Server](https://github.com/WaystoneWorks/Poe2Server) | `modules/server` | `cargo build`, `cargo test`, `cargo xtask openapi --check`, a gitleaks scan; its own [CONTRIBUTING.md](modules/server/CONTRIBUTING.md) |
 | [Poe2Protocol](https://github.com/WaystoneWorks/Poe2Protocol) | `modules/protocol` | `cargo test --workspace` (also with `--features poe-net/tokio`) |
 | [Poe2ClientHook](https://github.com/WaystoneWorks/Poe2ClientHook) | `modules/client-hook` | `cargo test`, and the DLL build for `x86_64-pc-windows-msvc` |
@@ -70,7 +70,7 @@ What CI runs, and what to run before you push:
 
 | Where | CI | You run |
 |---|---|---|
-| Hub (`.github/workflows/ci.yml`) | `python3 scripts/check-links.py`; `cargo build --locked` (xtask) with the pinned nightly; `cargo xtask tracker --check`; a gitleaks scan of the files | the same; `cargo xtask build-dll` if you touched the client hook |
+| Hub (`.github/workflows/ci.yml`) | `python3 scripts/check-links.py`; `cargo build --locked` (xtask) with the pinned nightly; a gitleaks scan of the files | the same; `cargo xtask build-dll` if you touched the client hook |
 | Poe2Server (`.github/workflows/ci.yml`) | `cargo build --locked` and `cargo test --locked` on Linux with the pinned nightly; `cargo xtask openapi --check`; a gitleaks scan of the files | the same (`cargo xtask server build` and `cargo xtask server test` from the hub) |
 | Poe2Protocol | `cargo fmt --all --check`, clippy, `cargo test --workspace` with and without the `tokio` feature | the same |
 | Poe2ClientHook | `cargo fmt --all --check`, clippy and `cargo test -p poe-hook-deploy`; a Windows job builds the DLLs and runs the `poe-hook-shared` tests | `cargo test` on the host crates; `cargo xtask build-dll` in the hub for the DLLs |

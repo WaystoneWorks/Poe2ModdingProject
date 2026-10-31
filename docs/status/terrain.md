@@ -7,7 +7,7 @@ How the client's generator works, and the tools used below, are in
 [tgr.md](../re/terrain/tgr.md), [dungeon.md](../re/terrain/dungeon.md),
 [shared-passes.md](../re/terrain/shared-passes.md).
 The plan for the remaining areas (scope matrix, verification at scale, blockers, work packages) is
-[../plans/terrain-all-areas.md](../plans/terrain-all-areas.md).
+the old plan terrain-all-areas.
 The per-area coverage (every area x topology x orientation: match, fail or untested, plus the generator probe) is the generated table [terrain-matrix.tsv](terrain-matrix.tsv) (`cargo xtask terrain-matrix`, [../guides/setup.md](../guides/setup.md#run)); its totals are in the README tracker. The play-log vectors of every area now feed it too (see "Bulk vectors" below); the planned target is 50 random seeds per combination from the client batch (WP7.16).
 
 ## Goal
@@ -236,7 +236,7 @@ the other 218,705 and its result is the matrix input `dumps/0.5.5e.hotfix1/terra
   overhanging subgraph tiles' storey (BossRush_Area3). Still failing: ChayulaLeague_Tower(+Boss),
   BossRush_Area1, G2_12, G1_13_2, RitualLeagueBoss, MapCaldera, MapCrimsonShores. Findings:
   [../re/terrain/dungeon.md](../re/terrain/dungeon.md), [../re/terrain/tgr.md](../re/terrain/tgr.md);
-  next steps: [../plans/handoff-agent-10.md](../plans/handoff-agent-10.md).
+  next steps: the old plan handoff-agent-10.
 - **Single agent, 2026-10-25/26 (handoff 8, Poe2Server `1ccbb4b` to `2cf8f68`, gated in one full replay):** 213,860 of
   218,705 client layouts match (from 206,746), 0 lost. Combinations 4222 match, 167 partial, 80
   fail. Subgraph windows share the parent's occupancy (G2_4_1), a second lattice settle after
@@ -250,7 +250,7 @@ the other 218,705 and its result is the matrix input `dumps/0.5.5e.hotfix1/terra
   the match sample only: the filler double count from a virtual default door type (`7e37d96`).
   Findings and open items: "Single agent, 2026-10-25 (after wave 6)" in
   [../re/terrain/dungeon.md](../re/terrain/dungeon.md); next steps:
-  [../plans/handoff-agent-9.md](../plans/handoff-agent-9.md).
+  the old plan handoff-agent-9.
 - **Wave 6 (2026-10-24/25, agents A, B, C, merged into Poe2Server `d53ee43`):** 206,746 of
   218,705 client layouts match (from 196,094), 0 lost; all of them also match the doodad hash.
   Combinations 4025 match, 259 partial, 185 fail. Agent A: `.dgr` node slots by edge index
@@ -301,7 +301,7 @@ the other 218,705 and its result is the matrix input `dumps/0.5.5e.hotfix1/terra
 1. Done 2026-10-28: `[terrain] generate` on by default (the user's decision 2026-10-27, once the
    natural choice was verified).
 2. Done 2026-10-29: MapCaldera / MapCrimsonShores, the full replay of the second batch (all match).
-3. The object stage for entities (handoff 10 "Entities"): transitions, waypoints, checkpoints.
+3. The object stage for entities ([entities.md](../protocol/entities.md#where-world-objects-come-from)): transitions, waypoints, checkpoints.
 4. A live test of `generated_grid` with server movement; then whether it defaults to on.
 
 ## Not ported yet (collected from the RE notes)

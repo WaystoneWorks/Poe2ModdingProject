@@ -87,7 +87,7 @@ cargo test                                          # in each submodule you chan
 cargo test; npm run check                           # modules/launcher/src-tauri, and the frontend if it changed
 cargo xtask versions --check
 cargo xtask check-build GameFiles/PathOfExileSteam.exe      # exit 0
-python3 scripts/check-links.py; cargo xtask tracker --check
+python3 scripts/check-links.py
 ```
 
 The tests of `xtask` run `check-build` on `GameFiles/PathOfExileSteam.exe` and on a copy with one byte of a required function changed (skipped without `GameFiles/`). Replay tests only protect the build whose captures they replay: for new layouts the user takes new official captures (read-only) and the replay tests get a new capture version.

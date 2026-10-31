@@ -6,7 +6,7 @@ The Path of Exile 2 (client 0.5.5e Hotfix 1) private server project is spread ov
 
 | Repository | Where in the hub | What it is |
 |---|---|---|
-| [**Poe2ModdingProject**](https://github.com/WaystoneWorks/Poe2ModdingProject) (the hub, this repo) | `/` | Documentation, plans, reverse-engineering notes and scripts, the dev tooling (`xtask`: deploy the client hook, build the DLLs, `check-build`, tracker, run the server from the hub), the progress tracker, news. Has every other repository as a submodule under `modules/`. No releases. |
+| [**Poe2ModdingProject**](https://github.com/WaystoneWorks/Poe2ModdingProject) (the hub, this repo) | `/` | Documentation, the plan, reverse-engineering notes and scripts, the dev tooling (`xtask`: deploy the client hook, build the DLLs, `check-build`, tracker, run the server from the hub), the progress tracker, news. Has every other repository as a submodule under `modules/`. No releases. |
 | [**Poe2Server**](https://github.com/WaystoneWorks/Poe2Server) | `modules/server` | The server: login server, instance server, web API, accounts, terrain generator, mod host, config. Builds and tests on its own. Releases `server-v*`. |
 | [**Poe2Protocol**](https://github.com/WaystoneWorks/Poe2Protocol) | `modules/protocol` | The wire protocol crates (`poe-net`, `poe-proto`), the opcode tables `opcodes/<version>/` and the supported-build definitions `versions/<version>.toml`. Used by the server, the client hook and (through the hook) the launcher. |
 | [**Poe2ClientHook**](https://github.com/WaystoneWorks/Poe2ClientHook) | `modules/client-hook` | The client DLLs (loader, debug core with overlay, mod loader), the signature table, `poe-hook-deploy`, and `poe-hook-mods` (mod manifest and packages, shared with the launcher, the server and the SDK). Releases `hook-v*`. |
@@ -20,7 +20,7 @@ The Path of Exile 2 (client 0.5.5e Hotfix 1) private server project is spread ov
 
 ```mermaid
 flowchart TD
-    Hub["Poe2ModdingProject (hub)<br/>docs, plans, xtask, scripts"]
+    Hub["Poe2ModdingProject (hub)<br/>docs, plan, xtask, scripts"]
     Server["Poe2Server<br/>servers, crates, config"]
     Protocol["Poe2Protocol<br/>poe-net, poe-proto, opcodes, versions"]
     Hook["Poe2ClientHook<br/>DLLs, poe-hook-deploy, poe-hook-mods"]
@@ -97,7 +97,7 @@ The server releases `server-v0.1.0` and `server-v0.2.0` were made in this reposi
 
 | Need | Look in |
 |---|---|
-| Rules, roadmap | [../CLAUDE.md](../CLAUDE.md), [../README.md](../README.md) (tracker) |
+| Rules, plan | [../CLAUDE.md](../CLAUDE.md), [PLAN.md](PLAN.md) |
 | Server config, crates, servers | `modules/server/` ([architecture/crates.md](architecture/crates.md)) |
 | Opcodes, supported builds | `modules/protocol/opcodes/<version>/`, `modules/protocol/versions/<version>.toml` |
 | Client DLLs, signatures | `modules/client-hook/` ([architecture/client-dll.md](architecture/client-dll.md)) |
