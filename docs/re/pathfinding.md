@@ -1,6 +1,6 @@
 # The client's pathfinder (0.5.5e Hotfix 1)
 
-Result of the movement-path work of 2026-10-21 (Ghidra, plus a DLL hook that logs the plans the client makes for the local player). Short version: **the client plans every walk itself, with a bounded jump point search over its 4-bit walkability grid**, for click-to-move, WASD, rolls and sprints, and the server now runs a port of it (`modules/server/crates/poe-game/src/clientpath.rs`). Addresses are Ghidra addresses of build 0.5.5e Hotfix 1 ([addresses.md](addresses.md#pathfinder-2026-10-21)); the movement spec that uses it is [../protocol/movement.md](../protocol/movement.md#the-clients-pathfinder).
+Result of the movement-path work of 2026-10-21 (Ghidra, plus a DLL hook that logs the plans the client makes for the local player). Short version: **the client plans every walk itself, with a bounded jump point search over its 4-bit walkability grid**, for click-to-move, WASD, rolls and sprints, and the server now runs a port of it (`modules/server/crates/poe-game/src/clientpath.rs`). Addresses are Ghidra addresses of build 0.5.5e Hotfix 1 ([addresses.md](addresses.md#pathfinder)); the movement spec that uses it is [../protocol/movement.md](../protocol/movement.md#the-clients-pathfinder).
 
 ## Where it is used
 | Caller | What it plans |

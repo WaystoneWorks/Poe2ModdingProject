@@ -39,18 +39,18 @@ WORD_LIMITS = {
     "docs/index.md": 1500,
     "docs/guides/agent-workflow.md": 2000,
 }
-# Docs still above the default, each to be condensed; lower or delete an entry when it shrinks.
+# Docs above the default; lower or delete an entry when one shrinks, never raise it.
 WORD_LIMITS.update({
-    "docs/re/terrain/dungeon.md": 14500,
-    "docs/protocol/movement.md": 14500,
-    "docs/guides/launcher.md": 9500,
-    "docs/re/update-compatibility.md": 9500,
-    "docs/re/terrain/tgr.md": 8500,
-    "docs/protocol/entities.md": 8500,
     "docs/architecture/client-dll.md": 8000,
     "docs/architecture/web-api.md": 7000,
-    "docs/re/addresses.md": 6500,
+    "docs/guides/launcher.md": 9500,
+    "docs/protocol/entities.md": 8500,
     "docs/protocol/login.md": 6500,
+    "docs/protocol/movement.md": 12000,
+    "docs/re/addresses.md": 6500,
+    "docs/re/terrain/dungeon.md": 12000,
+    "docs/re/terrain/tgr.md": 8500,
+    "docs/re/update-compatibility.md": 6500,
 })
 SOFT_DIRS = {"dumps", "runtime", "third_party", "GameFiles", "modules"}
 

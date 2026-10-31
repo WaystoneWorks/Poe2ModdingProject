@@ -12,7 +12,7 @@ Port: `modules/server/crates/poe-world/src/{doodads,collision,tdt}.rs`; checks: 
 Order in `TerrainGen_Run` (see [README.md](README.md#phases-terraingen_run-in-order)): after the
 tile layout (and its random draws), `TerrainGen_Doodads` `0x141ff56d0` walks every region's room
 placements (the list the de-repetition pass also uses, region +0x58, 0x38-byte entries) and calls
-`TerrainGen_TileDoodads` `0x141ff3490` for each. This pass places the doodads of rooms (`.arm`); the tiles' own objects come from the tile-object pass ([below](#what-decides-whether-an-object-exists-r2-2026-10-30)).
+`TerrainGen_TileDoodads` `0x141ff3490` for each. This pass places the doodads of rooms (`.arm`); the tiles' own objects come from the tile-object pass ([below](#what-decides-whether-an-object-exists)).
 
 1. **Cell and angle** (`0x141fe7a50`). An `.arm` doodad entry has a cell `(ex, ey)` inside the
    room, an angle (`radians1`), a scale, a flip flag, an object type (`stub`, e.g.
@@ -105,7 +105,7 @@ when `flip`. Walk shapes go to layer 0, projectile shapes to layers 0 and 1 (`st
 - all writes take the minimum (5 counts as unset; 0 always writes), so the order of the doodads
   does not matter.
 
-## What decides whether an object exists (R2, 2026-10-30)
+## What decides whether an object exists
 
 Found with per-phase grid snapshots of the client (`POE_HOOK_GRID_PHASES`, below). The rules run in this order for each entry, after the `AOSet` pick and, for room doodads, after the hash:
 
@@ -120,7 +120,7 @@ The type hashes of these sets are the `ObjectHASH32` column of `Data/Balance/Mis
 
 **`.tdt` fields:** the body's first u16 is tile data `+0x16c` (`Tdt::body_flags`); after the `tmd` string come a string and the object group byte (`+0x170`, sink `+0x58`). Tile data `+0x10` is the feature string's length (`0x141d161c0`).
 
-## Unwalkable corners: what changed (R2, 2026-10-30)
+## Unwalkable corners: what changed
 
 `0x141ff7b90` (called from `TerrainGen_Layout`) runs, per region: outer fill and outer buffer, then `0x141fe1150` on the region's rectangle if the master's `RoomOcclusion` (`+0x166`) is clear (regions past the main count only with `+0x164`), and `0x141fe1020` (the map border). **The port ran `0x141fe1150` for `.tgr` graphs only**; dungeons got flag 8 only from the outer buffer's margins. `finish_dungeon` now runs it on the region, which `regions.tsv` shows is the whole buffered map. `0x141fe1150` returns at once for area kinds 0x20 and 0x21 (world-map panels).
 

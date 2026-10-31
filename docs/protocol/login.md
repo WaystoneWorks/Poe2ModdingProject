@@ -153,7 +153,7 @@ The client's login factory is `0x14214fbe0` (opcode → class, then vtable slot 
 
 Vtable slots: 0 = destructor, 1 = serialize, 2 = deserialize, 3 = ?. The dispatcher is the switch at `0x1420e8313`, inside a function starting at `0x1420e82b0`.
 
-## Login flow after authentication (verified 2026-10-12)
+## Login flow after authentication
 | Step | Direction | Message | Notes |
 |---|---|---|---|
 | 1 | C→S | `0x0018` RequestCharacterList | `u32 account_id` |
@@ -218,7 +218,7 @@ Wire order: five wstrings (+0x10 id, +0x40, +0x60 display name used by the selec
 - The **league label** under a character is grey (`0xff676767`) for every non-hardcore league and dark red for hardcore (`0x1406b95f0`). Grey is normal.
 - The **league banner** comes from CharacterEntry **+0x4d = `LeagueFlag.dat` row + 1** (`0x140c7e460`). 0 or 1 give the grey event banner. The row's IsHC/IsSSF pick red or blue and the green variant. Config: `[[leagues]] flag = "StandardFlag"`.
 
-## Deleting a character (verified 2026-10-14)
+## Deleting a character
 1. **C→S `0x000c` DeleteCharacter**, sent after the confirmation dialog (builder `0x140ed8149`, delete screen state): `astring name` (`u16` byte length + bytes), `u8 slot`, `u32 account_id`. In the official capture the byte is 0 and the `u32` is the account id; the older local note `01 00 00 00 01` is the same layout with other values. The byte is the low byte of a `u32` at screen +0x214 that the select screen stores when the delete screen opens (`0xffffffff` when unset; probably the list index or the local player); our server identifies the character by name and may ignore it.
 2. **S→C `0x000d` DeleteCharacterResult**: `u16 result, u32 account_id` (class `0x143509f18`, shared with 0x0b/0x0f/0x44; official: `00 00` + the account id). The handler signals event +0xb88. The delete screen's callback (`0x140ed8710`) closes on result 0; any other code is looked up in `BackendErrors.dat` and shown as an error text. Until the reply arrives, the dialog shows "Waiting for response...".
 3. **S→C `0x0015` CharacterList**: the client keeps its old list after a delete and does not ask for a new one, so the server sends it.
@@ -247,9 +247,9 @@ Both results go through `BackendError_GetText` (`0x1425cb9c0`) as described unde
 
 Until WP B2 the server sent `1` for every create failure and for a failed delete (row 1 is `AccountNameAlreadyExists`, the wrong text for both). Now (`login-server/src/session.rs`): a name under 3 characters `23`, over 23 `24`, other characters than letters, digits and `_` `22` (the client's text says letters and underscores only; the server accepts digits, but the client's name box already drops digits, spaces and other characters), unknown league `26`, no free slot (`[accounts] max_characters`) `49`, unknown start state `25`, name taken `21`, store error `19` (seen in game: name taken shows "A character with this name already exists."; `22`, `23` and `24` cannot be reached from the stock client, which filters characters, keeps Continue disabled under 3 characters and caps the box at 23, so only the server tests cover them); flags `27` is named but cannot occur (the create packet has no flag field). Delete: no such character `16`, a character of another account `17`, store error `19`, and the reply carries the account id in its `u32`. The `notify` byte of CharacterCreated must stay 0: when it is non-zero the client builds a request to `https://<web host>/api/tracking-conversions/` (`0x1420e8b41`..`0x1420e8c40`), a marketing call to the official website.
 
-## Keep-alive and resuming (verified 2026-10-14)
+## Keep-alive and resuming
 - The client keeps its login connection open while in game (unless the server sends `0x0017`, below) and sends **`0x0001` KeepAlive** (no body) every 10 seconds. The server answers with an empty `0x0001` (the factory maps it to the empty class `0x143506450`).
-- **C→S `0x0008` ResumeSession**: `u32 account id, u64 token` (raw). Sent on a new login connection right after the key exchange, after the instance server's `0x174` ExitSession ("Exit to character selection"; see [instance.md](instance.md#leaving-the-game-2026-10-14)). The server redeems the ticket (`TicketRegistry::redeem_resume`, single use) and answers like a login (AuthenticationResult). The client then requests the character list.
+- **C→S `0x0008` ResumeSession**: `u32 account id, u64 token` (raw). Sent on a new login connection right after the key exchange, after the instance server's `0x174` ExitSession ("Exit to character selection"; see [instance.md](instance.md#leaving-the-game)). The server redeems the ticket (`TicketRegistry::redeem_resume`, single use) and answers like a login (AuthenticationResult). The client then requests the character list.
 
 ## Hand-off to the instance server
 | Message | Layout |
@@ -278,7 +278,7 @@ Unknown parts of `InstanceDetails`: the connect routine (`0x14211dd30`) uses onl
 
 **Gate G-LOGIN is not needed to implement WP B2.** The code-to-text mapping comes from the client's own table (`BackendErrors.dat`) and the callbacks that print it. A read-only official capture of a failed create (taken or invalid name) and a delete of a missing character would only confirm which code official servers pick for each case (`21`, `22` and `16` are the expected ones); ask the user for it if B2 wants to match them exactly.
 
-## Implementation notes for WP B2 (done 2026-10-21)
+## Implementation notes for WP B2
 WP B1 findings and what WP B2 did with them (`modules/server/servers/login-server`, `poe-proto`, `poe-config`):
 
 | # | WP B1 finding | Status |

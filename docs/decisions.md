@@ -18,13 +18,13 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 - Unlocks: per character, locked by default; admin command and web admin button.
 - The terms-of-service screen stays hidden: never set account flag byte 0 bits 2, 3, 4 or 7.
 
-## Public release (audit answers, 2026-10-21)
+## Public release
 - MIT licence only. All repos public. Private vulnerability reporting on. Official mode stays public and documented ([official-mode.md](guides/official-mode.md)), with a launcher entry "Official (read-only)".
 - Keep the commit email, `CLAUDE.md` and the co-author trailers. Keep the HNC `key_xor` table as a documented constant behind a narrow gitleaks allowlist. Keep `terrain-matrix.tsv`.
 - Machine-hash Steam login removed. Test passwords are never real. Launcher app id `org.poe2modding.launcher`. The `ConnectEx` guard exists.
 - Findings: no credential, capture, GGG asset or game table in history. Real `AddObject` test blobs hold only anonymised names. Official-capture fixtures are movement-only.
 
-## Mods (2026-10-22)
+## Mods
 - Native Rust libraries (versioned C ABI) plus data-only mods; no WebAssembly or Lua tier for now.
 - One `mod.toml` and zip per mod, `side = "client" | "server" | "both"`. SDK in its own repo; server loader in Poe2Server; shared parser in `poe-hook-mods`.
 - Required mods come from the server (`/api/v1/mods/{id}/{version}.zip`, exact version and SHA-256 pin). The Poe2Mods index is for the browser only.

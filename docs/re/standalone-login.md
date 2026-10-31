@@ -1,6 +1,6 @@
 # Standalone (email/password) login on the Steam exe (0.5.5e Hotfix 1)
 
-Static RE (Ghidra) for WP3.1, 2026-10-20. Question: how does `PathOfExileSteam.exe` choose between the Steam login (encrypted app ticket, packet `0x0005`) and the email/password login, what does the latter send, and how does our DLL force it. Addresses are Ghidra addresses (image base `0x140000000`); the new names are in [addresses.md](addresses.md#client-platform-and-standalone-login-2026-10-20).
+Static RE (Ghidra) for WP3.1, 2026-10-20. Question: how does `PathOfExileSteam.exe` choose between the Steam login (encrypted app ticket, packet `0x0005`) and the email/password login, what does the latter send, and how does our DLL force it. Addresses are Ghidra addresses (image base `0x140000000`); the new names are in [addresses.md](addresses.md#client-platform-and-standalone-login).
 
 ## Answers in short
 1. **Platform is decided once, from the exe file name and the command line**, by `ClientPlatform_Detect` (`0x142197010`). A name containing `Steam` (case-sensitive) or an argument `--steam` gives platform 1 (Steam). Anything with none of the markers gives platform **0 = standalone**. The result is cached in the global `DAT_144717148` and every consumer reads it through tiny getters. There is no config key, no flag and no Steam probing.
@@ -147,7 +147,7 @@ Only if platform 0 is unusable. Facts:
 
 **Decision: force the standalone screen (platform 0).** It is a one-getter patch, needs no Steam, gives a real account screen with Remember Me, and the saved 32-byte token is a ready-made launcher channel. Keep the Steam-ticket token idea documented only as a contingency.
 
-## 7a. Platform 0 starts the standalone patcher (found in the first in-game test, 2026-10-20)
+## 7a. Platform 0 starts the standalone patcher
 
 With platform 0 the exe first behaves like the **standalone patcher launcher** (window "Language", news pane, progress bar, LAUNCH button; `Client.txt`: `Started patching (N free bytes available)`). It contacts GGG's patch servers. This must never happen with our client.
 
@@ -184,8 +184,8 @@ No x64dbg session is required to start. Verify these during the first test run w
 5. **Patcher skipped:** with the standalone deploy and `cargo xtask run-client` (which passes `--success-event 0`), `Client.txt` must not contain `Started patching`, no patcher window appears, `[CMD] --success-event` is logged, and the debug log says `standalone patcher skipped by the client itself`. No `patch.pathofexile2.com` lookup/connection (check with `ss -tnp` or the DLL network guard log).
 6. **Result codes:** confirm that `5` and `6` produce the "account does not exist" / "password is not correct" messages when the notice is empty (send each once from our server), and that the old `0x62` opens the Unlock window (the reason to move the stale-token reply to `0x0f`).
 
-## Ghidra names added (2026-10-21, WP B1)
+## Ghidra names added
 `LoginState_AuthenticationResultHandler` (`0x140ef5140`), `LoginState_HandleAuthenticationError` (`0x140ef63a0`), `BackendError_GetText` (`0x1425cb9c0`), `SelectScreen_UpdateStrictUnlockBanner` (`0x140f0f600`), `SelectScreen_ShowWidgets` (`0x140f05b20`), `SelectScreen_SetEntry` (`0x1406b9b90`), `SelectScreen_SetEntryLocation` (`0x1406b9010`), `SelectScreen_SetEntryPortraitFrame` (`0x1406b8460`), `SelectScreen_OnCharacterDetails` (`0x140f0c090`), `CharacterPortrait_GetIconPath` (`0x1425ff350`), `CharacterEntries_Read` (`0x142716700`), `CreateCharacterState_OnCharacterCreated` (`0x140ed2ab0`), `StandalonePatcher_GetErrorText` (`0x1421ee750`).
 
-## Ghidra names added (2026-10-20)
+## Ghidra names added
 `ClientPlatform_Detect`, `ClientPlatform_IsSteam`, `ClientPlatform_IsHotcool`, `ClientPlatform_IsTokenLogin7or8`, `ClientPlatform_Equals`, `LoginState_BuildUi_SelectLoginScreen`, `LoginState_StartAuthentication`, `LoginState_StandaloneLogin`, `LoginState_SaveLoginAfterAuth`, `LoginState_OnSteamEncryptedAppTicket`, `LoginState_TokenLogin7or8`, `ClientLoginSession_SendCredentials_0003`, `ClientLoginSession_SendSteamTicket_0005`, `Packet0003_Credentials_Serialize`, `Sha256_Bytes32`, `LoginClientHash_Get32`, `LoginCredentials_Load32`, `LoginCredentials_Save32`, `LoginCredentials_GetFilePath`; 2026-10-20 (patcher): `StandalonePatcher_Run`, `Client_Startup`, `CmdLine_ReadSuccessEvent`, `CmdLine_BuildOptionTable`, `CmdLine_ParseArgs`, `Patcher_RunPatching`, `Window_CreateMain_POEWindowClass`.

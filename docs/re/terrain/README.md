@@ -114,7 +114,7 @@ markers (`Environment/NonDefaultFlows/…`), audio and camera-zoom markers. They
 objects, not sent by the server. The port's doodad pass and the collision grid built from the
 tiles and doodad hulls: [doodads.md](doodads.md).
 
-## Client-side facts (offline analysis, 2026-10-13)
+## Client-side facts
 
 - **Seeds:** towns and hideouts always use seed 1 (all 27 in the live log; `WorldArea::fixed_seed`).
   With seed 1 the tile hash is constant (`G1_town` gives `892597717`; loading it on our server

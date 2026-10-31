@@ -45,7 +45,7 @@ ones.
 ## Terrain switches (`[terrain]`)
 
 - `force_layout` (default `true`): every new instance's AreaInfo forces the layout (`map_force_topology`, `map_force_orientation`). What the instance does not force itself (`transfer <area> <seed> <topology> <orientation>`) is the server generator's natural choice (`poe_world::area::choose_layout`), which is the client's own (ported from the client's world-map pin directions; 4,173 of 4,173 unforced client generations match: [../re/terrain/shared-passes.md](../re/terrain/shared-passes.md)). The layout is the same as without forcing; forcing makes client and server agree by construction. The log line `forcing the layout (AreaInfo stats)` shows the values. `false`: only what the instance forces is sent and the client chooses the rest alone.
-- `generate` (default `true` since 2026-10-28): the server also generates each new instance's terrain (in the background, a few hundred ms per area in a release build) and logs whether its tile hash equals the client's: `server terrain matches the client`, or a warning `server terrain differs from the client` (the `terrain` command does it for one instance). Coverage: [../status/terrain.md](../status/terrain.md#current-results).
+- `generate` (default `true` since 2026-10-28): the server also generates each new instance's terrain (in the background, a few hundred ms per area in a release build) and logs whether its tile hash equals the client's: `server terrain matches the client`, or a warning `server terrain differs from the client` (the `terrain` command does it for one instance). Coverage: [../status/terrain.md](../status/terrain.md#results).
 - `generated_grid` (default `false`): the instance's collision grid (walkability for movement and spawns) comes from the server's own generator instead of the grid the client uploaded or the layout cache holds. It applies only when the server's tile hash equals the client's; otherwise the log says `generated collision grid unavailable` and the uploaded grid is used, so the switch is safe to leave on. When the grid is used the log has `using the generated collision grid` with the generation time. How the grid is built and how far it equals the client's: [../re/terrain/doodads.md](../re/terrain/doodads.md); where it plugs in: [../architecture/instance-world.md](../architecture/instance-world.md#terrain-grid-sources).
 
 ## Mods
@@ -155,7 +155,7 @@ seed, forced topology and orientation, the players in it and since when it is em
   random); later players get the same one.
 - Empty instances close after `[instance] idle_minutes` (towns and hideouts stay in the directory; their simulation (the instance actor) also ends after that time and restarts with the next player).
 - A closed instance disconnects its players.
-- All players in an instance share one simulation and see each other ([instance-world.md](../architecture/instance-world.md#the-instance-actor-wp36)). The escape menu pauses the world only for a lone player.
+- All players in an instance share one simulation and see each other ([instance-world.md](../architecture/instance-world.md#the-instance-actor)). The escape menu pauses the world only for a lone player.
 - `instances` shows each instance's player count and names (written by its actor).
 
 ## Transfers

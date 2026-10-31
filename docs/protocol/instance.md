@@ -4,7 +4,7 @@ Connection: client to `InstanceDetails.host:port` (ours: `[network] public_host`
 Opcodes: `modules/protocol/opcodes/0.5.5e.hotfix1/instance.toml`. Rust types: `modules/protocol/poe-proto/src/instance.rs`.
 The client's incoming factory is `0x142170500` (switch on opcode − 0x0d); the full opcode → class map (with deserializer addresses) is in `dumps/0.5.5e.hotfix1/ghidra/instance_factory_s2c.json` (316 classes; local and git-ignored, see [dumps/README.md](../../dumps/README.md)). The game-session handler is `0x1421220f0` (`ClientInstanceGameSession::ProcessPacket`); in-game packets are handled by `0x1420ee490` (`ClientInstanceAccountSession::ProcessPacket`).
 
-## Opening sequence (verified 2026-10-13)
+## Opening sequence
 1. **C→S `0x000f` Hello** (plaintext, 29 bytes):
    ```
    u32 (0) | u16 (0x000e) | 12 bytes (unknown) | u32 ticket | u32 (0) | u8 (4)
@@ -44,7 +44,7 @@ The client's incoming factory is `0x142170500` (switch on opcode − 0x0d); the 
    Some seeds fail to generate (`TerrainGenerationException`, e.g. "Mismatching ground types … Cannot place Mud over WideRiverWater" in `G1_1`), and the client then never sends TerrainHashes. The official server generates terrain itself, so it never sends such seeds. Until the server generates terrain for every area, it picks seeds from `[dev] known_seeds` (the area/seed pairs from live logs, `scripts/re/clientlog_terrain.py`). Towns and hideouts always use seed 1.
 5. **C→S `0x009a` TerrainHashes** after terrain generation: `u8, u32 tile hash, u32 doodad hash`. Confirmed: the client logs "Tile hash: N" and "Doodad hash: N" with the same values. These are the reference values for server-side terrain generation ([../status/terrain.md](../status/terrain.md)).
 
-## After the area loads (verified 2026-10-13: the player is visible in town and in the Riverbank intro)
+## After the area loads
 The server sends, in this order (`InstanceServer::enter_world`):
 1. **S→C `0x0022` LocalPlayers** (`u8, u8 n, (u8 index, wstring character name)[n]`): handler `0x142122f41`. Assigns indices to the existing local-player objects by name (+0x181).
 2. **S→C `0x00df` AddInventory**, one per `Inventories.dat` row except `StashInventoryId`:
@@ -96,12 +96,12 @@ If the entity id equals a local player's id (+0x184, set by `0x24`), `0x14210bcb
 - The DLL's `dump_object_types` feature also logs, per spawned entity, its components and the blob span each component reader consumes.
 
 
-## Frame reports and ping replies (2026-10-14)
+## Frame reports and ping replies
 - **C→S `0x001c` FrameReport**, every 100 ms (500 ms while idle, `0x142121364`): `u8 frames` (world +0x680, the frames processed since the last report, capped at 255), then `u32`. All 32 bits of the `u32` are HNC side-channel bits (serializer `0x141f48870`: value bits 14..31, then 0..13).
 - **S→C `0x001d` PingReply**: `u16, u16, u32` (reader `0x141f48de0`). The handler (`0x142122295`) updates the latency estimate (session +0x2260) from the first `u16`. The `u32` carries 32 HNC bits: value bits 9..31, then 0..8, filling bytes least significant bit first.
 - **HNC side channel**: both directions carry a byte stream encrypted with a second Salsa20 pair (see [../re/crypto.md](../re/crypto.md#hnc-side-channel)). Received bytes are decrypted and parsed (`0x1421c55a0`): 0 = idle, 0xda..0xdd start a message, anything else throws ("HNC Protocol Violated"). The server answers every report with a PingReply whose bits are raw keystream, so they decrypt to idle zero bytes. Zero bits instead crash the client.
 
-## Leaving the game (2026-10-14)
+## Leaving the game
 - **Exit to character selection**:
   1. The client sends **C→S `0x0173`** (no body) and waits.
   2. The server issues a resume ticket (`TicketRegistry::issue_resume`) and replies **S→C `0x0174` ExitSession**: `u8, u32 account id, u64 token` (the `u64` raw/little-endian; constructor `0x14215e0c0`, reader `0x14215e190`).
@@ -113,19 +113,19 @@ If the entity id equals a local player's id (+0x184, set by `0x24`), `0x14210bcb
   - The client keeps its **login connection** open during play (the official log shows later instance hand-offs arriving on it). After leaving the game it shows the log-in screen only if that connection is gone; otherwise it asks for the character list on it and shows character selection.
   - So on `0x1b` the instance server ends the account's login connection (`poe_cluster::LoginSessions`), and the client returns to the log-in screen. Verified 2026-10-14: log-in screen, logging in again, and exit to character selection afterwards all work. Before this, `0x355` was not decoded, so the `0x1b` behind it in the same batch was never seen and "Exit to log in screen" led to character selection.
 
-## Pause (2026-10-14)
+## Pause
 - **C→S `0x01ff` PauseRequest**: `u8, u8 paused` (class `0x1434e52b8`). Sent when the escape menu opens or closes in a solo game, and once (`00 00`) after entering an area.
 - **S→C `0x01fe` SetPause** (simulation message, reader `0x142184420`): simulation header, then `u8` (bit 0 → world +0x868 paused, bit 1 → +0x869). Applied by `0x1421343c0` through world vfunc +0x200 (`0x14168ac70`). While +0x868 is set, pausable entities update with dt 0. With both bits set the client also applies its "Pause" audio state and shows "GAME PAUSED". The server answers every request with both bits equal to the request, and pauses the instance's simulation while paused, but only when the player is alone in the instance ([movement.md](movement.md#pause), [instance-world.md](../architecture/instance-world.md#pause)); with other players it refuses and answers `SetPause(false)`.
 
-## Chat channels (2026-10-14)
+## Chat channels
 - **C→S `0x014c` ChatJoinRequest**: `u8, u16 channel (0xffff = any), u8 kind (0 global, 1 trade), u8, u8`. Sent for global and trade chat after entering an area.
 - **S→C `0x014d` ChatJoined** (constructor `0x14215ccd0`, reader `0x14215cdb0`, handler `0x142124d4a`): `u8, u16 channel, u8 trade, u8`. Stores the channel in the session (trade +0x2738, global +0x2740) and ends the pending join.
 - **S→C `0x0018` ChatMessage** (class `0x14350ac78`, reader `0x142150c50` → `0x1421a7520`, writer `0x1421a7320`): `u8` (1), then the chat line: wstring sender (channel prefix + character name: `#` global, `$` trade; none for local), wstring text (an item link shows as `_`), wstring (empty in captures), 2 raw flag bytes (+0xa3, +0xa4; +0xa4 bit 3 adds `u16` length + bytes), `u8` +0xa1 (0..8: probably the sender's class), `u8` +0xa2 (always 5), `u64` +0x98, `u8` +0xa0, `u8` item count then per item `u32` + the item (`0x1421ece00`). All 55 official ones decode (`check_capture`).
 - **C→S `0x0016` ChatSend**: `u8` (1), wstring text (as typed, prefixes included), `u8` (0). From our own session (`!where`, `!help`).
 - Without it the chat box shows "Timeout while joining {global|trade} chat" (ClientStrings `ChatTimeoutMessage`, formatted by `0x1401b6940`). The server answers a join with the requested channel number (`[chat] default_channel` for "any") and remembers it for routing ([server-admin.md](../guides/server-admin.md#chat)).
 
-## Skill messages and their acknowledgements (WP2.1, 2026-10-20)
-Opcode notes only; layouts, sequences and timing are in [movement.md](movement.md), structs in `modules/protocol/poe-proto/src/skill.rs`, addresses in [../re/addresses.md](../re/addresses.md#skill-acknowledgements-buffs-sprint-wp21-2026-10-20).
+## Skill messages and their acknowledgements
+Opcode notes only; layouts, sequences and timing are in [movement.md](movement.md), structs in `modules/protocol/poe-proto/src/skill.rs`, addresses in [../re/addresses.md](../re/addresses.md#skill-acknowledgements-buffs-sprint).
 
 | C→S | S→C reply (Player component, `0x14171cdf0`) |
 |---|---|
@@ -141,7 +141,7 @@ Also: `0x1eb` BuffAdded / `0x1ec` BuffRemoved (the three sprint buffs), `0x1ca` 
 ## Splitting client messages
 Client messages have no length prefix. The instance server decodes the known messages one after another (`InstanceServer::handle_client_message`). Fixed-size messages that are not decoded yet are listed by name in `[client_body_sizes]` of `modules/protocol/opcodes/0.5.5e.hotfix1/instance.toml` and skipped. Anything else ends the batch, and the rest is logged.
 
-## Aim (cursor) and inventories (2026-10-14, from official captures)
+## Aim (cursor) and inventories
 - **C→S `0x0062` AimTarget**: `u8 local player, u8 mode`, then mode 2 `i32 x, i32 y` (the cursor's cell), mode 3 `u32` (an entity, probably hovered), modes 0/1 nothing. Sent while the cursor moves once the client reports aims (see [captures.md](../re/captures.md)).
 - **The client only sends AimTarget mode 2 while** it is in WASD input mode (`user_input_mode=wasd`; mode 1 is sent first), its window is in the foreground, and **the Player component is in combat stance** (`0x14016ba40`). Official servers set the stance with a `0x02f9` delta at entry (frame ~10: `mask 0x0400` stance 1 in the 2026-10-15/17 sessions; in the 2026-10-14 ones stance 1 at frame 10 and 0 at frame 11); the only change during play in the captures is the input-mode toggle (`0x200` + `0x62` mode 0/1, answered by a stance delta in the same batch, 2026-10-20; [movement.md](movement.md#input-mode-and-stance)). Our server sets it on the player's first movement or skill.
 - **S→C `0x02f9` ComponentDelta**: header (official: entity, `0xffffffff`, 0, 0), varuint length, then `u8` component index (template order, Player = 6) and the component's own delta (component vfunc +0xb0). Player delta (`0x141dd0b90`): `u16` raw little-endian mask; `0x0002` flag words (`u16` count, (`u8` key, `u64`) entries), `0x0400` combat stance `u8`, `0x1000` `u8` (+0x3e7); other bits in `entity::PlayerDelta`'s reader notes.
@@ -149,14 +149,14 @@ Client messages have no length prefix. The instance server decodes the known mes
 - **AddInventory**: the byte after width/height is a flags byte (official values in `modules/protocol/opcodes/0.5.5e.hotfix1/inventories.tsv`), then the item count. The server sends the official inventory set; the client needs all of it before it starts the world.
 - **Local player index** is 1 on official servers (LocalPlayers, PlayerEntity, AddInventory, and the client's own messages).
 
-## Why the player model was not drawn (resolved 2026-10-13)
+## Why the player model was not drawn
 **Cause:** InitialState's `frame_ms` (world +0x11c, see InitialState above) was 0, so every entity update ran with dt = 0: models stayed invisible while labels and lights showed. A server-sent waypoint behaved the same, so it was not player-specific. How it was found: the frame drain's dt for the game world was always 0 (DLL hook on `0x142130840`), dt comes from the frame queue values, and those are recorded from world +0x11c, which InitialState overwrote with 0. With `frame_ms = 33` the player, NPC models and the town render.
 
 Other symptoms that had the same cause:
 - With the same server, spawn cell and DLL, the first area entry of a client process showed grey with a black vertical bar; after a restart of the server (the client returns to login) and a re-entry, the town rendered. Delaying the spawn by 8 s did not help.
 - Opening the character panel turned a good view grey (camera re-target): the camera's player target was degenerate.
 - Right after the player is created the client runs six more area loads (`0x14167b3f0`), probably world-map scenes.
-- A different grey view with a black bar has another cause: the player standing on a non-walkable spot ([../re/terrain/README.md](../re/terrain/README.md#client-side-facts-offline-analysis-2026-10-13)).
+- A different grey view with a black bar has another cause: the player standing on a non-walkable spot ([../re/terrain/README.md](../re/terrain/README.md#client-side-facts)).
 
 State of the player entity in town (DLL `dump_object_types`, 5 s after spawn), kept for reference:
 - Awake: entity +0x8c = +0x8d = 0x0c (bit 2: in the wake/update set).
@@ -168,7 +168,7 @@ State of the player entity in town (DLL `dump_object_types`, 5 s after spawn), k
 - Not checked: what the AO's skinned mesh and its attachments (`DexFour.ao`: RangerBody/Boots/Gloves/Hair via `AttachedAnimatedObject`) need to load, and whether resources for server-created objects need a preload list (AreaInfo +0x70 is a `u16`-count `u32` vector; in PoE1 it was the preload list).
 
 ## Client messages after spawn
-About 0.8 s after the spawn the client sends `0x351` (twice), `0x357`, `0x17a`, `0xbc`, `0x2e8`, `0x14c`, `0x13d` and `0x221` (UI and settings; only `0x14c` is answered, see Chat channels). Seen once each elsewhere: `0x23d`. `0x1c` is the 10 Hz frame report ([above](#frame-reports-and-ping-replies-2026-10-14)); `0xbc` carries bytes.
+About 0.8 s after the spawn the client sends `0x351` (twice), `0x357`, `0x17a`, `0xbc`, `0x2e8`, `0x14c`, `0x13d` and `0x221` (UI and settings; only `0x14c` is answered, see Chat channels). Seen once each elsewhere: `0x23d`. `0x1c` is the 10 Hz frame report ([above](#frame-reports-and-ping-replies)); `0xbc` carries bytes.
 
 ## Client packet classes
 `scripts/re/packet_layout.py <opcode…>` lists serializer and deserializer write/read calls for classes whose constructor stores the opcode at +8. Mapping vtables to opcodes over all of `.rdata` gives 306 serializer-shaped vtables and 185 opcodes: `dumps/0.5.5e.hotfix1/ghidra/packet_classes.json` (local, git-ignored; opcode → vtables, both directions; slot 1 serialize, slot 2 deserialize). More RE scripts: [../re/README.md](../re/README.md).

@@ -118,7 +118,7 @@ Mods are folders `poe-hook-mods/<id>/` next to the exe (`mod.toml`, an optional 
 ## Signature table (`signatures/<version>.toml`)
 Since WP A2 (2026-10-21) the DLLs hold **no** game addresses and no game struct offsets in code. Every hook address, patch site and the struct offsets the DLL reads come from the signature table of the running build (`modules/client-hook/signatures/0.5.5e.hotfix1.toml`, `0.5.5e.hotfix1.toml`; `poe-hook-sig/src/embedded.rs` `TABLES` picks the one whose PE timestamp and image size match), resolved once when a DLL loads. The matcher is the crate `poe-hook-sig`; the process glue is `poe-hook-shared/src/sigs.rs` (the core uses it through `poe-hook-core/src/sigs.rs`: `gate`, `addr`, `off`).
 
-**Where it lives and why embedded.** The tables are compiled into both DLLs (`include_str!`), not read from disk: the table must match the code it was built with, a file next to the exe could be stale or edited to point a hook at the wrong bytes, and the launcher deploys the DLL and its table together anyway. The build is chosen by the image's PE timestamp and `SizeOfImage`; the ASCII build revision (`323943`, a string in `.rdata` next to `%S.poecap`, also printed in `Client.txt`) is a third check. Any difference makes the result **unverified** (logged; see below). The generator bootstraps a table for a new build: [../re/update-compatibility.md](../re/update-compatibility.md#what-wp-a2-did).
+**Where it lives and why embedded.** The tables are compiled into both DLLs (`include_str!`), not read from disk: the table must match the code it was built with, a file next to the exe could be stale or edited to point a hook at the wrong bytes, and the launcher deploys the DLL and its table together anyway. The build is chosen by the image's PE timestamp and `SizeOfImage`; the ASCII build revision (`323943`, a string in `.rdata` next to `%S.poecap`, also printed in `Client.txt`) is a third check. Any difference makes the result **unverified** (logged; see below). The generator bootstraps a table for a new build: [../re/update-compatibility.md](../re/update-compatibility.md).
 
 **Entries** (85 signatures, 51 fields in 0.5.5e Hotfix 1: 74 `function`, 3 `site`, 8 `ref`):
 
@@ -228,7 +228,7 @@ Commands: [../guides/setup.md](../guides/setup.md).
 ## Entity tracing (`dump_object_types`)
 Besides dumping the object-type table, this feature hooks `0x141e712a0` (entity initial-state reader). It logs each entity's components (vtable, reader, owner), then wraps each serialized component's reader to log the blob span it consumed. That is how [protocol/entities.md](../protocol/entities.md) was measured: send an all-zero blob, padded, and read the spans.
 
-### Player state probes (`dump_object_types`, 2026-10-13)
+### Player state probes
 Five seconds after the local player entity is created, the DLL logs:
 - entity flags +0x8c/+0x8d;
 - Positioned scales and positions;
@@ -255,10 +255,10 @@ Unset, the old locations apply (next to the exe; the session folder's `areas/`).
 
 `sub` is the sub-tile's index in its tile's own orientation, row-major. It comes from the tile record's +0 pointer, which points into the tile object's sub-tile array (0x38 bytes per entry); the lowest such pointer per tile object is the array start. From `sub` and the map position, the server recovers how the tile was rotated or mirrored (`instance-server::spawn::PlacedTile`).
 
-### Send tracing (2026-10-14)
+### Send tracing
 `dump_object_types` also logs, once per opcode, the caller of the game-session send (`0x14211fa00`, packet +8 = opcode). It logs the caller of the raw stream writer (`0x142197fb0`) the first time `00 1c` is written, plus the HNC cipher object (stream +0xd0). That is how the frame report and the HNC channel were found.
 
-### Input injection for tests (2026-10-14)
+### Input injection for tests
 `poe-hook.keys` lets a test press keys and move the mouse in the client without touching other windows (never while read-only). The game reads WASD through Raw Input, so the DLL hooks `GetRawInputData`, `GetKeyState`, `GetCursorPos` and, for tests, `GetForegroundWindow` (`POE_HOOK_FAKE_FOCUS`). The entries and environment variables: [../guides/setup.md](../guides/setup.md#poe-hookkeys-entries).
 
 ### Movement log
@@ -268,7 +268,7 @@ With `dump_object_types`, plus `movement_log = true` or the `POE_HOOK_MOVEMENT_L
 
 It is off by default because it writes about 30 lines a second while moving. See [protocol/movement.md](../protocol/movement.md).
 
-### Facing probes (2026-10-15)
+### Facing probes
 With the movement log on, the DLL logs the player's facing (Positioned +0x44c and the lock bit) when it changes, and every distinct call stack of SetOrientation (`0x141ddc820`) for the player.
 
 ## Side channel

@@ -273,7 +273,7 @@ ordering `0x1420c69e0`, node split `0x1420c6060`, and logical links. The split u
 (`0x142196b30`; 0 for every Riverbank type). The DLL traces tile keys (`tile_key`, with caller)
 and dumps these bytes with each graph edge.
 
-## Findings from the 50-seed batch (2026-10-22, terrain-b)
+## Rules from client comparison
 
 Each item was found by comparing the port with client exports or traces of failing batch jobs
 (`dumps/.../batch/fails1`, `b1`, `act1_traces`); code in `modules/server/crates/poe-world`.
@@ -350,7 +350,6 @@ Each item was found by comparing the port with client exports or traces of faili
   fits. The nodes the splits make join the tile list of the tile stage unless fixed, so these dead
   ends are pushed one cell off the map (`MapCrimsonShores`).
 
-## Wave 4 (agent C, 2026-10-23)
 
 Found with the client traces of `batch/b3` and the fails1 exports; code in `modules/server/crates/poe-world`
 (branch `terrain-c` of the wave-4 worktree). Effect on the 28,633 jobs of agent C's areas: 8,102 more matches in
@@ -361,10 +360,6 @@ the first measurement (after the hideout, settle, fill-group and virtual-node ch
   returns its lower bound, so a hideout's layout does not depend on the seed (the client's batch hash is the
   same for all 50 seeds). Towns (`IsTown`) are not disabled; `G1_town` uses the batch seed. Ported in
   `area.rs` (`rng.disabled`). 3,750 of the 4,100 hideout/town-class jobs match, their doodad hashes too.
-  Still failing: `Design` and `G_login` (unported master/room features), `G3_town`, `HideoutArenaIncursion`
-  (`FileGroups` subgraph), `HideoutLimestone` (four 3x3 fill tiles carry height 26 in the port, 0 in the
-  client; a trace is requested), `P1_3`, `P2_1`. "Some client hashes vary with quest state": not seen; the
-  doodad hash of every matching hideout and town equals the client's.
 - **Master paths starting with `Metadata/` are absolute** (`HideoutLight`'s `master.tsi` names its files in
   full).
 - **Room settle (`0x1420c93e0`, start of `0x1420c9af0`).** Before a room (or node tile) is placed its margin
@@ -391,7 +386,7 @@ the first measurement (after the hideout, settle, fill-group and virtual-node ch
   tile's far side, one past the vector; the port uses (0, 0) there (unchecked).
 - **Only `(any)` nodes take the quarter turn** (`0x1420c8920` tests the node orientation byte against 8):
   `(best)` (9) and fixed orientations run the side check `0x1420b8cf0` instead. `MapInferno` boss clearing.
-- Open: the quarter turn's bottom border test is `h + x == map width` in the client (a typo for
+- The client's quarter turn bottom border test is `h + x == map width` (a typo for `y == map height`; not copied, nothing needs it). Room-less nodes in the tile list also try rooms
   `y == map height`; not copied, nothing needed it yet). Room-less nodes in the tile list also try rooms
   of the empty type first (`G2_1` topology 4: `stromacliff_join*.arm` for a node whose edges are
   `desert_dune_stromatolite.et` and `desert_dune.et`; `MapSinterRift`): `node_tiles::choose` only has the
@@ -408,14 +403,10 @@ the first measurement (after the hideout, settle, fill-group and virtual-node ch
   spiral separates them. Dropping the port's overlap test gave `G2_1` another 313 jobs.
 - **Nodes made by the virtual-junction split are not in the tile list** (the list was built from the original
   nodes at the start of the tile stage). `G2_1` topology 4 and `MapSinterRift`.
-- Gate (agent C's failing jobs plus the 15,000 match sample, 41,464 jobs, b740423): 11,705 gained, 0 lost.
 - Tried and rejected: the levelling rounds of `fill_black` (`0x141fd7340`) with the lower middle
   (`min + (max-min)/2`) instead of the upper one: `HideoutLimestone` (50 jobs, four fill tiles at height 26
   instead of 0) would match, but 3,929 other matches break. The cause there is elsewhere.
-- Open for `MapCrimsonShores` topology 2 (400 jobs): "no edge tile to expand the outer buffer" with a key
-  whose exits are 1 and 7 (a slanted crossing); needs a client trace (requested: runtime/wave4/c/client-requests.txt).
 
-## Wave 5 (agent C, 2026-10-23)
 
 Branch `terrain5-c` (commit 6673170 in the Poe2Server worktree `runtime/wt/c`). Gate on 37,177 client layouts (agent C's wrong areas, the 15,000 match sample, the Expedition/G_login/Design/P2_1/G3_town jobs): 488 gained, 0 lost.
 
@@ -429,7 +420,6 @@ Branch `terrain5-c` (commit 6673170 in the Poe2Server worktree `runtime/wt/c`). 
 - **Sealed tiles (found, not ported)**: `0x141d05520` sets tile data `+0x16f` bit 0 when one of the tile's objects (`.tmd`, last quoted string of a line) has a type with an `AreaTransition` component or an `InteractionAction` whose `action_name` is `waypoint` (`0x141e71e60`); only 7+1 `.tmd` files name such types, so it cannot explain `MapSlash`/`MapSeepage`. Bit 1 is the `Spawner` one already ported.
 - **HideoutLimestone** (50): four 3x3 fill tiles at inner (2,20), (5,20), (8,20), (11,20) were already placed by the dungeon fill at height 0; the outer fill's levelling rounds (`0x141fd6170` loop with `0x141fd7340`, applied by `0x141d0b510`, which also rewrites the tile's lattice corner heights) lift them to 1 in the port, the client keeps 0. The lattice at stage `92ce0` is identical in both, so the corner heights seen by the rounds differ (check whether placing a tile in the fill pass writes its corners' heights to the lattice).
 
-### Wave 5 (agent C, continuation): league mechanic rooms, tile-list nodes, open items
 
 - **League mechanic rooms (the big one: 1,139 of the 1,142 failing jobs of MapCrimsonShores, MapBackwash, MapWoodland, MapAridPlains, MapWetlands, MapSinterRift, MapInferno, MapDeforestation, MapSlash, MapCaldera; the same mechanism sits in every map area, about 3 to 6 percent of the seeds).** The failing seeds were the ones where the roll of mechanic 9 in `phase_cad0` (`0x141ffcc50`) succeeds: that mechanic adds the `ExtraTerrainFeatures` row `StoneCircle` (room `Metadata/Terrain/Gallows/Leagues/StoneCircle/Tiles/StoneCircle_01.arm`, tiles `StoneCircle_01..03.tdt`, orientation list `[8]` = any) through `FUN_141fef300` (count 1; more than 1 only for a chance above 100, then `+0x18c` counts the rest, not ported).
   - **The roll columns were off by one**: the row struct offset of column `c` is `4c + 4`, so mechanic 9's chance `+0x64` is `WorldAreaLeagueChances` column 24 (4 or 6 percent on maps) and mechanic 0xb's `+0x68` is column 25 (0 on maps). `league.rs` read 25 and 26, so the number of draws was right (one `below(100)` either way) but a map's last draw always "succeeded" at chance 100 and a real hit (draw below 4) was missed. `league::Rolled` keeps the counts; `league::extra_rooms` turns a stone circle into the room and its tiles.
@@ -441,7 +431,6 @@ Branch `terrain5-c` (commit 6673170 in the Poe2Server worktree `runtime/wt/c`). 
 - **G3_town** (50 jobs): the lattice at `92ce0` already differs (the client has `black_inside_wall.gt` on the top row from x 37 where the port has no ground; 4,731 points), so the ground-only slots / room grounds of this `.dgr` differ before any fill.
 - **Design** (50 jobs, open): a trace of `Design 1160401208 1 0` is requested; node 6 (three edges, `I`) has no tile in the identity orientation for its geometric sides `[3, 0, 2]`.
 
-### Wave 5 (agent C, third run): league rooms in `.dgr` areas, Limestone
 
 - **Full gate of c6861a7** (`gate1-in.tsv`, 37,177 jobs): +1,235 gained, 0 lost vs `forced-baseline.tsv`; match-sample 15,000/15,000.
 - **Where the league features go in a `.dgr`** (generator object `+0x48` holds the feature rows, `+0x144` the budget = list size for a one-graph job (`0x141f8bce0`, share from master `+0x152` via `0x141ffd520`), `+0x148` cap). Master offsets: `+0x1f8` RoomSet, `+0x200` Overlays, `+0x218` FillTiles (not overlays), `+0x230` OuterGroundType. Two mechanisms, chosen by the room set:
@@ -450,14 +439,12 @@ Branch `terrain5-c` (commit 6673170 in the Poe2Server worktree `runtime/wt/c`). 
   - Measured on the 3,716 stone-circle jobs of the batch (`runtime/wave5/c/sc-all-in.tsv`, built with the `league_filter` example): 2,315 match (from 0), 0 lost. Remaining: MapCrypt 169 of 196, MapHeadland 127/139, MapSpiderWoods, MapHiddenGrotto, MapFrozenFalls (all fail), MapOrbalasCrossing, MapBurialBog, MapSwampTower, MapJadeCitadel (all fail), MapDerelictMansion (the "feature room ... would be placed as a room" error: container graph with side length = unit size case), MapEpitaph/MapMire/MapDeserted/MapCreek partial. Causes not examined: other mechanics (counts of mechanic 0 and 2 = Brequel/others), the multi-graph budget share, requests > 1, `0x1420aace0` priority rooms, hosting details (cell attribute bytes, `0x141d0c7b0`).
 - **HideoutLimestone** (client trace w5-c-2): the client never calls the levelling step `0x141fd7340` for it (hooks `round_corner` and function start silent) while the port lifts four 3x3 tiles; rounds off in the port (`repair` false) match all 4 tested jobs. Hideouts are the only other dungeons with these outer-fill passes and all match with rounds on, so the condition that turns the rounds off for Limestone is still unknown (conditions in `0x141fd6170`: job+8 flag, outer ground flags bit 0 clear, master `+0x161` clear; the cell list compares tile handles `cell+8 == local_400`, the outer ground's first fill tile from `0x141f93e40`).
 
-## Wave 6 (agent C, 2026-10-24)
 
 Branch `terrain6-c` (worktree `runtime/wt/c`). League stone-circle jobs (3,716 of the batch, `runtime/wave5/c/sc-all-in.tsv`): 1,401 failures before; the first fix alone gave +807 (0 lost).
 
 - **Exact-fit candidate list is sorted by placed-room index** (`0x1420cf350`, a lower-bound insert keyed by the room index; `0x1420a7f20` builds the list of rooms a mission/special room fits). The port kept discovery order, so the `below(count)` pick (`0x1420a8528`) took another entry than the client's (client `n=1` variants where the port had 2). `dungeon::place_special`. MapCrypt 169, MapHeadland 127, MapHiddenGrotto, MapEpitaph, MapMire, MapPit ... matched afterwards. Found by `area_trace` (first divergence at `0x1420a8542`).
 - **Mission rooms count as overlay "feature" rooms.** The overlay occupancy (`overlay.rs`, bits 4 and 8 over the room rectangle) must include a placed `mission` room (`special` true, `.arm` tag `mission`); only other `special` rooms stay out. MapCreek: the client never calls the candidate fit (`0x141fa19b0`) for positions overlapping `mission_02`, the port did (`ofit` lines, `runtime/wave6/c/ofitcmp.py` compares our `POE_DBG_OVERLAY` FIT lines with the trace). Measured on the leftover SC jobs of MapCreek, MapOutlands, MapArroyo, MapCliffside, MapSpiderWoods, MapBurialBog: 185 gained, 0 lost (`area.rs`, `RoomRect::feature`).
 - **The generator's feature list is shared by all graphs of a job** (SwampTower: five subgraphs placed the one stone circle five times). `0x141f8bce0` (called per graph from `0x141ff0770` / `0x141ff2dd0`, share = master `+0x152` read by `0x141ffd520`; no master sets it, so total 0 and the budget is the whole remaining list) hands each graph what is left; a placed or queued feature leaves the list (`0x141f8b4a0`). Ported as `Files::take_league` (called by `place_league_rooms`, `place_league_rooms_dgr`, and `extra_features` for each served request). The league tiles are added to a graph's master from the list as it stands before the layout (`area.rs`, `league` is read before `dungeon::layout`). MapSwampTower 12/12 sampled (0 of 46 before). Graph order: the port's order (container first, subgraphs in node order) worked for SwampTower; the client's job order is not checked.
-- **Open: DerelictMansion (59) and CopperCitadel (4)**: error "feature room StoneCircle ... would be placed as a room". The graphs' master has `RoomUnitSize 3` = the `.arm` side length, and the room set has no mission table, so `0x1420abd10` takes its `LAB_1420abe61` branch: the feature `.arm` goes through `0x1420a7f20` as a one-entry special room (mask 0 = any orientation, `local_60 = *mask`), then `0x141f8ae00` records its rectangle, budget -1 and the feature leaves the list. Plan: build a `DungeonRoom` from the feature `.arm` (like the closure in `dungeon::layout`; `DungeonRoom` needs `Clone`), call `place_special(files, &rooms_plus_feature, &[idx], ...)` in `extra_features` instead of the error, `take_league` on success. Tell agent B (dgr code).
 - **Hideout rounds (Limestone, 50 + Claimable 50)**: not solved. Findings: `0x141fd6170` runs the levelling rounds only when the generator byte `+8` (never written in any decompile searched: constructor zeroes it, `TerrainGen_Run`/`Layout`/`LoadArea` do not set it) is non-zero, the outer ground's `.gt` flag 1 is clear and master `+0x161` (= `OuterFillHeightOverride`, parser struct byte 0xd, value byte 0x1b -> `+0x153`) is clear. Limestone has none of these keys, its ground is the shared `black_inside_wall.gt`, and the client never calls `0x141fd7340` (hook works in other traces). Rounds off for every hideout (`!rng.disabled`) breaks 14 baseline jobs (Atziri, Doomguard, Darkwood, Yaochi, TencentApocalypse, OlrothArena, BlankCrypt); treating `OverrideMonsterSpawns` like `OverrideSpawns` (plain fill) fixes Limestone and Claimable but breaks 12 areas (BossRush_Area2, Kalguur, G4_10, MapMothersoul, ...). The 25 fill tiles of Limestone come from the dungeon fill (draws `below` `0x141f90227`/`0x141f90262`), the outer fill's own placements (`0x141fd9e95` ...) draw nothing. StoreyHeight (26 there) is not the cause (BossRush has 18 and needs rounds). Next: a client trace that logs generator `+8` (and the three conditions) at `0x141fd6170` entry for Limestone and Darkwood.
 - **Height passes** (2026-10-27, Design 50, Design_Lite 50, P2_1 39: all match). The `lattice` trace snapshots are taken at function entry (`borders` = before `0x1420b9650`, `flood` = before `0x1420c0be0`, `heights` = before `0x1420b99a0`). Port: `lattice::height_pass` after the border floods, `lattice::refix_fills` after the overlays' second phase, world units in `area.rs` (switches `POE_NO_HEIGHT_PASS`, `POE_NO_EDGE_FALLBACK`, `POE_NO_REFIX`, `POE_NO_TGR_STOREY`, `POE_TGR_NO_REPAIR`). Decompiles in `runtime/wave6/c/re/` (`c0a60.c`, `c06f0.c`, `c0d90.c`, `h_*.c`).
   - `0x1420c0be0`: (1) row by row, every tile origin not yet reached starts the fix-up flood `0x1420c0870` (a queue of tile origins). Per tile, `0x1420bfe20` collects the heights its reached corners imply (`0x1420c0720`: corner height minus the tile's own point height, `0x141d08690`), only at corners whose tile ground is missing or takes heights (`.gt` flag 1); an empty cell takes the reached corner heights of its four corners (`0x1420c0580`). None: the real edges (`.et` `+0x48` bit 7 clear) give the reached neighbour cell at the edge's exit (`exits / 3` along the side): its height minus the tile's point height plus the neighbour's at the shared corner. Still none: the four outer corners, any ground. Several: the lowest (`0x142b8def0` is a min-element). `0x1420bfc40` sets the tile (cells and corners, `0x141d0b510`), marks its corners and cells reached and sets the map's raised flag for a non-zero height; `0x1420c3cc0` queues the neighbours across corner pairs that take heights (left, right, below, above; an empty cell queues all four) and across real edges. (2) With the raised flag (view `+0x20`): the lowest tile height is subtracted from every corner (all get flag 2) and every tile. (3) `0x1420c0f10`: an unreached corner with exactly one reached neighbour corner takes its height, until nothing changes. (4) `0x1420c1080` (room heights) is not ported.
@@ -467,7 +454,7 @@ Branch `terrain6-c` (worktree `runtime/wt/c`). League stone-circle jobs (3,716 o
 - **Collision grid (`POE_GRID2`)**: not run.
 - **MapCaldera (2)**: the lattice at the `fill` snapshot differs in 229 corners in clusters (flag 2 and grounds), the first RNG divergence is the overlay candidate count (`0x141fa261c`); causes not found (`w5-c-2` traces). **Fixed 2026-10-28** (below).
 
-## R1 (2026-10-28): the last failures of both batches
+## The last failures of the batches
 Traces: run `r1-tr1` under `dumps/0.5.5e.hotfix1/terrain/batch/` (the 7 jobs, `POE_HOOK_GEN_TRACE=1`).
 `area_trace` now also compares the lattice at the `bdae0` (league rooms) and `be360` (shrines)
 checkpoints.

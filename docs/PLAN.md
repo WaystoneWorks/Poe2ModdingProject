@@ -83,7 +83,7 @@ Built before the R2 live test, because every later step needs it. The official-s
 **Generator inputs the batches hold fixed** (needed for "any seed" in real play):
 - Area level: G3_10's level 75+ path, the trial's rooms (UltimatumPlugin `0x141f101e0`).
 - League and session state: roll outcomes, Incursion and extra-feature rooms, `unique<N>` lettered tags.
-- Paths no tested job uses: listed in [terrain.md](status/terrain.md#not-ported-yet-collected-from-the-re-notes).
+- Paths no tested job uses: listed in [terrain.md](status/terrain.md#not-ported-yet).
 - The 39 combinations where the client errors on every seed; Sanctum_1-4, IncursionTemple(Present) and HideoutPietyArena have no comparable client result.
 - Whether official servers make the world-map seed non-zero (needs a traced official town load).
 

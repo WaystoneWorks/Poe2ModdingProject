@@ -270,19 +270,17 @@ It installs the package (checksum verified), sets it up in a temp launcher folde
 
 ## End-to-end test on a real machine
 
+Passed on Linux with v0.4.0 (2026-10-23): depot install, hook download, Host a server with an update, Play, web admin, restart. To repeat it:
+
 1. Start the server with the web API and an account (above, or the real config).
 2. Start the launcher in dev mode ([setup.md](setup.md#launcher-build-and-test)); set the DLL directory (Settings).
-3. Servers: add the server; Account: log in.
-4. Library, Game: enter your Steam account, answer the Steam Guard prompt, wait for "Done" and the verification table. Report any failed check; the warning on the executable checksum would mean the recorded value needs correcting.
-5. Start Steam (Linux), press Play. Expected: the client opens on the realm and logs in by itself.
+3. Servers: add the server.
+4. Library, Game: enter your Steam account, answer the Steam Guard prompt, wait for "Done" and the verification table. A warning on the executable checksum needs reporting.
+5. Start Steam (Linux), press Play. Expected: the game opens at its own login screen pointed at the selected server.
 
 ## Not done
 
-- The custom window frame, the version dropdown, the official mode, the Steam log-out, the minimize option and the desktop entry have been built and unit-tested; the frame and the app id were checked in a real KWin Wayland session (window class `org.poe2modding.launcher`, no server-side decoration), but resizing by dragging, the minimize/restore around a running game and the official Play have not been exercised by hand, and none of it has run on Windows.
-- The Play page, news, the server browser, logs, backups, pause/resume and the restart supervision are covered by unit and mock-server tests and were looked at in headless screenshots of the preview (mock backend); none has run in the real app against GitHub, a real server list, Steam or a real `poe-server` yet. The `Poe2ServerList` repository and the server's `motd` field do not exist yet.
-- Host a server: the real GitHub download and the one-click update have not run against a published `server-v*` release of Poe2Server and a real `poe-server` (the update logic is tested with shell-script servers and a mock GitHub API; a real server's restart and the Windows stop are not covered); the Windows paths (zip, `taskkill`, no console window) compile but have not run; the in-app page has not been clicked through on a desktop, its logic is covered by unit tests and the backend by the tests above.
-- The Windows launch path is written but untested (no Windows machine); `cargo check` runs in CI.
-- Verification reference values are unconfirmed (above); the Steam download and the Play launch have not been run by a real install yet.
-- Mod loader (DLL side); mod signatures and packaging beyond a zip.
-- Windows code signing (SmartScreen warning); macOS builds.
-- The self-update has been built and the AppImage signature verified against the embedded public key locally; the release workflow, the NSIS installer and an installed v0.1.0 updating to v0.1.1 are untested until the first real release (WP E3, needs the repositories public and the two signing secrets).
+- Windows: the launch path, installer, update, Host a server and restart are untested (no Windows machine); `cargo check` runs in CI.
+- Mod sync has not run against a real server with mods.
+- Unverified on a real desktop: window drag and resize, the icon, minimize on Play, Official play.
+- Mod signatures and packaging beyond a zip. Windows code signing (SmartScreen warning). macOS builds.

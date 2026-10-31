@@ -1,18 +1,18 @@
 # Update compatibility: what breaks when GGG ships a new client build
 
-Assessment for WP A1 of the old plan orchestration-2026-10b. Analysis only: no code changed. Measured on `GameFiles/PathOfExileSteam.exe` (client 0.5.5e Hotfix 1, 2026-10-21). The proposals feed WP A2 (signatures), A3 (`cargo xtask check-build`) and A4 (version plumbing).
+What breaks when a game build changes, measured on the 2026-10-21 exe; the signature table, `cargo xtask check-build` and the version files built from this analysis are in [client-dll.md](../architecture/client-dll.md) and [new-game-version.md](../guides/new-game-version.md). Rows 1, 2, 3, 4, 5, 9, 17 and 18 of the ranked table are implemented.
 
-**Status (2026-10-21): WP A2, A3 and A4 are done** (A3 and A4: [What WP A3 and A4 did](#what-wp-a3-and-a4-did)). **WP A2 is done** (S1 to S3 and the redaction fix; see [What WP A2 did](#what-wp-a2-did)). Rows 1, 2, 3, 4, 5, 9, 17 and 18 of the ranked table are implemented (marked **A2 done** below); rows 15 (partly), 6 to 8, 10 to 14 and 16 to 26 are still open. The sections below are the original assessment and are kept as written, except where a line says what A2 did.
+## Still open
+- The struct offsets listed as literal in client-dll.md (terrain cell grids, tile record internals, generator-trace object layouts, diagnostic reads, component indices 0 and 9).
+- Runtime sanity checks after resolution (position inside the terrain; the side-channel key against the server's first report); making a failed tile-hash check disable the export upload (row 15).
+- `symbols.tsv` per build (row 20), the opcode/layout drift report and everything else in sections 3 to 7 (A3/A4).
+- `cargo xtask sig-gen`: `scripts/re/sig_gen.py` is the generator for now; A3 can wrap it.
+- **The `client_hash` is the exe's sha256 (confirmed in game, 2026-10-21)**: local captures redact `0x0003`/`0x0005`, so the value was derived from the code; the login server then saw the same value on a real standalone login (0.5.5e Hotfix 1) and `hashes_confirmed = true` is set. The refusal (code 8 popup) and `allow_unknown_client` were checked in game too (guide, step 6).
+- Renumbered opcodes and client-to-server layouts are not derived from the exe; the factory is not found by the `Unable to deserialise packet` string (its address and switch numbers come from Ghidra and `find_switches.py`).
+- Row 11's "ids instead of rows" in config and code; row 14's format-version checks (`.tgr` and others); a pinned schema download; `symbols.tsv` per build; the DLL selecting its opcode tables by the resolved build (it still uses `poe_proto::opcodes::v0_5_5e`); a side-channel hello that carries the DLL's resolved build (option 1 of S5; only the login channel is protected).
+- `cargo xtask sig-gen` (the generator stays `scripts/re/sig_gen.py`).
 
-## Summary
-- **Today the DLL cannot tell which build it runs in.** It checks no version, no hash and no build number. Every address is a fixed Ghidra address of 0.5.5e. Only one feature (`crypto_bypass`) finds its target by a byte pattern.
-- **Hooks are installed without checking the target's bytes.** `hooks::install` only saves 16 bytes for the undo (`modules/client-hook/poe-hook-core/src/hooks.rs:45`). The research hooks (`dump_object_types`, `area_export`, packet capture, `crash_log`) are **on by default, also in official read-only mode** (`poe-hook-shared/src/config.rs:125-139`). A stale address crashes the client, also on an official observation session.
-- **The login patch check is weak.** It compares 3 bytes. In the 0.5.5e exe, 1,167 functions start with `40 55 53` and 6,590 start with `48 8b c4`. After an exe rebuild, another function may sit at the old address, and it would be overwritten with `xor eax,eax; ret`.
-- **The server never learns the client version.** `game.version` in `modules/server/config/server.toml` is a label. The opcode folder, the DLL's compiled-in tables and `dumps/0.5.5e` all name the version by hand, in separate places.
-- **The exe sha256 in the launcher file is correct.** `7157984534da1b146e9b0be342aa9fd24272915b6f478aadef9830fc7873f89f` matches `GameFiles/PathOfExileSteam.exe` (78,335,832 bytes). The five key-file sizes also match. It is still unconfirmed against a real depot download, and `exe_sha256_enforce = false`.
-- **Good news for signatures.** Prologue signatures with wildcards over the `rel32`/`disp32` fields and the stack-frame immediates are unique in `.text` for 44 of the 47 addresses I tried (details below). The build also carries a plain `323943` string in `.rdata` (the `Build Revision` that `Client.txt` prints), a cheap version fingerprint.
-
-## The first real update: 0.5.5e Hotfix 1 (2026-10-28)
+## The first real update: 0.5.5e Hotfix 1
 The Summary and the table below are the audit made before WP A2-A4 (on 0.5.5e). The first build GGG shipped after them was **0.5.5e Hotfix 1** ("Fixed a bug where minimap landscape geometry could fail to render correctly", client only, the servers were not restarted). What the tools found, as the record of how well the design held:
 - **Identity:** exe 78,336,856 bytes, sha256 `d46f4c27…a455d`, PE timestamp `0x6ae12470` (image size unchanged `0x4ca0000`), build revision `326410`. Steam manifests: content `4712263798014036045`, exe `4973272861086296374`.
 - **`check-build` with the 0.5.5e table:** every one of the 115 signatures and 64 struct offsets resolved uniquely (106 at moved addresses), all 16 features on, every server-to-client deserializer fingerprint unchanged, all game-data checks passed. Only the identity and the key-file sizes differed, and the revision pattern no longer matched (the `" 326410"` string now follows `%S.poecap` instead of preceding it).
@@ -60,46 +60,6 @@ Ratings are L (low), M (medium), H (high), written D/H/M. Detection: **easy** = 
 | 24 | Scripts with fixed addresses: `scripts/re/dump_factory.py` arguments (`d 35f 217305c 142173040`), `export_symbols.py` file names | L/H/L | The tool dumps wrong tables | easy | Find the factory by the string `Unable to deserialise packet` (S4)<br>**A3 partly done**: `dump_factory.py` takes an index table (`--bytes`) and `find_switches.py` prints its arguments; the factory is still found by hand. |
 | 25 | Win32 and Vulkan hooks (ws2_32 `connect`, `GetRawInputData`, Vulkan loader), `version.dll` proxy exports | L/L/L | None expected | easy | None |
 | 26 | `poe-hook-deploy` constants: `PathOfExileSteam.exe`, `gateway_list.txt`, app id `2694490` (`lib.rs:39-51`) | L/L/L | Deploy fails or copies to the wrong file | easy | Take from `modules/protocol/versions/<ver>.toml` |
-
-## What WP A2 did
-Implemented 2026-10-21 in `modules/client-hook` (crate `poe-hook-sig`, `signatures/0.5.5e.hotfix1.toml`, the DLL changes) and `scripts/re/sig_gen.py`. Behaviour and format: [../architecture/client-dll.md](../architecture/client-dll.md#signature-table-signaturesversiontoml).
-
-**Done**
-- S1: the matcher and resolver (`poe-hook-sig`: pattern parser with wildcards and captures, PE reader, one-pass scanner, resolver, per-feature status), 85 signatures: 74 `function` entries (unique prefix in the code sections, 24+ bytes with the stack frame, calls and RIP displacements wildcarded; `pdata = true` on 72 of them, not on the two leaf stubs), 3 `site` entries (`packet_flush_plaintext`, `doodad_hash_site`, `room_candidates`; pattern inside the anchor function, instruction boundary checked by a linear decode with `iced-x86`), 8 `ref` entries (the platform cache globals, the terrain vtable, the window pointer, and the three clone-like functions found through a unique caller: `object_type_lookup` via the frame processor `0x1421343c0`, `entity_get_render`, `terrain_sample` and `render_refresh` via `0x140237120`). Every entry resolves to exactly its 0.5.5e address on `GameFiles/PathOfExileSteam.exe` in about 0.2 s.
-- S2/S3: 51 `[[field]]` entries read the displacement from an instruction operand inside an anchor function (`positioned.grid_x/y`, `facing` ... from the Positioned reader; the component loop of `Entity_ReadInitialState` gives six entity/component offsets in one pattern; the stream and session offsets from the stream functions; the crypto key buffer; ...), with `min`/`max`/`align` and `agrees_with` between the reader's and `SetOrientation`'s facing. The platform cache addresses come from instructions of the cached getter.
-- Build selection by PE timestamp + `SizeOfImage` + the revision string (`<rev:bytes6>` capture), unknown build reported as unverified; official mode on an unverified build starts only the observers.
-- Every hook installation first resolves all of its feature's addresses; the research hooks that are on by default (`dump_object_types`, `area_export`, packets) fail closed; the 5-second entity probe (direct calls into the game) has its own feature; the login patch resolves before it patches, checks the `expect` bytes twice and survives a missing cache signature.
-- Redaction: `Credentials` (`0x0003`) is redacted by name, and every login-channel message is redacted when the build is not the table's (`poe-hook-shared/src/redact.rs`, unit-tested).
-- Tests: unit tests for the pattern parser, PE reader, scanner, table validation and resolver (including mutation: a changed byte makes the entry `Missing` and only its features go off; ambiguity; wrong `expect`; a site inside an instruction; field limits and disagreement; unverified build); `tests/real_exe.rs` resolves the embedded table against the real exe (all addresses and offsets equal the `ghidra`/`value` keys) and mutates it; `examples/resolve.rs` does it from the command line (also on a mutated copy of the exe).
-
-**Differences from the proposal in section 9**
-- The kind `data` is called `ref` (the address a RIP-relative operand refers to; also used for call targets). A `site` is found by a pattern inside its anchor function (or by `anchor_offset`), not only by a fixed offset.
-- A `[[field]]` has its own pattern and anchor; the capture is named in `capture` (no `sig` reference).
-- `string_xref` and `caller_of` were not needed: the three clone-like functions are `ref` entries in a unique caller. A string anchor remains the fallback if a rebuild breaks them.
-- No `required` flag: any entry that lists a feature disables it when it fails; entries without `features` are anchors only.
-- The table is embedded (not loaded from disk): see client-dll.md.
-- The `(pe_timestamp, image_size)` check selects the table; the revision string is the third check. An unknown build still tries the newest table.
-
-**Not done (still open)**
-- The struct offsets listed as literal in client-dll.md (terrain cell grids, tile record internals, generator-trace object layouts, diagnostic reads, component indices 0 and 9).
-- Runtime sanity checks after resolution (position inside the terrain; the side-channel key against the server's first report); making a failed tile-hash check disable the export upload (row 15).
-- `symbols.tsv` per build (row 20), the opcode/layout drift report and everything else in sections 3 to 7 (A3/A4).
-- `cargo xtask sig-gen`: `scripts/re/sig_gen.py` is the generator for now; A3 can wrap it.
-
-## What WP A3 and A4 did
-Implemented 2026-10-21: `cargo xtask check-build` (`xtask/src/check_build.rs`, `fingerprint.rs`), `modules/protocol/versions/<version>.toml` and its consumers, the server's client check, [../guides/new-game-version.md](../guides/new-game-version.md) (the procedure; read it for behaviour and commands).
-
-**Done**
-- S4 `check-build <exe> [--bundles <dir>] [--version v] [--report f]`: identity (sha256, size, PE timestamp and image size, the revision string, the signature table's `[build]` against the version file, the launcher copy), every signature and struct offset (found with its new address and delta, missing, ambiguous, failed), per-feature status split into required and research (`[client_hook] required_features`), HNC `key_xor` by value, the strings the tools need, every table and column the server reads (`poe_data::used`) with the row width, the dat-schema pin, row counts and the row anchors, the config's sprint buff rows, key-file sizes, and the build of the terrain vectors. Report `dumps/<version>/check-build.md`; exit 0/1/2. Tests: the real exe passes, and a copy with one byte of a required function changed fails with exit 2 (skipped without `GameFiles/`).
-- **Opcode drift by deserializer fingerprint** (not the full factory derivation): `opcodes/<version>/deserializers.tsv` (135 server-to-client opcodes of the login factory and the two instance factories; generated by `check-build --write-fingerprints` from the factory dumps). Every `.pdata` function of the new exe is fingerprinted (instruction decode with iced-x86; call/jump targets, RIP and stack displacements, frame sizes and image addresses wildcarded; about 1 s) and each baseline entry is looked up. A changed deserializer of a named opcode is a FAIL.
-- S5: `modules/protocol/versions/<version>.toml` (one place: depots and manifests, `[exe]` sha256/size/PE fingerprint, key files, `[protocol] opcodes`, `[client_hook] signatures`, `[client]` hashes and strings, `[data]` pin, anchors and row counts). Read by xtask (`dumps/<version>`, `check-build`, the terrain matrix), the server (`Config::load`: `[game] version` selects the file, an unknown version stops the start-up and names the known ones; `{version}` in path settings; `protocol_dir` default) and the launcher (a byte-identical copy `modules/launcher/versions/<version>.toml`, written and checked by `cargo xtask versions`; its `build.rs` embeds every file, so the `EMBEDDED` list and its hand-written version are gone). The Python tools use `scripts/re/version.py`; `poe_proto::opcodes::EMBEDDED` lists the compiled-in tables by version.
-- The server refuses an unknown client: the login server judges the `client_hash` of `0x0003` and `0x0005` (a SHA-256 of the exe, read off `LoginClientHash_Get32`/`Sha256_Bytes32`) against `[client] hashes`; an unknown one gets code 8 (`InvalidProtocolVersion`, the client's "you need to update" popup) and a notice. `[security] allow_unknown_client` (default `false`) lets it in.
-
-**Not done (still open)**
-- **The `client_hash` is the exe's sha256 (confirmed in game, 2026-10-21)**: local captures redact `0x0003`/`0x0005`, so the value was derived from the code; the login server then saw the same value on a real standalone login (0.5.5e Hotfix 1) and `hashes_confirmed = true` is set. The refusal (code 8 popup) and `allow_unknown_client` were checked in game too (guide, step 6).
-- Renumbered opcodes and client-to-server layouts are not derived from the exe; the factory is not found by the `Unable to deserialise packet` string (its address and switch numbers come from Ghidra and `find_switches.py`).
-- Row 11's "ids instead of rows" in config and code; row 14's format-version checks (`.tgr` and others); a pinned schema download; `symbols.tsv` per build; the DLL selecting its opcode tables by the resolved build (it still uses `poe_proto::opcodes::v0_5_5e`); a side-channel hello that carries the DLL's resolved build (option 1 of S5; only the login channel is protected).
-- `cargo xtask sig-gen` (the generator stays `scripts/re/sig_gen.py`).
 
 ## 1. Fixed Ghidra addresses
 
@@ -156,9 +116,6 @@ Cautions the table hides:
 - **Short patterns are lucky.** `SET_ORIENTATION` is unique at 12 bytes (`40 53 48 81 ec 60 01 00 00 0f 28 c1`) and `FRAME_DRAIN` at 11 bytes. They hold only if the stack frame stays the same. Require at least 24 bytes, or include body instructions.
 - **Mid-function sites** (`0x142198187`, `0x141f8eec5`, `0x141ff37c3`) are unique at 11 to 21 bytes because I started the pattern at the site itself. That is accidental. Anchor them to the enclosing function's signature plus an offset, and check the expected bytes at the site (for example `48 8b 93 60 02 00 00 48 8b bb 58 02 00 00` for the flush site).
 - **String anchors survive a rebuild better than prologues.** Good ones: `"General Rhoa Failure #3"` (verify-and-derive), `"HNC Protocol Violated"`, `"Generating level"`, `"Tile hash"`, `"Doodad hash"`, `"Unable to deserialise packet"` (message reader and factory), `"Connecting to instance server at {}:{} "`. A `string_xref` signature kind (find the string in `.rdata`, find the `lea` that references it, take the function start from `.pdata`) should be the fallback when a prologue is ambiguous.
-
-### 1.4 Order of work for A2
-The login patch, the side channel and the crypto bypass act on our own sessions. Packet capture, entity and terrain research also run on official sessions, where a bad hook costs the observation. Suggested order: login patch pair, crypto, side channel, then packet capture, then the entity and terrain research hooks.
 
 ## 2. Struct offsets
 
@@ -282,159 +239,6 @@ Verified values (2026-10-21):
 - `login_patch.rs` falls back to a log line on mismatch. The patcher skip logs "would contact GGG patch servers" (`:64-80`); in private mode the guard still refuses external connects.
 - `poe-hook-deploy/src/lib.rs:39-51`: `version.dll`, `steam_appid.txt` (`2694490`), `gateway_list.txt`, `PathOfExileSteam.exe`. The Steam app id and exe name rarely change.
 - `config.json` keys (`GGG_*`, `STEAM_APP_ID`, ...) from `0x141018370` are used by `docs/guides/setup.md` for the credentials file name (`login_token.rs:14`).
-
-## 9. Proposal: the signature table (`modules/client-hook/signatures/<version>.toml`)
-
-Goal: one file per build, embedded in the DLL, used by the DLL and by `check-build`.
-
-```toml
-# modules/client-hook/signatures/0.5.5e.hotfix1.toml
-[build]
-version        = "0.5.5e.hotfix1"
-build_revision = "323943"                 # string in .rdata, also in Client.txt
-pe_timestamp   = 0x6ac302e0               # IMAGE_FILE_HEADER.TimeDateStamp
-image_size     = 0x04ca0000               # SizeOfImage
-exe_sha256     = "7157984534da1b146e9b0be342aa9fd24272915b6f478aadef9830fc7873f89f"   # used by check-build only
-
-# kind "function": the resolved address is the function start (+ offset).
-[[sig]]
-name     = "client_platform_detect"
-features = ["login_patch"]               # which feature needs it
-required = true                          # missing => that feature is disabled, others continue
-kind     = "function"
-pattern  = "40 55 53 56 57 41 56 48 8d ac 24 ?? ?? ?? ?? 48 81 ec ?? ?? ?? ?? 48 8d 4c 24 ??"
-offset   = 0                             # bytes from the match start to the address
-ghidra   = 0x142197010                   # the table build's address (docs, symbols, sanity check)
-expect   = "40 55 53"                    # bytes at the resolved address; required for any patch
-patch    = "31 c0 c3"                    # optional: written only after expect matched
-
-# kind "site": inside a function. Anchored to another signature.
-[[sig]]
-name     = "packet_flush_plaintext"
-features = ["packets"]
-kind     = "site"
-anchor   = "stream_flush"                # a function signature
-anchor_offset = 0x...                    # from the function start to the site
-expect   = "48 8b 93 60 02 00 00 48 8b bb 58 02 00 00"
-boundary = true                          # the loader decodes from the anchor and requires an instruction boundary
-
-# kind "data": resolve a global through a RIP-relative operand.
-[[sig]]
-name     = "platform_cache_guard"
-kind     = "data"
-anchor   = "client_platform_get"         # cached getter, 0x140109b20
-pattern  = "80 3d <guard:rip4+1> 00 75 ??"   # absolute address of the operand's target
-```
-
-**Pattern syntax:** `xx` = byte, `??` = any byte, `<name:N>` = capture N bytes as a little-endian integer, `<name:rip4+K>` = a RIP-relative 4-byte displacement; the resolved value is the absolute address (end of the instruction = after the 4 bytes plus `K` more bytes, usually 0 for `call`, `jmp` and `lea`).
-
-**Other kinds:**
-- `string_xref`: `string = "General Rhoa Failure #3"`, `utf16 = false`, `xref = 1`. Find the string in `.rdata`, find the `lea reg,[rip+rel32]` that targets it, take the enclosing function from `.pdata` (the DLL already parses `.pdata`, `symbols.rs`).
-- `caller_of`: find the unique function that calls the unique function `anchor` at the `n`-th call, for the template-clone lookups (`0x141693840`, `0x140150cb0`).
-
-**Fields that give offsets** (from section 2):
-
-```toml
-[[field]]
-name   = "positioned.facing"
-sig    = "positioned_set_orientation"
-capture = "facing"        # the <facing:4> capture in that signature's pattern
-min    = 0x100
-max    = 0x2000
-align  = 4
-check  = "positioned.facing_lock"   # optional second field that must agree with the first
-```
-
-Example pattern for `positioned_set_orientation` (tested, unique in 0.5.5e): `f6 81 <lock:4> 02 0f 85 ?? ?? ?? ?? e8 ?? ?? ?? ?? 84 c0 0f 84 ?? ?? ?? ?? c7 81 <facing:4> 00 00 00 00`. The capture `lock` gives `+0x1e5` (the `00 00` high bytes are part of the displacement), the capture `facing` gives `+0x44c`.
-
-**Resolution rules (A2):**
-1. Select the table by `(pe_timestamp, image_size)` read from the PE header (cheap, available in `DllMain`; a SHA-256 of 78 MB costs time, so only `check-build` does that), then confirm with `build_revision`. Unknown build: use the newest table as a candidate, but flag every result as "unverified" (and see rule 6).
-2. Scan `.text` only, one pass for all patterns (the existing `Module::scan` runs a naive `windows()` over the whole `SizeOfImage`, `module.rs:49-61`; fine for one pattern, slow for 50).
-3. A signature must give **exactly one** match. Zero or several: the feature that needs it is disabled and logged with the signature name and the count. Other features continue.
-4. If `ghidra` is set and the match is at another address, log it as a note (the exe was rebuilt but the signature held).
-5. A patch is written only when the resolved address holds the `expect` bytes. If it already holds `patch`, do nothing. The existing read-only rules stay: never in official mode.
-6. Unknown build in official mode: install only features that read memory with guarded reads (`packets` without the field tracer, `crash_log`). Do not install `dump_object_types` or `area_export` until their signatures resolved uniquely.
-7. Log one line per feature at start: `feature X: on (3 signatures)` or `feature X: OFF (sig Y matched 0 times)`. Show the same list on the overlay Status page.
-8. Struct-offset captures are checked against `min/max/align` and any `check` partner; a failed check disables the dependent feature (position sync especially).
-
-**Which addresses get a signature:** all 47 I tested except three need an anchor (section 1.3). In priority: login patch pair, crypto, side channel, packets (3 + 2 stream functions), `Entity_ReadInitialState`, `Positioned` reader, `SetOrientation`, area load pair, frame drain, terrain driver and its two mid-function sites, then the research trace set (generator trace is off by default and can stay "best effort").
-
-**A generator for signatures:** the algorithm I used (decode instruction by instruction with capstone, wildcard `rel32`, RIP-relative `disp32`, image-address immediates and stack-frame immediates, grow until unique in `.text`) is about 60 lines of Python. A3 should ship it as `cargo xtask sig-gen <exe> <addr>…` or a `scripts/re/` tool, so a new table can be bootstrapped from a Ghidra export of the old one (`symbols.tsv`).
-
-## 10. Proposal: `modules/protocol/versions/<ver>.toml` as the single source
-
-Today the version appears in about 15 places (section 5). Proposed: one file per supported build.
-
-```toml
-# modules/protocol/versions/0.5.5e.toml
-version        = "0.5.5e.hotfix1"
-build_revision = "323943"
-status         = "supported"            # supported | experimental | legacy
-app_id         = 2694490
-
-[exe]
-name        = "PathOfExileSteam.exe"
-sha256      = "7157984534da1b146e9b0be342aa9fd24272915b6f478aadef9830fc7873f89f"
-size        = 78335832
-pe_timestamp = 0x6ac302e0
-image_size   = 0x04ca0000
-sha256_enforce = true                   # after a real depot install has matched
-
-[[depots]]
-id = 2694491
-manifest = "7366357142270402355"
-role = "content"
-[[depots]]
-id = 2694492
-manifest = "246779027001700092"
-role = "windows exe"
-
-[verify]                                 # as today: min_files, min_bytes, [[verify.files]]
-
-[protocol]
-opcodes = "opcodes/0.5.5e.hotfix1"               # relative to the protocol repo
-
-[client_hook]
-signatures = "signatures/0.5.5e.hotfix1.toml"
-symbols    = "symbols/0.5.5e.tsv"
-
-[data]
-schema_release = "<dat-schema tag or sha256>"
-schema_sha256  = "..."
-dumps          = "dumps/0.5.5e"
-```
-
-Placement: the version file is needed by the server, xtask, the launcher and (through its embedded copy of the protocol repo) the DLL. Poe2Protocol is the repo all of them already depend on (`opcodes/<ver>/` lives there, and the DLL and the launcher embed it). Put the canonical files in `modules/protocol/versions/<ver>.toml` and let the launcher embed them (it already `include_str!`s its own copy, `version.rs:7`). The signature table stays in Poe2ClientHook as the plan says, referenced by name. The alternative (repo root) works for the server and xtask but the launcher and the DLL cannot read it at build time.
-
-Consumers:
-- **Server:** `[game] version` is looked up in `modules/protocol/versions/`; startup fails for an unknown version, loads `opcodes` from the file instead of `protocol_dir`. The `Protocol::load` check for duplicates stays.
-- **xtask:** `dump_dir`, deploy paths and `check-build` read the file.
-- **Launcher:** the `EMBEDDED` list is generated from the folder; Play compares the installed exe (cached sha from the install, or at least size and PE timestamp) with the file and refuses to deploy the hook on a mismatch unless the user overrides.
-- **DLL:** the signature table and opcode tables are embedded by build; the table is selected by `pe_timestamp` and `image_size`.
-- **`status`:** `experimental` means "signatures resolve but layouts are unchecked". `legacy` means "kept for old captures only".
-
-**Letting the server know the client's version.** The client sends no version string. Two options for A4:
-1. The DLL knows the build (header fields and `build_revision`). Private mode needs the DLL anyway. Have the DLL say so in the side-channel hello, and make the server drop a session from an unsupported build with a clear log line. The side channel starts after login, so this protects the instance part only.
-2. Check whether `client_hash` (32 bytes in `0x0003`/`0x0005`, `LoginClientHash_Get32` `0x1420e7700`, global `0x1445d5f90`) is stable per build. It is filled asynchronously, which suggests a hash of the executable or a build signature. If it is, the login server can map it to a version before any message is answered. This was verified for 0.5.5e on 2026-10-21 (see the A4 note above: the value is the exe's SHA-256); the next build still has to be checked the same way.
-
-## 11. Proposed `cargo xtask check-build` report (A3 input)
-Each block reports found / ambiguous / missing (or OK / drift / fail):
-
-| Block | Checks | Source |
-|---|---|---|
-| Identity | sha256, size, PE timestamp, image size, `build_revision` string vs the version file | exe |
-| Signatures | every `[[sig]]`, match count, new address, delta from `ghidra` | exe |
-| Captures | every `[[field]]`, value, agreement of partners | exe |
-| Patch sites | `expect` bytes at each patch address | exe |
-| Opcodes | factory dump, deserializer fingerprints, renumbered or missing opcodes | exe |
-| HNC table | `key_xor` found by value, swaps from `0x1421c52f0` | exe |
-| Strings | `--success-event`, `--disable-client-switching`, `gateway_list.txt`, `Bundles2/gateway_list.txt`, `LatestClient.txt` | exe |
-| Data | each used table and column, row width, row-count sanity, the anchors in section 4, the sprint buff ids | `Bundles2` |
-| Formats | `.tgr` / `.dgr` / `.tdt` / `.ot` versions seen in the bundles against the versions the parsers accept | `Bundles2` |
-| Vectors | `build` column of `terrain-vectors.tsv`, vector count for this build | dumps |
-| Launcher | exe sha vs `modules/protocol/versions/*.toml`, depot manifests listed | files |
-
-Exit code: 0 all fine, 1 warnings (a research signature missing), 2 a required feature missing.
 
 ## Surprises
 - The packet capture's redaction list used to be by name only and did not contain `Credentials` (`0x0003`); `poe-hook-shared/src/redact.rs` now redacts `Credentials` too and has a fail-safe for unknown builds (every outgoing login-channel body is redacted when the opcode table is not the known one). The weakness remains in principle: redaction depends on the opcode table, so check a capture after a game update. Captures in `dumps/` are never committed (WP D1 found none in any repo).

@@ -23,7 +23,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 - `VERSION.dll`: `GetFileVersionInfoW`, `GetFileVersionInfoSizeW`, `VerQueryValueW`. These are proxied by poe-hook.
 - `WS2_32.dll`: sockets. `bcrypt.dll` and `CRYPT32.dll` are present. The crypto strings in the binary (CALG_*, TLS_*, RSA) belong to bundled curl/OpenSSL for HTTPS. The game protocol cipher has no string anchors.
 
-## Entities and rendering (2026-10-13)
+## Entities and rendering
 | Address | What |
 |---|---|
 | `0x142130440` | game world update in frame mode: plays queued frames in real time, dt = frame ms / 1000 |
@@ -41,7 +41,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 | `0x1426f2460` | GEAL script interpreter loop |
 | `0x140286850` | `Data/Balance/Hideouts.dat` table getter |
 
-## Session, chat, pause (2026-10-14)
+## Session, chat, pause
 | Address | What |
 |---|---|
 | `0x14211f6c0` | logout routine ("FourLogOut"): 0 / 2 = exit to login / game, 1 = exit to character selection (sends `0x173`) |
@@ -57,7 +57,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 | `0x1421c52f0` | HNC bit queue: key material XOR table `0x142f10980` + swaps, Salsa20 pair |
 | `0x1421c55a0` | HNC incoming byte parser ("HNC Protocol Violated") |
 
-## Movement and skills (2026-10-14)
+## Movement and skills
 | Address | What |
 |---|---|
 | `0x14211fa00` | game-session send (`packet->vtable[1](packet, stream)`); senders build the packet on the stack (opcode at +8) |
@@ -85,7 +85,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 | `0x141939fc0` | `[NETWORKING] networking_type` option reader |
 | `0x142120cf0` | game session update: frame reports, auto network-mode switch, world update |
 
-## Roll, sprint and steering (2026-10-14)
+## Roll, sprint and steering
 | Address | What |
 |---|---|
 | `0x141b76da0` | end of a dodge roll: decides whether it carries on as a sprint |
@@ -95,7 +95,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 | Actor +0x238 / +0x240 | current action (roll) / Move action slot (WASD walk); action type at action +0x120 |
 | Actor +0x2a2 bit 5 | sprint key held (set by S→C `0x2e7`) |
 
-## Character creation (2026-10-14)
+## Character creation
 | Address | What |
 |---|---|
 | `0x14214fbe0` | login incoming-packet factory (opcode → class); `0x13` CharacterCreated class `0x143509e98`, deserializer `0x14214ebf0` |
@@ -109,7 +109,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 | `0x140ed4e50` | create screen key handler (Space skips the creation scene) |
 | `0x140e7ca80` | league banners at character creation (entries with +0xe0 bit 7, not variants; variants matched by +0x80) |
 
-## Frame playback, snapping and leaving the game (2026-10-14)
+## Frame playback, snapping and leaving the game
 | Address | What |
 |---|---|
 | `0x142130440` | lockstep frame playback: speed factor world +0x670 (1.01× with 1 spare frame, 1.5× with 2–29, 2× with 30–59, 5× with ≥60, back to 1.0 when drained) |
@@ -120,7 +120,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 | `0x14211fc50` | sends `0x355` ExitReport (once per session) |
 | `0x141f47b30` | `0x355` serializer: `u8, u16 len, bytes` |
 
-## Facing (2026-10-15)
+## Facing
 | Address | What |
 |---|---|
 | `0x141ddc820` | Positioned::SetOrientation(angle): writes +0x44c (radians, `atan2(dy, dx) + π/2`) unless locked (+0x1e5 bit 1) |
@@ -134,7 +134,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 | `0x14210fd30` | skill target update sender: `0x1a8` (lockstep, relative), `0x1a9` (absolute), `0x1aa` (entity) |
 | `0x14210efe0` | chat sender (`0x16`, wstring; "@whisper") |
 
-## Streams and packet capture (2026-10-14, debug DLL)
+## Streams and packet capture
 | Address | What | Notes |
 |---|---|---|
 | `0x1421c5b90` | message reader `(registry, stream)` | reads the opcode, lets the registered handlers deserialize, advances the receive ring (+0x268) by the message size; low byte of the result 1 = a whole message was read |
@@ -149,7 +149,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 | `0x1421820a0` | Stats component message handler | `0x1d3` StatsUpdate: set 0 → container at component `+0x1c8`, other sets in the list `+0x1e8..+0x1f0` (container `+0xd8` = set id); `0x1d4` removes a set |
 | `0x1426acb60` | stat container set `(container, key, value)` | sorted `(i32 key, i32 value)` array at `+0xf8..+0x100` |
 
-## Login hand-off, chat, AreaInfo stats, terrain passes (2026-10-16/17)
+## Login hand-off, chat, AreaInfo stats, terrain passes
 | Address | Function | Notes |
 |---|---|---|
 | `0x1420e82b0` | `ClientLoginSession_ProcessPacket` (named in Ghidra) | login message switch (opcode − 2); case `0x14` InstanceDetails (+0x84 byte kept), case `0x17` → `0x1420e72c0` |
@@ -162,7 +162,7 @@ Ghidra project: `GhidraProject/Poe2ModdingProject`, program `/PathOfExileSteam.e
 | `0x141ff7b90` / `0x141ff0770` | per-graph outer fill + buffer / subgraph generation | subgraphs run the whole pipeline in a window (`0x141f9e2b0`) of the main map |
 | `0x141fd6170` / `0x141fd7340` | outer fill with height repair / one levelling round | see [terrain/dungeon.md](terrain/dungeon.md) |
 
-## Skill acknowledgements, buffs, sprint (WP2.1, 2026-10-20)
+## Skill acknowledgements, buffs, sprint
 Names below were set in Ghidra on 2026-10-20.
 Layouts and sequences: [../protocol/movement.md](../protocol/movement.md). Structs: `modules/protocol/poe-proto/src/skill.rs`.
 
@@ -190,7 +190,7 @@ Layouts and sequences: [../protocol/movement.md](../protocol/movement.md). Struc
 | `0x14214a2be` | | Actor case `0x1ca` (header only): decrements `Actor +0x348`; in predictive mode also restarts the action; seen with every roll start and sprint end by an attack |
 | `0x141b76da0` | | end of a roll: whether it becomes a sprint (already listed above); official servers decide server-side: `is_sprinting` is set 15 frames into a held roll |
 
-## Walk speed factor, roll heading, sprint end (WP C1, 2026-10-21)
+## Walk speed factor, roll heading, sprint end
 Names set in Ghidra on 2026-10-21. Findings and evidence: [../protocol/movement.md](../protocol/movement.md#coasting-after-a-sprint).
 
 | Address | Ghidra name | What |
@@ -208,7 +208,7 @@ Names set in Ghidra on 2026-10-21. Findings and evidence: [../protocol/movement.
 | `0x141e4db60`, `0x1416e20f0` | | sprint animation transition: `sprint_blend_time_override_ms` (`0x5735`) / 1000 as the blend time (-1 = default), `virtual_sprint_timeline_variation` (`0x6996`) |
 | client log `action start/end slot N: <Action>` (`poe-hook.log`, `poe_hook_core::actions`) | | slot 0 = the performing action (DodgeRoll, Melee), slot 1 = Move; the end of the Move at a sprint's end and its restart by a `0x64` are read from it |
 
-## Client platform and standalone login (2026-10-20)
+## Client platform and standalone login
 Details and the patch: [standalone-login.md](standalone-login.md).
 
 | Address | Name | What |
@@ -243,8 +243,8 @@ Details and the patch: [standalone-login.md](standalone-login.md).
 | `0x14010ac40` / `0x14010aca0` | | config singleton / its default builder (patch servers `us.patch.pathofexile2.com` `0x142f76fd0`, `patch.pathofexile2.tw`, `patch2/3.pathofexile2.tw`, `kr-patch.pathofexile2.com`) |
 | `0x141050c30` | `Window_CreateMain_POEWindowClass` | registers and creates the game window (class `POEWindowClass`, string `0x142f797b8`); `FUN_14011ac30` uses the same class for the single-instance check |
 
-## Remote players, entity lifetime, party and trade (WP3.5, 2026-10-20)
-Layouts: [../protocol/entities.md](../protocol/entities.md#other-players-add-actions-remove-party-and-trade-wp35). Structs: `modules/protocol/poe-proto/src/player_blob.rs`, `remote.rs`.
+## Remote players, entity lifetime, party and trade
+Layouts: [../protocol/entities.md](../protocol/entities.md#other-players-add-actions-remove-party-and-trade). Structs: `modules/protocol/poe-proto/src/player_blob.rs`, `remote.rs`.
 
 | Address | Ghidra name | What |
 |---|---|---|
@@ -267,8 +267,8 @@ Layouts: [../protocol/entities.md](../protocol/entities.md#other-players-add-act
 | `0x141f45210` | | deserializer of `0x0271` (`u8 × 4`); handler not found |
 | `0x1421564a0` | | `0x00c8` PartyUpdate reader (`0x142156230` ctor); `0x142157630` `0x00d9` TradeState reader; `0x141f44000` `0x00c9`; `0x141f38f00` `0x00da`; `0x141f38e60` serializer of `0x00d2`/`0x00c9`; `0x141f3ced0` `0x00e0`; `0x142150f20` `0x0019` |
 
-### Party invitation and trade request, receiving side (WP C3, 2026-10-21)
-Layouts and the flow: [../protocol/entities.md](../protocol/entities.md#party-and-trade-flows-wp-c3). Renamed in Ghidra.
+### Party invitation and trade request, receiving side
+Layouts and the flow: [../protocol/entities.md](../protocol/entities.md#party-and-trade-flows). Renamed in Ghidra.
 
 | Address | Ghidra name | What |
 |---|---|---|
@@ -283,7 +283,7 @@ Layouts and the flow: [../protocol/entities.md](../protocol/entities.md#party-an
 | `0x1402c3fb0` | `TradeInvite_ShowPopup` | builds the popup with the string `TradeInviteFrom;` (`0x142fa5750`) and the trade record; its result callback is `0x1402c3c30` (writes a bool into a promise) |
 | `0x1402c3cb0` | `TradeInvite_OnTradeState` | listener of the `0xd9` event: popup only if trade id ≠ 0, record flags `+0x30` bit 1 set and bit 0 clear, and the character is in the social list (`0x142129700`, lookup by character name, case-insensitive) |
 
-## Login results, flags, create and delete (WP B1, 2026-10-21)
+## Login results, flags, create and delete
 Details and decoded fields: [../protocol/login.md](../protocol/login.md). Names are set in Ghidra.
 
 | Address | Name | What |
@@ -309,7 +309,7 @@ Details and decoded fields: [../protocol/login.md](../protocol/login.md). Names 
 | `0x140ed8149` | | `0x000c` DeleteCharacter builder (name, `u8` from screen `+0x214`, `u32` account id from `+0x210`) |
 
 
-## Pathfinder (2026-10-21)
+## Pathfinder
 Algorithm and evidence: [pathfinding.md](pathfinding.md). Signature `path_plan` (feature `path_log`) in `modules/client-hook/signatures/0.5.5e.hotfix1.toml`.
 
 | Address | Name | What |
@@ -332,7 +332,7 @@ Algorithm and evidence: [pathfinding.md](pathfinding.md). Signature `path_plan` 
 | `0x14212ece0`, vfunc `+0x1d8` | | world constructor; vfunc `+0x1d8` returns 2 for frame mode 2 (lockstep) |
 | `0x142130440` | | frame playback: speed factor 1.01 with one spare frame queued (the client's steady walking step is 1.2333 = 1.01 x 1.221; short steps when it waits for the next frame) |
 
-## In-client batch generation (`gen_batch`, 2026-10-22)
+## In-client batch generation
 Details, field meanings and the exception handling: [terrain/batch.md](terrain/batch.md). Signature entries (feature `gen_batch`) in `modules/client-hook/signatures/0.5.5e.hotfix1.toml`.
 
 | Address | Name | What |
