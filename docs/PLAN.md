@@ -15,15 +15,15 @@ Steps:
 
    | Area | Failing exports | Average differing cells |
    |---|---|---|
-   | `MapRazedFields` (cause unknown; theories ruled out in doodads.md) | 14 | 100,723 |
-   | `G3_8` | 16 | 39,626 |
-   | `MapPlantation` | 7 | not re-measured |
-   | `G3_14` | 15 | 17,117 |
-   | `MapVaalCity` | 32 | 5,156 |
-   | `G2_5_2` | 38 | 506 |
-   | `G3_1` | 15 | 410 |
-   | `G2_2` | 23 | 97 |
-   | `G2_5_1` | 81 | 67 |
+   | `G3_8` | 16 | 39,627 |
+   | `P3_1` | 8 | 27,243 |
+   | `HideoutArenaMaven` | 2 | 23,219 |
+   | `G3_14` | 15 | 17,118 |
+   | `MapBazaar`, `BossRush_Area3` | 1 each | 10,147 and 9,051 |
+   | `MapVaalCity` | 32 | 5,157 |
+   | `HideoutCanal`, `G2_5_2`, `G3_16`, `G3_1` | 2, 38, 8, 15 | 410 to 732 |
+   | `MapReservoir`, `MapLostTowers`, `G2_2`, `MapPlantation`, `G2_5_1`, `G4_5_1` | 11, 3, 23, 7, 81, 9 | 64 to 160 |
+   | 6 smaller areas (`ExpeditionLogBook_*`, `G4_town`, `G4_7`, `P1_5`, `MapSteamingSprings`, `MapWaywardIsle`) | 15 | 3 to 78 |
 
 2. **The 6 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
 3. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
