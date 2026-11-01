@@ -156,7 +156,7 @@ An unhandled throw ends the process, so `cxx_guard.rs` makes a guarded call:
 | `jobs.txt` | `terrain_batch.py plan` | `area seed topology orientation` per line; topology 1-based (0: not forced), orientation 0-7 (negative: not forced) |
 | `export.txt` | by hand | same format: jobs whose `exports/<area>_<seed>_<topology>_<orientation>/` (`layout.tsv`, `doodads.tsv`, `grids.bin`, `meta.txt`) are written |
 | `suspects.txt` | `terrain_batch.py run` | jobs that were running when the client died; run first, on one thread |
-| `batch-results.tsv` | the DLL | `area seed topology orientation status tile_hash doodad_hash width height ms detail`; `status` `ok`, `error` (detail: the exception or the check that failed) or `crash-skip` (written by the script); one `write` and flush per line; jobs already in the file are skipped on a restart |
+| `batch-results.tsv` | the DLL | `area seed topology orientation status tile_hash doodad_hash width height ms detail grid_hash`; `grid_hash` is FNV-1a 64 of the job's `grids.bin` bytes (hex, every job, exported or not; `forced_verify` compares it with the port's grid); `status` `ok`, `error` (detail: the exception or the check that failed) or `crash-skip` (written by the script); one `write` and flush per line; jobs already in the file are skipped on a restart |
 | `inflight-<n>.txt` | the DLL | the job worker `n` is running (removed when the run ends) |
 | `batch-done` | the DLL | written when every job has a line |
 | `crashes.tsv`, `state.json`, `seeds.json` | the script | crash counts per job, timing, the plan (master seed, filters) |

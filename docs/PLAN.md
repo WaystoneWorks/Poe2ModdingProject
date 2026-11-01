@@ -24,7 +24,7 @@ Steps:
 
 2. **The 5 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
 3. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
-4. **Fresh sample:** a new export list of a few thousand layouts across all areas and every topology (from batch 3, `terrain_batch.py run <run> --threads 8 --no-deploy`, then `check_grids <run dir> --threads 8`); fix until byte-identical. `entities.tsv` may explain blockers that are not doodads.
+4. **Fresh sample (user, 2026-11-01): all areas, 50 seeds per topology and orientation (`terrain_batch.py plan <run> --seeds 50`, about 225,400 jobs), grids compared by hash.** The batch writes `grid_hash` per job ([batch.md](re/terrain/batch.md)); `forced_verify <run>/batch-results.tsv --threads 8 --grid-fails <file>` rechecks the tile and doodad hashes (the R1 area-generation check) and compares the grid hashes; the `--grid-fails` list is the `export.txt` of a re-run with full exports for `check_grids`. Order: a 2-seed pilot (`plan <run> --seeds 2`) first, then the 50-seed run. Ask the user before deleting old batch run directories.
 5. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
 6. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
 
