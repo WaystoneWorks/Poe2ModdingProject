@@ -6,7 +6,7 @@ The only list of what is left to do and the only status source. Edit it in place
 
 The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_grid`, off by default) must equal the client's.
 
-**State (2026-10-30):** 4,864 of the 5,237 client grid exports on disk are byte-identical (92.9%); 367 differ in the grid, 6 already in the layout. No regressions; server tests pass. Details and open families: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
+**State (2026-10-31):** 4,949 of the 5,256 client grid exports on disk are byte-identical (94.2%); 301 differ in the grid, 6 already in the layout. No regressions; server tests pass. Details and open families: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
 
 **Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); a biased sample (many exports come from failure hunts); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
@@ -15,11 +15,11 @@ Steps:
 
    | Area | Failing exports | Average differing cells |
    |---|---|---|
-   | `G4_11_2` | 6 | ~1,000,000 |
-   | `MapUberBoss_JadeCitadel` | 6 | ~730,000 |
+   | `G4_11_2` (no-overlap shuffle RNG, doodads.md) | 9 | 2 to 94 |
+   | `MapUberBoss_JadeCitadel` (same cause) | 4 | 2 to 94 |
    | `MapRazedFields` (cause unknown; theories ruled out in doodads.md) | 14 | 100,723 |
    | `G3_8` | 16 | 39,626 |
-   | `MapPlantation` | 18 | 33,680 |
+   | `MapPlantation` | 7 | not re-measured |
    | `G3_14` | 15 | 17,117 |
    | `MapVaalCity` | 32 | 5,156 |
    | `G2_5_2` | 38 | 506 |

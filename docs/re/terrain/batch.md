@@ -263,3 +263,8 @@ placeholder fill adds `roomgrid` (its room grid, 0 = free) and `placeholder_size
 ground); the outer buffer adds `strip_grounds` (site `0x141fdbdf4`: row y, walk limit and the two
 grounds compared); the topology choice adds `map_pins` (generator `+0x280`) and `pin_dirs`
 (generation state `+0x70`), see [shared-passes.md](shared-passes.md#topology-choice).
+
+Lattice dumps (`terrain_tools.rs`): `unwalkable` at the entry of `0x141fe1150`, `enclosed` at the
+entry of `0x141fe0cc0` (signature `lattice_enclosed`), `border` at the entry of `0x141fe1020`.
+`check_lattice` with `LATTICE_GROUNDS=1` compares the client's ground index with the port's, with
+flag 8 on each side.

@@ -114,8 +114,13 @@ this order for each entry, after the `AOSet` pick and, for room doodads, after t
    (`+0x2d0`: 1 `server_only`, 2 `client_only`) exists only on its own side: server mode (globals
    `0x1445c995c` or `0x14458c74c` set) keeps `server_only` and drops `client_only`, a client process
    does the opposite. A `league_category` must equal the area's. Port: `Doodad::exists(Side)`;
-   `collision::build` takes the side. **The batch exports run in a client process, so they show
-   client-side filtering**; the instance server builds `Side::Server`.
+   `collision::build` takes the side. The instance server builds `Side::Server`. **Open question:**
+   the batch exports were assumed to show client-side filtering, but the server-only scatter in
+   `TerrainGen_Doodads` (draws `below(w*23)`, `below(h*23)` at `0x141ff61c9` / `0x141ff61d6`, guarded
+   by the same two globals; it saves and restores the RNG `0x142cb75c0`, 5000 bytes, so it does not
+   move the stream) ran in the batch process trace (7,686 pairs), so at least one global is set in
+   batch generation. To verify: which global, and whether `0x141ff48e0` then keeps `server_only`
+   types in batch exports.
 2. **Angle rules** (`0x141fe8860`, `0x141fe86f0`). With `a = angle - 0.7603982` (+2pi when
    negative), `AntiTallWallDoodad` is dropped for `a >= 3.1915927`, the upper-tile types
    (`TileUpperDoodad`, `TileUpperDoodadNoOverlap`, `TileUpperDoodad_ExtendDistance`, the two
@@ -163,6 +168,23 @@ the outer ground and only empty or wildcard edges get their footprint marked
 (`mark_outside_tiles`). Master offsets: `DisableDoors` is `+0x167`, so the keys parsed by
 `0x142928820` line up as `OuterGroundIsOutside` `+0x165`, `RoomOcclusion` `+0x166`.
 
+**`outside_tiles` zones** (`0x141ffbab0`, runs after the layout, after `0x141ff7b90`): walks every
+region's room placements (region `+0x58`, 0x38-byte entries; corner = placement min, orientation
+`+0x1b`) and each room's `.arm` zones (room data `+0xa0`, 0x60-byte entries: name, x_min, y_min,
+x_max, y_max, an object type checked by the side filter vtable `+0xa0`, a string, an int; in the file
+`"outside_tiles" x0 y0 x1 y1 "" "" 0`, poe_data_tools `ARMFile::zones`). A zone named
+`outside_tiles` has its first cell (x_min, y_min) and last cell (x_max-1, y_max-1) turned like a
+doodad cell (table `0x142f02118`), and `0x141fdd690` sets lattice flag 8 on every corner from
+ceil(min/23) to ceil(end/23) inclusive (end exclusive in cells), clamped to the map. All 97 zones of
+this build have empty type strings; 71 `.arm` files use it (ubertavakai, act 4 gallows, plantation,
+razedfields, slash, monument, oasis, necropolis, ...). Other zone names handled there:
+`hide_teleports`, `boss_sector` (not ported, no grid effect known). Port: `doodads::room_outside`
+(collected per placement in `generate::derepeat_pass` into `TileMap::outside`, shifted with the
+doodads) and `doodads::mark_outside` (called in `area::generate_with_files` after the graph; switch
+`POE_NO_OUTSIDE_ZONES`). `0x141fe1020` only flags the map border. Found with the generator-trace
+lattice dumps ([batch.md](batch.md#traces-in-batch-mode)) and `check_lattice` with
+`LATTICE_GROUNDS=1` (client ground index vs port ground, flag 8 each side).
+
 ## Tools and checks
 
 - `check_doodads <export or run dirs> [--only forced.tsv]`: generates each export's job and compares
@@ -204,18 +226,26 @@ neither on `poe-game` nor on `poe-config`; the instance server is the adapter
 - Doodads: every tile-matching export equals `doodads.tsv` (set, hash, draws) except the
   `MapVaalVault` angle case below, and every tile match of the 50-seed batch (72,718 of 218,705
   client layouts) matches the client's doodad hash.
-- Collision grid: 4,864 of 5,237 client grid exports on disk equal `grids.bin` (a sample biased
-  toward earlier failures), 367 differ, 6 differ in the layout already. Layers 2 and 3 always agree.
-  Largest open families: `G2_5_1` (81), `G2_5_2` (38), `MapVaalCity` (32), `G2_2` (23),
-  `MapPlantation` (18), `G3_8` (16), `G3_14` (15), `G3_1` (15), `MapRazedFields` (14).
+- Collision grid: 4,949 of 5,256 client grid exports on disk equal `grids.bin` (a sample biased
+  toward earlier failures; 4,875 with `POE_NO_OUTSIDE_ZONES`), 301 differ, 6 differ in the layout
+  already. Layers 2 and 3 always agree. The `outside_tiles` rule
+  ([above](#unwalkable-corners)) cleared `MapRazedFields` (18 to 0), `MapOasis` (11 to 0),
+  `MapMonument` (11 to 0), `MapSlash` (9 to 0) and `MapPlantation` 18 to 7. Largest open families:
+  `G2_5_1` (81), `G2_5_2` (38), `MapVaalCity` (32), `G2_2` (23), `G3_8` (16), `G3_14` (15),
+  `G3_1` (15).
+- `G4_11_2` and `MapUberBoss_JadeCitadel` went from about 1,000,000 / 730,000 differing cells to 2
+  to 94 per export (3 of 16 match; 9 `G4_11_2` and 4 JadeCitadel exports still fail).
 
-### Open: `MapRazedFields`
+### Open: no-overlap shuffle RNG (`G4_11_2`, `MapUberBoss_JadeCitadel`)
 
-1,386 corners are flagged by the client only, a connected network around `woods_trim` and road
-grounds (`check_lattice`). They look like the impassable flood entering at (81, 94), but the same
-`EdgeInTheWay` (`0x141fe0990`, checked against the disassembly) stops at the first tile boundary in
-the port, and the strip tiles are placed before the pass runs (trace `tdiff`), so what lets the
-client through is not known.
+The remaining cells are pairs of `DoodadNoOverlap` `Karui_Fence_Post_03` posts one cell apart; the
+client keeps the other post of the pair. The no-overlap shuffle (`0x141ff4cd0`, a group of 44 room
+doodads in `G4_11_2 59551355 3 0`) gets different draws: client `below(44)` = 39, then uniform(44)
+= 8, (43) = 2; port `below(44)` = 23, uniform 27, 40. The port's RNG stream is already off before
+`doodads_post` (the doodad hash still matches). The client calls `doodads_post` twice: at the end of
+`TerrainGen_Doodads` (called from `0x141ff6e88`) and after the tile-object pass from `0x141fff1bc`
+(the second had no draws here). Debug: `POE_DBG_NO_OVERLAP=1`; traced exports
+`dumps/0.5.5e.hotfix1/terrain/batch/r2-big2` and `r2-big3`.
 
 ### Open: grid families
 
@@ -224,8 +254,7 @@ All differ in layer 0 unless noted. Tools: `check_grids --blame`, `POE_DBG_GRID_
 
 | Family | Cells | What differs | Findings |
 |---|---|---|---|
-| `MapSlash` | 771 each | A pocket of three by three tiles around a `CvSM_01.tdt` tile is open in the port and fully blocked in the client | Forcing all nine tiles to four unwalkable corners (a 4 x 4 block of lattice corners with flag 8, so every `clear()` margin falls where the client has it) reproduces `grids.bin` exactly, so the cause is the lattice, not the planes. The pocket's inner corners have no ground in the port's lattice (`-3`), their neighbours are mud. `0x141fe0cc0` (ported, `lattice::mark_enclosed_fills`) is not the cause: it needs a uniform edgeless tile whose outline is already flagged. Suspects: the tile-set option `+0x165` block (tiles with `+0x16c & 0x40` whose four corner grounds equal the tile-set's `+0x230`, which flags the whole footprint), or flood paths blocked by the stubbed `sealed_inside` (tile data `+0x16f` bit 0, read by `0x141fe2500` and `0x141fe1f70` through the record at the corner's own index) |
-| `MapSeepage`, `MapUberBoss_IronCitadel` (partly) | 250 to 690 | The port blocks more than the client: whole tiles cleared with the margin ramp, or a wall plane 4 cells longer | The opposite direction to `MapSlash`: the port flags corners the client does not, which fits the `sealed_inside` stub (a sealed tile stops the flood). The `.tdt` field behind `+0x16f` is not mapped (the flag word of `0x142915630` is set bit by bit through a vtable slot `+0x40`) |
+| `MapSeepage`, `MapUberBoss_IronCitadel` (partly) | 250 to 690 | The port blocks more than the client: whole tiles cleared with the margin ramp, or a wall plane 4 cells longer | The port flags corners the client does not, which fits the `sealed_inside` stub (a sealed tile stops the flood). The `.tdt` field behind `+0x16f` is not mapped (the flag word of `0x142915630` is set bit by bit through a vtable slot `+0x40`) |
 | `MapCrimsonShores` | 400 to 1,800 | A circular blob of radius about 10 with the 1..4 clearance ramp is blocked in the client, absent in the port, centred in a `fill_01.tdt` tile (3 x 3, flags 0x03, plane-less) | Not a tile plane and not one of the room doodads. Probably a generator object that is not in `doodads.tsv` (an entity from tile data `+0x1b8`, or a scatter object); an export with `entities.tsv` of a failing layout decides |
 | `MapMonument`, `MapFortress`, `G4_5_2`, `G2_10_1`, `MapReservoir` | 150 to 4,900 | Feature tiles (`PrecursorGroundAnchor_*`, `fortress_boss_01`, `Warden_Office`, `JamanraRitualSite_02`) and fill tiles | Same two suspects (unported unwalkable-corner rules, objects outside `doodads.tsv`) |
 | `MapVaalVault` | 53 | Two doodads (`SunkenPillar_set.ao`, `random_orientation`, `AOSet` with one choice) have the angle off by pi/2 (ours 3pi and 2.5pi after the pick, the client 2.5pi and 2pi; the seed 35611400 topology 1 orientation 0 layout) | `0x1421c3f40` is ported as decompiled (`mask 0xff`: `u & 7`) and the picks of all other sets (`random_flip`, 1,879 doodads) agree, so the draw `u` (99 and 314, `below(0x348)`) or the mapping from the picked orientation to the angle differs for the full eight-way case. A client trace of `MapVaalVault 35611400 1 0` shows the real draws |

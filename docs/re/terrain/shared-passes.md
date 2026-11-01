@@ -238,6 +238,8 @@ tile corners, +0x68 the ground table, indices in order of first use):
   `+0x165` (`mark_outside_tiles`): [doodads.md](doodads.md#unwalkable-corners). It fails with "No
   walkable area in the level" when fewer than `max(10, w·h/500)` corners are walkable. This is the
   walkability base for collision.
+- Room `outside_tiles` zones (`0x141ffbab0`, after the layout) set flag 8 on rectangles of corners:
+  [doodads.md](doodads.md#unwalkable-corners).
 - `0x1420b99a0`: every corner gets flag 1; ground-less ones take the graph's default ground.
 
 ### Fill
