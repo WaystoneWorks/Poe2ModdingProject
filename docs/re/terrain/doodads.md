@@ -34,6 +34,13 @@ the tiles' own objects come from the tile-object pass ([below](#what-decides-whe
    - orientation, when `random_orientation` / `random_flip` set the allowed mask at +0x5c (`0xff` /
      `0x11`): `below(0x348)`, then `orientation_pick(mask, u)` (mask 0 or 0xff: `u & 7`, else the
      `u % n`th allowed bit); the angle is turned by it and orientations 4..7 mirror;
+     `random_orientation` is `true` (mask `0xff`) or a list of names (`"I R180 FI FR180"`, e.g.
+     `street_short_st_set.ao` in `G3_8`): one bit per name, `I R90 R180 R270 FI FR90 FR180 FR270` =
+     bits 0..7, that list is `0x55` (`doodads::orientation_names` in `parse_ao`). The pick takes the
+     `(u mod count)`th allowed orientation (`0x1421c3f40`). A client trace of `G3_8 30319231 1 0`
+     (`dumps/0.5.5e.hotfix1/terrain/batch/g38trace`) equals the doodad pass and all 112 tile-object
+     draws; the tile-object pass starts at MT index 842, the raw value of the server-only scatter's
+     first draw (the save/restore);
    - scale, when the range is not `1..1`: `below(0x200)`, `(max - min) * u / 512 + min`;
    - translation, when `random_translate_radius > 0`: `below(0x200)` for the distance
      `sqrt(r^2 * u / 512)` and `below(0x200)` for the angle `u / 512 * 2pi`; the offset is
@@ -169,6 +176,8 @@ orientation list (all orientations); cell = floor(world * 0.092).
   `+0x14` and `+0x18` (passed to `0x14291dd30`), type string `+0x1c`, `.ao` string `+0x20`; scale 1, no flip.
 - v6, `0x2d` bytes: world x, y, height, two rotations, angle `+0x14`, scale `+0x18`, asset names
   `+0x1c`/`+0x20`, type `+0x24`, `.ao` `+0x28`, flip byte `+0x2c`.
+  Ruled out: a different angle sign or rotation offset for the `G3_8` street pillars (rotating them
+  worsens `G3_8`); `.ao` index `0xffffffff` entries (none in `G3_8`).
 
 **`.tdt` fields:** the body's first u16 is tile data `+0x16c` (`Tdt::body_flags`); after the `tmd`
 string come a string and the object group byte (`+0x170`, sink `+0x58`). Tile data `+0x10` is the
@@ -249,7 +258,7 @@ neither on `poe-game` nor on `poe-config`; the instance server is the adapter
   client layouts) matches the client's doodad hash.
 - Collision grid: 4,979 of 5,256 client grid exports on disk equal `grids.bin` (a sample biased
   toward earlier failures; 4,875 with `POE_NO_OUTSIDE_ZONES`), 277 differ, 5 differ in the layout
-  already. Layers 2 and 3 always agree. Total differing cells 346,364. The `outside_tiles` rule
+  already. Layers 2 and 3 always agree. Total differing cells 194,829 (was 346,364); no regressions. The `random_orientation` list fix took `G3_8` from about 15,500 to about 117 average cells; the rest (0..97 per layout) are one-cell corner differences of pillar footprints at angles like 4pi (12.566; f32 rasterisation precision suspected, not checked). The `outside_tiles` rule
   ([above](#unwalkable-corners)) cleared `MapRazedFields`, `MapOasis`, `MapMonument`, `MapSlash`; the
   binary `.tmd` reader cleared `HideoutArenaMaven`, `HideoutCanal`, `G4_5_1`, `G4_7`, `P1_5` and
   `ExpeditionLogBook_Peninsula`. Open layouts, count of unique failing layouts / average differing

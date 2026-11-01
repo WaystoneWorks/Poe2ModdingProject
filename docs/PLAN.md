@@ -6,24 +6,23 @@ The only list of what is left to do and the only status source. Edit it in place
 
 The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_grid`, off by default) must equal the client's.
 
-**State (2026-10-31):** 4,979 of the 5,256 client grid exports on disk are byte-identical (94.7%); 277 differ in the grid, 5 already in the layout. No regressions; server tests pass. Details and open families: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
+**State (2026-11-01):** 4,979 of the 5,256 client grid exports on disk are byte-identical (94.7%); 277 differ in the grid, 5 already in the layout. No regressions; server tests pass. Details and open families: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
 
 **Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); a biased sample (many exports come from failure hunts); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
 1. **Fix the grid families, largest differences first**, using per-pass snapshots:
 
-   Unique failing layouts / average differing cells (the gate's dir list has duplicates). `G3_8`, `G3_14`, `MapVaalCity`, `MapBazaar`, `BossRush_Area3` all contain `VaalExterior/Street` or `SunkenStreet` wall tiles; the remaining `G3_8` differences there are not classified.
+   Unique failing layouts / average differing cells (the gate's dir list has duplicates). The `G3_8` residue is one-cell corner differences of pillar footprints. `G3_14`, `MapVaalCity`, `MapBazaar` still differ and do not share `G3_8`'s cause (an RNG offset test did not help them).
 
    | Area | Failing layouts | Average differing cells |
    |---|---|---|
    | `P3_1` | 5 | 25,289 |
-   | `G3_8` | 9 | 15,497 |
-   | `G3_14` | 8 | 1,824 |
-   | `MapVaalCity` | 26 | 1,524 |
-   | `MapBazaar`, `BossRush_Area3` | 1 each | 1,210 and 857 |
-   | `G3_16`, `G3_1`, `G2_5_2` | 7, 11, 33 | 465, 404, 196 |
-   | `MapReservoir`, `MapLostTowers`, `G2_2`, `MapPlantation`, `G2_5_1` | 10, 3, 21, 7, 73 | 70 to 162 |
+   | `MapVaalCity` | 26 | 1,465 |
+   | `G3_14`, `MapBazaar` | 8, 1 | 831 and 766 |
+   | `G3_1`, `BossRush_Area3`, `G2_5_2` | 11, 1, 33 | 404, 228, 196 |
+   | `MapReservoir`, `G3_8`, `MapLostTowers`, `G2_2`, `G3_16` | 10, 9, 3, 21, 7 | 97 to 162 |
+   | `MapPlantation`, `G2_5_1` | 7, 73 | 72 and 70 |
    | 4 smaller (`G4_town`, `MapSteamingSprings`, `ExpeditionLogBook_Atoll`, `MapWaywardIsle`) | 2, 2, 6, 1 | 3 to 59 |
 
 2. **The 5 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
