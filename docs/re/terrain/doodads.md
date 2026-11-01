@@ -159,6 +159,17 @@ n [orientations]`; the flag says whether the world `x y` is present. Not ported:
 `alttiles/<env>/<env>_<name>.tmd` variant of the art list (`0x141d11c50`) and the per-sub-tile
 objects of tiles with data `+0x16d & 2` (`0x141d07630`).
 
+**Binary `.tmd`** (805 of the game's 9,706; 742 version 5, 63 version 6; `doodads::tmd_binary`).
+Client parser `0x14291aab0` (entries go to the sink vtable `0x1434bfe70`, slot 0 `0x141d01c60`; the text
+line options go to `0x141d01310`). First byte = version: 2..6 binary, otherwise the text format
+starting `version`. Then a u32 entry count, the entries, then a UTF-16 string table (u32 length in
+chars, NUL-terminated strings addressed by char index; `0xffffffff` = none). Entries have no
+orientation list (all orientations); cell = floor(world * 0.092).
+- v5, `0x24` bytes: world x, world y, height, x-rotation, angle (z rotation), asset-name indices at
+  `+0x14` and `+0x18` (passed to `0x14291dd30`), type string `+0x1c`, `.ao` string `+0x20`; scale 1, no flip.
+- v6, `0x2d` bytes: world x, y, height, two rotations, angle `+0x14`, scale `+0x18`, asset names
+  `+0x1c`/`+0x20`, type `+0x24`, `.ao` `+0x28`, flip byte `+0x2c`.
+
 **`.tdt` fields:** the body's first u16 is tile data `+0x16c` (`Tdt::body_flags`); after the `tmd`
 string come a string and the object group byte (`+0x170`, sink `+0x58`). Tile data `+0x10` is the
 feature string's length (`0x141d161c0`).
@@ -236,13 +247,13 @@ neither on `poe-game` nor on `poe-config`; the instance server is the adapter
 - Doodads: every tile-matching export equals `doodads.tsv` (set, hash, draws) except the
   `MapVaalVault` angle case below, and every tile match of the 50-seed batch (72,718 of 218,705
   client layouts) matches the client's doodad hash.
-- Collision grid: 4,962 of 5,256 client grid exports on disk equal `grids.bin` (a sample biased
-  toward earlier failures; 4,875 with `POE_NO_OUTSIDE_ZONES`), 288 differ, 6 differ in the layout
-  already. Layers 2 and 3 always agree. The `outside_tiles` rule
-  ([above](#unwalkable-corners)) cleared `MapRazedFields` (18 to 0), `MapOasis` (11 to 0),
-  `MapMonument` (11 to 0), `MapSlash` (9 to 0) and `MapPlantation` 18 to 7. Largest open families:
-  `G2_5_1` (81), `G2_5_2` (38), `MapVaalCity` (32), `G2_2` (23), `G3_8` (16), `G3_14` (15),
-  `G3_1` (15).
+- Collision grid: 4,979 of 5,256 client grid exports on disk equal `grids.bin` (a sample biased
+  toward earlier failures; 4,875 with `POE_NO_OUTSIDE_ZONES`), 277 differ, 5 differ in the layout
+  already. Layers 2 and 3 always agree. Total differing cells 346,364. The `outside_tiles` rule
+  ([above](#unwalkable-corners)) cleared `MapRazedFields`, `MapOasis`, `MapMonument`, `MapSlash`; the
+  binary `.tmd` reader cleared `HideoutArenaMaven`, `HideoutCanal`, `G4_5_1`, `G4_7`, `P1_5` and
+  `ExpeditionLogBook_Peninsula`. Open layouts, count of unique failing layouts / average differing
+  cells: [PLAN.md](../../PLAN.md#now-r2-server-side-collision).
 - All 16 `G4_11_2_*` and `MapUberBoss_JadeCitadel_*` exports are byte-identical (the two-run
   `doodads_post` above).
 

@@ -6,26 +6,27 @@ The only list of what is left to do and the only status source. Edit it in place
 
 The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_grid`, off by default) must equal the client's.
 
-**State (2026-10-31):** 4,962 of the 5,256 client grid exports on disk are byte-identical (94.4%); 288 differ in the grid, 6 already in the layout. No regressions; server tests pass. Details and open families: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
+**State (2026-10-31):** 4,979 of the 5,256 client grid exports on disk are byte-identical (94.7%); 277 differ in the grid, 5 already in the layout. No regressions; server tests pass. Details and open families: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
 
 **Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); a biased sample (many exports come from failure hunts); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
 1. **Fix the grid families, largest differences first**, using per-pass snapshots:
 
-   | Area | Failing exports | Average differing cells |
-   |---|---|---|
-   | `G3_8` | 16 | 39,627 |
-   | `P3_1` | 8 | 27,243 |
-   | `HideoutArenaMaven` | 2 | 23,219 |
-   | `G3_14` | 15 | 17,118 |
-   | `MapBazaar`, `BossRush_Area3` | 1 each | 10,147 and 9,051 |
-   | `MapVaalCity` | 32 | 5,157 |
-   | `HideoutCanal`, `G2_5_2`, `G3_16`, `G3_1` | 2, 38, 8, 15 | 410 to 732 |
-   | `MapReservoir`, `MapLostTowers`, `G2_2`, `MapPlantation`, `G2_5_1`, `G4_5_1` | 11, 3, 23, 7, 81, 9 | 64 to 160 |
-   | 6 smaller areas (`ExpeditionLogBook_*`, `G4_town`, `G4_7`, `P1_5`, `MapSteamingSprings`, `MapWaywardIsle`) | 15 | 3 to 78 |
+   Unique failing layouts / average differing cells (the gate's dir list has duplicates). `G3_8`, `G3_14`, `MapVaalCity`, `MapBazaar`, `BossRush_Area3` all contain `VaalExterior/Street` or `SunkenStreet` wall tiles; the remaining `G3_8` differences there are not classified.
 
-2. **The 6 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
+   | Area | Failing layouts | Average differing cells |
+   |---|---|---|
+   | `P3_1` | 5 | 25,289 |
+   | `G3_8` | 9 | 15,497 |
+   | `G3_14` | 8 | 1,824 |
+   | `MapVaalCity` | 26 | 1,524 |
+   | `MapBazaar`, `BossRush_Area3` | 1 each | 1,210 and 857 |
+   | `G3_16`, `G3_1`, `G2_5_2` | 7, 11, 33 | 465, 404, 196 |
+   | `MapReservoir`, `MapLostTowers`, `G2_2`, `MapPlantation`, `G2_5_1` | 10, 3, 21, 7, 73 | 70 to 162 |
+   | 4 smaller (`G4_town`, `MapSteamingSprings`, `ExpeditionLogBook_Atoll`, `MapWaywardIsle`) | 2, 2, 6, 1 | 3 to 59 |
+
+2. **The 5 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
 3. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
 4. **Fresh sample:** a new export list of a few thousand layouts across all areas and every topology (from batch 3, `terrain_batch.py run <run> --threads 8 --no-deploy`, then `check_grids <run dir> --threads 8`); fix until byte-identical. `entities.tsv` may explain blockers that are not doodads.
 5. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
