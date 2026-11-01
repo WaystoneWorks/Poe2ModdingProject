@@ -131,7 +131,17 @@ this order for each entry, after the `AOSet` pick and, for room doodads, after t
    (`Overlays::suppresses`). The doodad still counts for the hash.
 4. **No-overlap types** (`0x141fe8040`: `DoodadNoOverlap`, `TileUpperDoodadNoOverlap`;
    `DoodadNoOverlap3` is the listed one) are deferred (`0x141ff4a50`) to `doodads_post`
-   (`0x141ff4cd0`, `doodads::no_overlap`): per group in descending key order (rooms key 0, tile
+   (`0x141ff4cd0`, `doodads::no_overlap`). The client runs it twice, each run independent (empty
+   placed set, group lists cleared): run 1 for the room doodads at the end of `TerrainGen_Doodads`
+   (called from `0x141ff6e88`), right after the room-doodad AOSet picks and before the tile-object
+   pass draws; run 2 for the tile objects after that pass (from `0x141fff1bc`). The server-only
+   scatter between the picks and run 1 (draws at `0x141ff61c9`/`0x141ff61d6`, AOSet picks at
+   `0x141f964ac`, `0x141f9630d`, `0x141f96325`, `0x141fe79eb`, `0x141ff6f65`/`0x141ff6f83`, called
+   from `0x141ff67f7`) is wrapped in an RNG save and restore (`0x142cb75c0`): the MT index returns
+   to the saved one (i=850) at the first `doodads_post` draw. `area.rs` runs
+   `doodads::no_overlap(rng, list, tile_objects)` twice (rooms after `resolve`, tile objects after
+   `tile_objects`). `POE_DBG_DOODAD_DRAWS=1` prints every bounded draw of the doodad passes
+   (`DOODAD_DRAW n result`). Per group in descending key order (rooms key 0, tile
    objects the `.tdt` object group), `below(n)`, a Fisher-Yates shuffle (`uniform(n - k)`, swapping k
    with k + draw), then placed unless a placed cell lies in its 3 x 3 cells. The listed type comes
    last, in order, and also needs no other listed object in its 3 x 3 cells.
@@ -226,26 +236,15 @@ neither on `poe-game` nor on `poe-config`; the instance server is the adapter
 - Doodads: every tile-matching export equals `doodads.tsv` (set, hash, draws) except the
   `MapVaalVault` angle case below, and every tile match of the 50-seed batch (72,718 of 218,705
   client layouts) matches the client's doodad hash.
-- Collision grid: 4,949 of 5,256 client grid exports on disk equal `grids.bin` (a sample biased
-  toward earlier failures; 4,875 with `POE_NO_OUTSIDE_ZONES`), 301 differ, 6 differ in the layout
+- Collision grid: 4,962 of 5,256 client grid exports on disk equal `grids.bin` (a sample biased
+  toward earlier failures; 4,875 with `POE_NO_OUTSIDE_ZONES`), 288 differ, 6 differ in the layout
   already. Layers 2 and 3 always agree. The `outside_tiles` rule
   ([above](#unwalkable-corners)) cleared `MapRazedFields` (18 to 0), `MapOasis` (11 to 0),
   `MapMonument` (11 to 0), `MapSlash` (9 to 0) and `MapPlantation` 18 to 7. Largest open families:
   `G2_5_1` (81), `G2_5_2` (38), `MapVaalCity` (32), `G2_2` (23), `G3_8` (16), `G3_14` (15),
   `G3_1` (15).
-- `G4_11_2` and `MapUberBoss_JadeCitadel` went from about 1,000,000 / 730,000 differing cells to 2
-  to 94 per export (3 of 16 match; 9 `G4_11_2` and 4 JadeCitadel exports still fail).
-
-### Open: no-overlap shuffle RNG (`G4_11_2`, `MapUberBoss_JadeCitadel`)
-
-The remaining cells are pairs of `DoodadNoOverlap` `Karui_Fence_Post_03` posts one cell apart; the
-client keeps the other post of the pair. The no-overlap shuffle (`0x141ff4cd0`, a group of 44 room
-doodads in `G4_11_2 59551355 3 0`) gets different draws: client `below(44)` = 39, then uniform(44)
-= 8, (43) = 2; port `below(44)` = 23, uniform 27, 40. The port's RNG stream is already off before
-`doodads_post` (the doodad hash still matches). The client calls `doodads_post` twice: at the end of
-`TerrainGen_Doodads` (called from `0x141ff6e88`) and after the tile-object pass from `0x141fff1bc`
-(the second had no draws here). Debug: `POE_DBG_NO_OVERLAP=1`; traced exports
-`dumps/0.5.5e.hotfix1/terrain/batch/r2-big2` and `r2-big3`.
+- All 16 `G4_11_2_*` and `MapUberBoss_JadeCitadel_*` exports are byte-identical (the two-run
+  `doodads_post` above).
 
 ### Open: grid families
 
