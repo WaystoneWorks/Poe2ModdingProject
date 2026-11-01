@@ -5,7 +5,7 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 ## Scope and order
 - Client 0.5.5e Hotfix 1 (`0.5.5e.hotfix1`) is the only supported build; older addresses and files are gone (2026-10-29).
 - Order: R2 collision finished fully, then R3 movement, then R4 entities and world map (2026-10-31). Items and entities stay deferred until then, with everything depending on them.
-- One central plan ([PLAN.md](PLAN.md)); no handoff files, no tracker (2026-10-31).
+- One central plan ([PLAN.md](PLAN.md)); no handoff files, no tracker (2026-10-31). Agents at 300k hand off to a new T3 thread themselves; Opus delegates routine work to Sonnet (2026-10-31).
 
 ## Terrain
 - Goal: 1:1 tile hash, doodad hash and collision grid for every area, topology and orientation in the default league mode (4,508 combinations). The 84 league-mode topologies and the client's server-only spawn scatter in the doodad pass are out of scope.

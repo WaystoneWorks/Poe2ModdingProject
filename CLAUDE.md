@@ -16,8 +16,9 @@ A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.h
 - Allowed without asking: Steam, the server and the client for private-server tests; x64dbg on the `GameFiles/` client in private sessions. Ask for official captures.
 
 ## Session rules
-- **One task per session, 300k context at most.** At the limit or the end of the task: commit, update PLAN.md and the topic doc, stop, and give the user a one-line prompt for the next session. No handoff files.
-- Sonnet by default, Opus for hard RE and design. Script the analysis: print summaries, keep raw output in `runtime/`.
+- **One task per session, 300k context at most.** At the end of the task: commit, update PLAN.md and the topic doc, stop. **At 300k with the task unfinished, hand off yourself** (T3 Code): commit (WIP marked NOT GATED), update PLAN.md, then call `t3_thread_launch` (load it with ToolSearch; workspace `root`; model per the next rule) whose `message` is the handoff: the task, state, files touched, what failed, next steps, and "read CLAUDE.md first". No handoff files. Tell the user the new thread's link and stop.
+- **Model routing:** Opus only for hard RE (Ghidra, client traces, porting generator rules) and heavy code design. Everything else (docs, tests and test runs, launcher and web admin UI, config, small fixes, batch runs, summarising logs) goes to Sonnet. An Opus agent hands such a step to a Sonnet subagent (`Agent` with `model: "sonnet"`, `run_in_background: false`) with a self-contained brief, and gets back a short report. A Sonnet agent that hits hard RE says so and recommends an Opus thread.
+- Script the analysis: print summaries, keep raw output in `runtime/`.
 
 ## Doc rules (`python3 scripts/check-links.py` enforces links and word limits)
 - One owner per topic; link, never copy. Docs state what is true now, not what happened. Keep every address, offset, opcode and format.

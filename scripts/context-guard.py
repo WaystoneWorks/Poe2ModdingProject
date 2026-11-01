@@ -43,8 +43,9 @@ def main():
     state.parent.mkdir(parents=True, exist_ok=True)
     state.write_text(str(level))
     text = (
-        f"Context is {tokens // 1000}k: over the 300k session limit. Stop at the next safe point: commit, update "
-        "docs/PLAN.md and the topic doc, and give the user a one-line prompt for a new session."
+        f"Context is {tokens // 1000}k: over the 300k session limit. At the next safe point: commit, update "
+        "docs/PLAN.md and, if the task is unfinished, hand off to a new thread with t3_thread_launch as CLAUDE.md "
+        "'Session rules' says (the handoff is the thread's first message); then stop."
         if level == 2
         else f"Context is {tokens // 1000}k of the 300k session limit. Plan to finish this task or stop at a safe point soon."
     )

@@ -1,77 +1,70 @@
 # Documentation index
 
-A private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), written in Rust. Rules: [../CLAUDE.md](../CLAUDE.md). Which repository does what and how they fit together: [overview.md](overview.md). Start with [guides/setup.md](guides/setup.md), then [architecture/overview.md](architecture/overview.md).
-
-Contributing, security reports and the legal notice: [../CONTRIBUTING.md](../CONTRIBUTING.md) (setup, pull requests, checks, docs rule, how RE findings are documented), [../SECURITY.md](../SECURITY.md), [the disclaimer](../README.md#disclaimer).
-
-## Overview
-| Document | Contents |
-|---|---|
-| [overview.md](overview.md) | The repositories (hub, Poe2Server, Poe2Protocol, Poe2ClientHook, Poe2WebAdmin, Poe2Launcher, Poe2ModSDK, Poe2Mods, Poe2ServerList): what each does, the dependency diagram, where releases live, how players, hosts and developers get started |
+Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules: [../CLAUDE.md](../CLAUDE.md). Repositories: [overview.md](overview.md). Start with [guides/setup.md](guides/setup.md), then [architecture/overview.md](architecture/overview.md). Contributing, security, legal: [../CONTRIBUTING.md](../CONTRIBUTING.md), [../SECURITY.md](../SECURITY.md), [disclaimer](../README.md#disclaimer).
 
 ## Guides
 | Document | Contents |
 |---|---|
-| [guides/setup.md](guides/setup.md) | The only place for commands, logs and unattended tests: clone, toolchain, build, deploy to `GameFiles/`, run client and server, offline accounts and characters, web admin and launcher builds, two-client test, official read-only sessions, config keys and migration, crash dumps |
-| [guides/server-admin.md](guides/server-admin.md) | Server commands (chat `!` and overlay), admins, instances, transfers, chat, the web admin site |
-| [hosting.md](../modules/server/docs/hosting.md) (Poe2Server) | The hosting guide: release package or source, ports, `public_host`, config, terrain upload, firewall, accounts, running it permanently (systemd, Windows), TLS reverse proxy, backups and updates, logs, what a remote player needs, security notes, troubleshooting, the local two-client test and its results |
-| [guides/official-mode.md](guides/official-mode.md) | Official mode: observing a session on the official servers with the hook, read-only: what it does and does not do, the read-only latch, the detection risk to your account, step by step (`deploy-client --official`, play, where the captures go, switching back) |
-| [guides/client.md](guides/client.md) | The client and install guide: install through the launcher, or by hand with `cargo xtask` on Linux (Proton) and Windows; first start, updating, going back, troubleshooting |
-| [releasing.md](../modules/server/docs/releasing.md) (Poe2Server) | Releasing the server: tagging `server-v*`, what the release workflow builds and packages, the secrets it needs, checking a package locally |
-| [guides/new-game-version.md](guides/new-game-version.md) | When GGG ships a build: `modules/protocol/versions/<version>.toml` (the single definition), `cargo xtask check-build`, signatures, opcodes, the launcher copy, the in-game check, and how the server refuses an unknown client |
-| [guides/releasing-hook.md](guides/releasing-hook.md) | Releasing the client hook (Poe2ClientHook): tagging `hook-v*`, what the workflow builds, the package and its `release.json`, what the launcher checks before it uses a download |
-| [guides/launcher.md](guides/launcher.md) | The player launcher (Poe2Launcher): download and auto-update, the Home/Servers/Host/Library/Settings layout, Home news and the server's message of the day, the public server browser, profiles and accounts, Steam depot install (pause/resume, speed, disk space), logs and crash dumps, Play, hosting a server from the launcher (restart supervision, database backups), Open web admin, the plain-http warning, mods, releasing (tags, signing secrets and key) |
-| [server-list-template/README.md](server-list-template/README.md) | Template of the public server list repository `Poe2ServerList` (`modules/server-list`; how a host lists a server by pull request, the `servers.json` schema, a validation script) |
-| [mod-index-template/README.md](mod-index-template/README.md) | Template of the public mod index repository `Poe2Mods` (`modules/mod-index`; how an author submits a mod by pull request, the `index.json` schema, a validation script with tests, CI); the launcher's mod browser reads it |
-| [guides/modding.md](guides/modding.md) | Server and client modding hooks (existing and planned) |
+| [guides/setup.md](guides/setup.md) | Commands, logs, unattended tests, config keys, crash dumps |
+| [guides/server-admin.md](guides/server-admin.md) | Server commands, admins, instances, web admin |
+| [hosting.md](../modules/server/docs/hosting.md) | Hosting a server: ports, config, systemd, TLS, backups |
+| [releasing.md](../modules/server/docs/releasing.md) | Releasing the server (`server-v*`) |
+| [guides/official-mode.md](guides/official-mode.md) | Read-only observation of official sessions |
+| [guides/client.md](guides/client.md) | Installing the client through the launcher or by hand |
+| [guides/new-game-version.md](guides/new-game-version.md) | Supporting a new client build |
+| [guides/releasing-hook.md](guides/releasing-hook.md) | Releasing the client hook (`hook-v*`) |
+| [guides/launcher.md](guides/launcher.md) | The player launcher |
+| [guides/modding.md](guides/modding.md) | Server and client modding hooks |
+| [server-list-template/README.md](server-list-template/README.md) | Template of the `Poe2ServerList` repository |
+| [mod-index-template/README.md](mod-index-template/README.md) | Template of the `Poe2Mods` repository |
+| [guides/agent-workflow.md](guides/agent-workflow.md) | How agents work |
 
 ## Architecture
 | Document | Contents |
 |---|---|
-| [architecture/overview.md](architecture/overview.md) | Data flow between client, login server and instance server; design rules |
-| [architecture/crates.md](architecture/crates.md) | Every crate, server and submodule and its role |
-| [architecture/client-dll.md](architecture/client-dll.md) | The client DLLs: loader, hot-reloadable core, overlay, packet capture, modes (read-only), features |
-| [architecture/accounts.md](architecture/accounts.md) | Accounts, passwords, per-cluster tokens, login paths, admins by role, one session per account; what is not done |
-| [architecture/instance-world.md](architecture/instance-world.md) | Instance directory, the instance actor (one shared `World` per instance), join/relay/leave/pause, the movement component and its tests |
-| [architecture/web-api.md](architecture/web-api.md) | The web API (accounts, admin endpoints, live log, OpenAPI) and the web admin SPA (modules/web-admin) |
-| [architecture/mod-host.md](architecture/mod-host.md) | The server mod host: mods folder, state.toml, native mod loading (poe-mod-api), data-tier commands, the mod advertisement and downloads, the login mod check |
-| [openapi.json](../modules/server/docs/openapi.json) (Poe2Server) | The API's OpenAPI document, generated by `cargo xtask openapi` (the web admin and launcher generate their types from it) |
+| [architecture/overview.md](architecture/overview.md) | Data flow and design rules |
+| [architecture/crates.md](architecture/crates.md) | Crates and submodules |
+| [architecture/client-dll.md](architecture/client-dll.md) | Client DLLs: loader, core, overlay, capture, features |
+| [architecture/accounts.md](architecture/accounts.md) | Accounts, tokens, login paths, admins |
+| [architecture/instance-world.md](architecture/instance-world.md) | Instance actor, world, movement component |
+| [architecture/web-api.md](architecture/web-api.md) | Web API and web admin |
+| [architecture/mod-host.md](architecture/mod-host.md) | Server mod host |
+| [openapi.json](../modules/server/docs/openapi.json) | Generated OpenAPI document |
 
-## Protocol (client 0.5.5e Hotfix 1)
+## Protocol
 | Document | Contents |
 |---|---|
-| [protocol/framing.md](protocol/framing.md) | Wire format: encodings, framing, encryption |
-| [protocol/login.md](protocol/login.md) | Login messages, character list, leagues, hand-off |
-| [protocol/instance.md](protocol/instance.md) | Instance messages: opening sequence, area info, inventories, frames, pause, chat, leaving the game |
-| [protocol/entities.md](protocol/entities.md) | Entity initial-state blobs (player components, actor skills, NPCs), other players (add, relayed actions, removal), party and trade messages, and what the instance actor sends |
-| [protocol/movement.md](protocol/movement.md) | Lockstep movement: WASD, click-to-move, skills, dodge roll, facing, lag |
-| [protocol/side-channel.md](protocol/side-channel.md) | DLL to instance server side channel: HMAC-authenticated position reports and debug link (UDP), terrain upload (TCP) |
+| [protocol/framing.md](protocol/framing.md) | Encodings, framing, encryption |
+| [protocol/login.md](protocol/login.md) | Login messages and hand-off |
+| [protocol/instance.md](protocol/instance.md) | Instance messages |
+| [protocol/entities.md](protocol/entities.md) | Entity blobs, other players, party, trade |
+| [protocol/movement.md](protocol/movement.md) | Lockstep movement |
+| [protocol/side-channel.md](protocol/side-channel.md) | DLL to server side channel |
 
 ## Reverse engineering and data
 | Document | Contents |
 |---|---|
-| [re/README.md](re/README.md) | How the client is analysed: Ghidra access, `scripts/re`, where findings go |
-| [re/addresses.md](re/addresses.md) | Ghidra addresses of functions and structures |
-| [re/update-compatibility.md](re/update-compatibility.md) | What breaks when GGG ships a new client build: ranked inventory (addresses, offsets, opcodes, layouts, data, versions), what WP A2 to A4 did, and the open items |
-| [re/standalone-login.md](re/standalone-login.md) | How the Steam exe picks the Steam vs email/password login (platform getter), the `0x0003` credentials packet, Remember Me tokens, the DLL patch to force standalone, and the fallback |
-| [re/crypto.md](re/crypto.md) | Login key exchange, Salsa20 key/IV layout, the HNC side channel, the DLL bypass |
-| [re/datamining.md](re/datamining.md) | Reading Bundles2 and `.datc64` tables, the schema, the dumps folder |
-| [re/captures.md](re/captures.md) | Official servers vs ours, and the live client log |
-| [re/terrain/README.md](re/terrain/README.md) | Terrain generator overview: phases, RNG, hashes, tile records, tools, the port crate |
-| [re/terrain/tgr.md](re/terrain/tgr.md) | `.tgr` areas: generation order, graph layout, rooms, routing, edge tiles |
-| [re/terrain/dungeon.md](re/terrain/dungeon.md) | `.dgr` dungeon areas: call chain, rooms, corridors, tile pass |
-| [re/terrain/shared-passes.md](re/terrain/shared-passes.md) | Passes both kinds share: topology choice, lattice, fill, de-repetition, outer buffer |
-| [../dumps/README.md](../dumps/README.md) | `dumps/<version>/` (git-ignored): what produces each file and `scripts/dumps/migrate.sh` |
+| [re/README.md](re/README.md) | How the client is analysed |
+| [re/addresses.md](re/addresses.md) | Ghidra addresses |
+| [re/update-compatibility.md](re/update-compatibility.md) | What breaks on a new build |
+| [re/standalone-login.md](re/standalone-login.md) | Standalone login patch |
+| [re/crypto.md](re/crypto.md) | Key exchange and Salsa20 |
+| [re/datamining.md](re/datamining.md) | Bundles2 and `.datc64` |
+| [re/captures.md](re/captures.md) | Official vs our server, client log |
+| [re/terrain/README.md](re/terrain/README.md) | Terrain generator overview |
+| [re/terrain/tgr.md](re/terrain/tgr.md) | `.tgr` areas |
+| [re/terrain/dungeon.md](re/terrain/dungeon.md) | `.dgr` areas |
+| [re/terrain/shared-passes.md](re/terrain/shared-passes.md) | Passes both kinds share |
+| [../dumps/README.md](../dumps/README.md) | `dumps/<version>/` |
 
 ## Plan, status, research
 | Document | Contents |
 |---|---|
 | [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
-| [decisions.md](decisions.md) | The user's settled decisions |
-| [guides/agent-workflow.md](guides/agent-workflow.md) | How agents work: session limits, checks, testing, terrain method |
-| [status/terrain.md](status/terrain.md) | The only terrain status: results per area, where work stopped, next steps |
-| [status/terrain-matrix.tsv](status/terrain-matrix.tsv) | Generated table: every area x topology x orientation as match, fail or untested (`cargo xtask terrain-matrix`) |
-| [status/history.md](status/history.md) | What was built when, and the open items |
-| [research/poe1-prior-art.md](research/poe1-prior-art.md) | What public PoE1 research says about the protocol |
-| [research/tools.md](research/tools.md) | Survey of datamining and RE tools |
-| [../modules/client-hook/docs/mod-manifest.md](../modules/client-hook/docs/mod-manifest.md) | `mod.toml` spec, mod ABI and loader rules for client mods (Poe2ClientHook submodule) |
+| [decisions.md](decisions.md) | Settled user decisions |
+| [status/terrain.md](status/terrain.md) | Terrain status |
+| [status/terrain-matrix.tsv](status/terrain-matrix.tsv) | Generated terrain match table (`cargo xtask terrain-matrix`) |
+| [status/history.md](status/history.md) | What was built when |
+| [research/poe1-prior-art.md](research/poe1-prior-art.md) | PoE1 research |
+| [research/tools.md](research/tools.md) | Datamining and RE tools |
+| [../modules/client-hook/docs/mod-manifest.md](../modules/client-hook/docs/mod-manifest.md) | `mod.toml` spec and mod ABI |

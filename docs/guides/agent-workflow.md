@@ -3,9 +3,9 @@
 How agents work on this project: what past sessions learned the hard way. Commands, logs and test tools: [setup.md](setup.md). Limit: 2,000 words.
 
 ## Session size
-- One task from [../PLAN.md](../PLAN.md) per session. At 300k context tokens or at the end of the task: commit, update PLAN.md and the topic doc, stop, and give the user a one-line prompt for the next session. `scripts/context-guard.py` warns at 250k and 300k. No handoff files.
+- One task from [../PLAN.md](../PLAN.md) per session. `scripts/context-guard.py` warns at 250k and 300k. At 300k with the task unfinished, the agent hands off to a new T3 Code thread itself (CLAUDE.md, Session rules); the handoff is that thread's first message, never a file. A user can turn this off by saying "no auto handoff" in a thread.
 - Why: every tool call resends the whole conversation. 90% of this project's tokens went out above 200k context, 64% above 400k.
-- Sonnet is the default. Use Opus for hard RE and design.
+- Model routing (CLAUDE.md): Opus for hard RE and heavy code design, Sonnet for the rest. Opus delegates routine steps to Sonnet subagents. A Sonnet brief names the files to touch, the checks to run, "do not commit" unless it should, and asks for a report under 100 words.
 - Script the analysis: batch checks, gates and logs print a short summary, with full output in `runtime/`. No raw logs or long decompiles when a script can answer.
 - Do not resume a huge old session or agent; start a new one from PLAN.md. A delegated agent that stopped early with a small context may be continued in its thread.
 
