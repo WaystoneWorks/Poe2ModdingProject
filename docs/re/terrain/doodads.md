@@ -104,7 +104,7 @@ export checked.
 `.ao` (merged over `extends`, base first). A block is a list of sections (`section = ...` starts a
 new one) of `walk_tri x0 y0 x1 y1 x2 y2`, `proj_tri ...`, `walk_circle x y r` and `proj_circle x y
 r`. The transform is rotation by the doodad angle times the scale, mirrored in x when `flip`. Walk
-shapes go to layer 0, projectile shapes to layers 0 and 1 (`stamp_hull`). Before sin/cos the object angle is wrapped fully into [0, 2pi) (`rem_euclid`, negative angles too); where the client normalises it was not located, the evidence is the grid gate (4,979 -> 4,991 identical). Only subtracting 2pi repeatedly, without wrapping negatives, regressed 8 `G2_5_1`/`MapWaywardIsle` exports. Cause: f32 sin/cos of 4pi or -pi/2 differ from 0 or 3pi/2 at cell edges.
+shapes go to layer 0, projectile shapes to layers 0 and 1 (`stamp_hull`). Before sin/cos the object angle is wrapped fully into [0, 2pi) (`rem_euclid`, negative angles too); where the client normalises it was not located, the evidence is the grid gate (4,979 -> 4,991 identical). Only subtracting 2pi repeatedly, without wrapping negatives, regressed 8 `G2_5_1`/`MapWaywardIsle` exports. Cause: f32 sin/cos of 4pi or -pi/2 differ from 0 or 3pi/2 at cell edges. A `Hull` block may set `disable_rotation = true`; the key parser `0x141d6e4b0` stores it at hull `+0x88` (one flag for the whole hull). The port (`collision::parse_hull`, `HullSection::disable_rotation`, `stamp_hull`) stamps such hulls with angle 0 and keeps the mirroring; where the client reads `+0x88` was not traced, and keeping the flip scored 5 more byte-identical exports than dropping it. Example: `SunkenCity/Past_Individual_Doodads/WovenBasket07.ao` (12 x 12 square walk_tri).
 - a triangle (`0x141d10d60`) zeroes the cells it covers (the 4-bit fixed-point scan of
   `0x141d1d3d0` / `0x141d18ee0` with the top-left rule), zeroes each corner and stamps the 48-entry
   corner kernel `0x1434bfc30` (values 1..4 around the corner), and for each edge stamps the distance
@@ -256,9 +256,8 @@ neither on `poe-game` nor on `poe-config`; the instance server is the adapter
 - Doodads: every tile-matching export equals `doodads.tsv` (set, hash, draws) except the
   `MapVaalVault` angle case below, and every tile match of the 50-seed batch (72,718 of 218,705
   client layouts) matches the client's doodad hash.
-- Collision grid: 4,991 of 5,256 client grid exports on disk equal `grids.bin` (a sample biased
-  toward earlier failures; 4,875 with `POE_NO_OUTSIDE_ZONES`), 265 differ, 5 differ in the layout
-  already. Layers 2 and 3 always agree. Total differing cells 192,575 (was 346,364); no regressions. The `random_orientation` list fix took `G3_8` from about 15,500 to about 117 average cells; `G3_8` has 5 failing layouts left (17 to 54 cells each, layer 0 only, not classified). The `outside_tiles` rule
+- Collision grid: 5,084 of 5,256 client grid exports on disk equal `grids.bin` (96.7%; a sample biased
+  toward earlier failures), 172 differ, 5 layouts (6 dir-list lines) differ in the layout already. Layers 2 and 3 always agree. Total differing cells 143,143 (was 192,575, originally 346,364); no regressions, no export worse. The `disable_rotation` hull flag cleared every `G3_8`, `G3_14`, `MapVaalCity`, `MapBazaar`, `BossRush_Area3`, `MapReservoir`, `G3_16`, `G4_town` and `ExpeditionLogBook_Atoll` export and 7 of the `G3_1` exports: the whole `VaalExterior` Street family is closed. The `random_orientation` list fix (the `G3_8` RNG offset) came first. The `outside_tiles` rule
   ([above](#unwalkable-corners)) cleared `MapRazedFields`, `MapOasis`, `MapMonument`, `MapSlash`; the
   binary `.tmd` reader cleared `HideoutArenaMaven`, `HideoutCanal`, `G4_5_1`, `G4_7`, `P1_5` and
   `ExpeditionLogBook_Peninsula`. Open layouts, count of unique failing layouts / average differing

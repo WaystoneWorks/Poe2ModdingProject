@@ -6,25 +6,21 @@ The only list of what is left to do and the only status source. Edit it in place
 
 The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_grid`, off by default) must equal the client's.
 
-**State (2026-11-01):** 4,991 of the 5,256 client grid exports on disk are byte-identical (94.96%); 265 differ in the grid, 5 already in the layout. No regressions; server tests pass. Details and open families: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
+**State (2026-11-01):** 5,084 of the 5,256 client grid exports on disk are byte-identical (96.7%); 172 differ, 5 layouts of them (6 dir-list lines) already in the layout. No regressions; server tests pass. Details and open families: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
 
 **Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); a biased sample (many exports come from failure hunts); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
 1. **Fix the grid families, largest differences first**, using per-pass snapshots:
 
-   Unique failing layouts / average differing cells (the gate's dir list has duplicates). `G3_14`, `MapVaalCity`, `MapBazaar` still differ and do not share `G3_8`'s cause (an RNG offset test did not help them).
+   Unique failing layouts / average differing cells (the gate's dir list has duplicates). `P3_1` is the largest family and has not been looked at.
 
    | Area | Failing layouts | Average differing cells |
    |---|---|---|
    | `P3_1` | 5 | 25,289 |
-   | `MapVaalCity` | 26 | 1,465 |
-   | `G3_14`, `MapBazaar` | 8, 1 | 831 and 766 |
-   | `G3_1`, `BossRush_Area3`, `G2_5_2` | 11, 1, 33 | 404, 228, 196 |
-   | `MapReservoir`, `MapLostTowers`, `G2_2`, `G3_16` | 10, 3, 21, 7 | 97 to 162 |
-   | `MapPlantation`, `G2_5_1` | 7, about 73 | 72 and about 70 |
-   | `G3_8` | 5 | 31 |
-   | 3 smaller (`G4_town`, `MapSteamingSprings`, `ExpeditionLogBook_Atoll`) | 2, 2, 6 | 21 to 59 |
+   | `G3_1` | 4 | 527 |
+   | `G2_5_2`, `G2_2`, `G2_5_1` | 33, 21, 70 | 196, 100, 73 |
+   | `MapLostTowers`, `MapPlantation`, `MapSteamingSprings` | 3, 7, 2 | 104, 72, 48 |
 
 2. **The 5 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
 3. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
