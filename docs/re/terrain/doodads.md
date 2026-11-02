@@ -104,7 +104,7 @@ export checked.
 `.ao` (merged over `extends`, base first). A block is a list of sections (`section = ...` starts a
 new one) of `walk_tri x0 y0 x1 y1 x2 y2`, `proj_tri ...`, `walk_circle x y r` and `proj_circle x y
 r`. The transform is rotation by the doodad angle times the scale, mirrored in x when `flip`. Walk
-shapes go to layer 0, projectile shapes to layers 0 and 1 (`stamp_hull`). Before sin/cos the object angle is wrapped fully into [0, 2pi) (`rem_euclid`, negative angles too); where the client normalises it was not located, the evidence is the grid gate (4,979 -> 4,991 identical). Only subtracting 2pi repeatedly, without wrapping negatives, regressed 8 `G2_5_1`/`MapWaywardIsle` exports. Cause: f32 sin/cos of 4pi or -pi/2 differ from 0 or 3pi/2 at cell edges. A `Hull` block may set `disable_rotation = true`; the key parser `0x141d6e4b0` stores it at hull `+0x88` (one flag for the whole hull). The port (`collision::parse_hull`, `HullSection::disable_rotation`, `stamp_hull`) stamps such hulls with angle 0 and keeps the mirroring; where the client reads `+0x88` was not traced, and keeping the flip scored 5 more byte-identical exports than dropping it. Example: `SunkenCity/Past_Individual_Doodads/WovenBasket07.ao` (12 x 12 square walk_tri).
+shapes go to layer 0, projectile shapes to layers 0 and 1 (`stamp_hull`). Before sin/cos the object angle is wrapped fully into [0, 2pi) (`rem_euclid`, negative angles too); where the client normalises it was not located, the evidence is the grid gate (4,979 -> 4,991 identical). The stamp reads the Positioned component (`0x141d10650`): angle `+0x44c`, scale `[+0x158]+0x74` times `+0x474`, flip `+0x1e4` bit 4, origin cell `+0x444`; `0x141d19270` (triangles) and `0x141d194f0` (circles, cells via `0x141d11400`) match `stamp_hull`. **Anim-driven hulls:** an `.ao` whose `AnimationController` has `anim_driven_subobject` lines (the breakable fences, `WoodenFenceShort01.ao`) is in the client grid twice, unturned and unmirrored and with its final transform (`AoInfo::anim_driven`; `MapPlantation` 800/800 identical). Unturned alone fails map orientations 1 and 7, the final transform alone 0, 6 and 7. Where the client stamps the unturned copy was not traced (eight callers of `0x141d10650`). Only subtracting 2pi repeatedly, without wrapping negatives, regressed 8 `G2_5_1`/`MapWaywardIsle` exports. Cause: f32 sin/cos of 4pi or -pi/2 differ from 0 or 3pi/2 at cell edges. A `Hull` block may set `disable_rotation = true`; the key parser `0x141d6e4b0` stores it at hull `+0x88` (one flag for the whole hull). The port (`collision::parse_hull`, `HullSection::disable_rotation`, `stamp_hull`) stamps such hulls with angle 0 and keeps the mirroring; where the client reads `+0x88` was not traced, and keeping the flip scored 5 more byte-identical exports than dropping it. Example: `SunkenCity/Past_Individual_Doodads/WovenBasket07.ao` (12 x 12 square walk_tri).
 - a triangle (`0x141d10d60`) zeroes the cells it covers (the 4-bit fixed-point scan of
   `0x141d1d3d0` / `0x141d18ee0` with the top-left rule), zeroes each corner and stamps the 48-entry
   corner kernel `0x1434bfc30` (values 1..4 around the corner), and for each edge stamps the distance
@@ -166,19 +166,22 @@ the hash. A `.tmd` line is `x y flag [wx wy] z angle q0 q1 q2 q3 flip scale "ao"
 n [orientations]`; the flag says whether the world `x y` is present. P3_1's
 `ambush_CenterHoleLarge_01.tdt` (flags `0x9a`) proves the bit-8 rule: its art `.tmd` repeats the
 own list's 11 `SkeletonCave_set.ao` picks, and drawing them twice shifted every later pick.
-Not ported: the `alttiles/<env>/<env>_<name>.tmd` variant of the art list (`0x141d07eb0`,
-`0x141d11c50`; used when the file exists) and the **per-sub-tile objects** of tiles with
-`+0x16d & 2` (body flag 0x200; `0x141d07630`; the port gives these tiles no art list). Then
-the `.tgt` is a `;` list (`0x141d080d0` returns segment i only in this case) and each group
-origin sub-tile (record `+0x90`, 0x38 bytes, row-major, `+0x60` wide; `+0x31` = `SubTile::b1`:
-8 skip, 2 joined to the left, 4 joined above; none of them = origin) places the `.tmd` of
-segment `+0x36 >> 2` (`SubTile::parts[0]`, `0x141d07c80`). Its span (`0x141d074a0`): 1 + the
-run of right neighbours with b1 2, 1 + the run of lower neighbours with b1 4. Orientation
-`+0x37 >> 5` (`parts[1]`); height `+0x37 & 0xf`, sign 0x10, times `+0x177` times 7.8125. Each
-entry's world point turns in the span box (swapped for odd orientations; `0x142f02118` table),
-plus (x, y) * 250, cell = floor(world * 0.092); angle as `turn_angle`; flip toggles for
-orientations 4..7; the orientation mask maps through the table `0x143512a00[o + mask * 8]`.
-The result goes to the same `0x141ff43d0` as the other lists.
+`+0x178` keeps the last existing `.tmd` of the `.tgt`'s `;` segments; `0x141d07630` returns
+when it is null. Without body flag 0x200 (`+0x16d & 2`) the art list is the whole `.tgt` with the
+extension swapped (`0x141d07eb0`). With it (`doodads::subtile_objects`) the `.tgt` is a `;` list
+and each group-origin sub-tile (record `+0x90`, 0x38 bytes, row-major, `+0x60` wide; `+0x31` =
+`SubTile::b1`: 8 skip, 2 joined to the left, 4 joined above; bit 1 is the plane margin) places the
+`.tmd` of segment `parts[0]` (`+0x36 >> 2`, `0x141d07c80`; skipped when missing), turned by
+`parts[1]` (`+0x37 >> 5`; `Landmark_feature_02.tdt`: segments 0..6 of 7, orientations 0..7).
+Span (`0x141d074a0`): 1 + the run of right neighbours with b1 2, 1 + the run of lower neighbours
+with b1 4, swapped for odd orientations. Each entry's world point turns in the span box
+(`0x142f02118`), plus (x, y) * 250, cell = floor(world * 0.092); angle as `turn_angle`; flip
+toggles for orientations 4..7; the orientation mask maps through `0x143512a00[o + mask * 8]`, the
+OR over the mask's bits of an 8 x 8 composition (`ORIENT_COMPOSE`). Height `+0x37 & 0xf`, sign
+0x10, times `+0x177` times 7.8125 (no grid effect). The entries replace the art list and go to
+`0x141ff43d0` before the own list. Gate: `forced_verify` 12,848/12,848 grids identical in `G3_1`,
+`G2_5_1`, `G2_2`, `MapLostTowers`, `P3_1`, `G2_5_2`. Not ported: the `alttiles/<env>/<env>_<name>.tmd`
+variant (`0x141d07eb0`, `0x141d11c50`; 111 files: foundry, act3church, marakethdesert, nosnow).
 
 **Binary `.tmd`** (805 of the game's 9,706; 742 version 5, 63 version 6; `doodads::tmd_binary`).
 Client parser `0x14291aab0` (entries go to the sink vtable `0x1434bfe70`, slot 0 `0x141d01c60`; the text
@@ -250,7 +253,13 @@ lattice dumps ([batch.md](batch.md#traces-in-batch-mode)) and `check_lattice` wi
   (`LATTICE_MAP=1` draws the differences, `LATTICE_COL=x`, `LATTICE_ROW=y` print grounds and flags).
 - `lattice_probe <export> x0 y0 x1 y1`: the corner lattice around a tile range (ground letter and
   flags per corner).
-- `forced_verify` reports `doodads match|differ` after the tile hash.
+- `forced_verify` reports `doodads match|differ` after the tile hash; `POE_DBG_GRID_DUMP=DIR` writes
+  the port's grid and solid objects (`.objects.tsv`) per layout (rule on/off comparisons where no
+  client export exists).
+- `POE_DBG_HULL_SET=x,y,angle,flip[,scale]` restamps one object (flip 2 leaves it out);
+  `runtime/gridtools/anglesweep.sh` sweeps angle x flip with it, `circfit.py` scores circle
+  centres and radii against the client grid. Examples `subtile_parts` (per-sub-tile bytes),
+  `ao_anim_scan` (animated hulls at non-zero angles).
 - Batch exports also write `entities.tsv` (objects with cells), `tiledata.tsv` (tile data
   `+0x16c..`), `lattice.bin` (final corners), `regions.tsv` (region rectangles and master flags).
   `POE_HOOK_GRID_PHASES=<Z: dir>` with `POE_HOOK_GEN_TRACE=1` (one thread) writes the grids at each
@@ -296,4 +305,5 @@ All differ in layer 0 unless noted. Tools: `check_grids --blame`, `POE_DBG_GRID_
 | `MapSeepage`, `MapUberBoss_IronCitadel` (partly) | 250 to 690 | The port blocks more than the client: whole tiles cleared with the margin ramp, or a wall plane 4 cells longer | The port flags corners the client does not, which fits the `sealed_inside` stub (a sealed tile stops the flood). The `.tdt` field behind `+0x16f` is not mapped (the flag word of `0x142915630` is set bit by bit through a vtable slot `+0x40`) |
 | `MapCrimsonShores` | 400 to 1,800 | A circular blob of radius about 10 with the 1..4 clearance ramp is blocked in the client, absent in the port, centred in a `fill_01.tdt` tile (3 x 3, flags 0x03, plane-less) | Not a tile plane and not one of the room doodads. Probably a generator object that is not in `doodads.tsv` (an entity from tile data `+0x1b8`, or a scatter object); an export with `entities.tsv` of a failing layout decides |
 | `MapMonument`, `MapFortress`, `G4_5_2`, `G2_10_1`, `MapReservoir` | 150 to 4,900 | Feature tiles (`PrecursorGroundAnchor_*`, `fortress_boss_01`, `Warden_Office`, `JamanraRitualSite_02`) and fill tiles | Same two suspects (unported unwalkable-corner rules, objects outside `doodads.tsv`) |
+| `MapSteamingSprings` | 30 to 367 | Ramp cells one off around `walk_circle` hulls with an off-centre point (`BlackFernTrunk02.ao`: `0.471945 -0.145465 3.15566`, flipped, angle 1.464; `BlackFernTrunk03.ao`) | Angle, flip, scale and the cell code are not it (sweeps; `0x141d194f0`/`0x141d11400` match `stamp_circle`). A fit on sample `2220715731_6_2` puts the client's centre at about (0.14, -0.04) cells instead of our (0.09, -0.48): the file's y kept, x (0.47) mostly or wholly dropped. Next: fit more fern circles (other samples, other angles) to fix the rule |
 | `MapVaalVault` | 53 | Two doodads (`SunkenPillar_set.ao`, `random_orientation`, `AOSet` with one choice) have the angle off by pi/2 (ours 3pi and 2.5pi after the pick, the client 2.5pi and 2pi; the seed 35611400 topology 1 orientation 0 layout) | `0x1421c3f40` is ported as decompiled (`mask 0xff`: `u & 7`) and the picks of all other sets (`random_flip`, 1,879 doodads) agree, so the draw `u` (99 and 314, `below(0x348)`) or the mapping from the picked orientation to the angle differs for the full eight-way case. A client trace of `MapVaalVault 35611400 1 0` shows the real draws |

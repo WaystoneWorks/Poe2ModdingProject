@@ -6,24 +6,18 @@ The only list of what is left to do and the only status source. Edit it in place
 
 The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_grid`, off by default) must equal the client's.
 
-**State (2026-11-01):** broad sample done (all areas, 50 seeds per topology and orientation, `terrain_batch.py plan <run> --seeds 50`; [status/terrain.md](status/terrain.md)). Pilot (2 seeds): 9,016 jobs, 8,739 ok, grids 8,428 identical. Full: 225,400 jobs, client 1 h 29 min, no crash, 218,705 ok, 6,695 errors (2.97%, client generation exceptions). `forced_verify` over the 218,705: tile 218,705 and doodad 218,705 identical (the R1 area-generation check passes broad); **grids 210,766 identical (96.4%), 7,889 differ**, all in 9 of 432 areas (every other area is 100% identical). Layout (tile and doodad) always matches in the differing grids. Details: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
+**State (2026-11-01):** broad sample done (all areas, 50 seeds per topology and orientation, `terrain_batch.py plan <run> --seeds 50`; [status/terrain.md](status/terrain.md)). Pilot (2 seeds): 9,016 jobs, 8,739 ok, grids 8,428 identical. Full: 225,400 jobs, client 1 h 29 min, no crash, 218,705 ok, 6,695 errors (2.97%, client generation exceptions). `forced_verify` over the 218,705: tile 218,705 and doodad 218,705 identical (the R1 area-generation check passes broad); **grids 210,766 identical (96.4%), 7,889 differ** at the time, all in 9 of 432 areas (8 closed since, step 1) (every other area is 100% identical). Layout (tile and doodad) always matches in the differing grids. Details: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
 
 **Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
-1. **Fix the grid families** (hard RE, Opus; `check_grids --blame`; runs `grid50`, `grid50ex`: 6 differing layouts per area). Closed: `TN_WorldMap` (master `+0x166` is `DoNotFillOutside`; gate 4,116/4,116 in the affected areas). **WIP, NOT GATED** (server `9233967`): the art `.tmd` list only without tile data `+0x16c & 8` ([doodads.md](re/terrain/doodads.md#what-decides-whether-an-object-exists)): `grid50ex` 21 of 54 samples identical (`P3_1` 6/6, `G2_5_2` 6/6, `G2_2` 3/6, `TN_WorldMap` 6/6); one regression, `G2_2_1242428274_8_7` L1 72 -> 109 cells. Next: port the per-sub-tile objects (`0x141d07630`, specified in doodads.md; a rough whole-tile try also cleared 3 `MapLostTowers`, 2 `G3_1`, all `G2_2`), then per-family `forced_verify`. Open:
+1. **Fix the grid families** (hard RE, Opus; `check_grids --blame`; runs `grid50`, `grid50ex`: 6 differing layouts per area). Closed and gated with area-limited `forced_verify` ([doodads.md](re/terrain/doodads.md#what-decides-whether-an-object-exists)): `TN_WorldMap` (`DoNotFillOutside`, 4,116/4,116); the art `.tmd` only without `+0x16c & 8` plus the per-sub-tile objects of `+0x16d & 2` tiles (`G3_1`, `G2_5_1`, `G2_2`, `MapLostTowers`, `P3_1`, `G2_5_2`: 12,848/12,848); anim-driven fence hulls stamped twice (`MapPlantation` 800/800). **WIP, NOT GATED** (server `776f551`): the art rule is global, so a full `grid50` regression (about 2.3 h, batch-runner) must show no new failures. `grid50ex`: 48 of 54 samples identical. Open:
 
    | Area | Differing / ok grids (grid50) | Layers and differing cells |
    |---|---|---|
-   | `G3_1` | 1,666 / 3,099 | L0, 112-565 |
-   | `G2_5_1` | 3,253 / 4,800 | L0, 11-145 (`+0x16d & 2` tiles, `Landmark_feature_02.tdt`) |
-   | `G2_2` | 462 / 778 | L1, 37-109 |
-   | `MapLostTowers` | 184 / 2,372 | L0, 46-175 |
-   | `MapPlantation` | 384 / 800 | L0, 41 (125 in one; blame `0x26` b1 5 list1) |
-   | `MapSteamingSprings` | 125 / 2,399 | L0, 30-367 (blame flags `0x07` b1 0 list0) |
-   | `P3_1`, `G2_5_2` | 175 / 199, 1,590 / 1,600 | samples identical with the WIP rule |
+   | `MapSteamingSprings` | 125 / 2,399 | L0, 30-367: circle hulls with an off-centre point (`BlackFernTrunk02/03.ao`), [doodads.md](re/terrain/doodads.md#open-grid-families) |
 
-   Files: `dumps/.../batch/grid50/grid-fails.txt`, `runtime/r2fam/` (per-sample cells), `runtime/gridtools/`.
+   Next: fit the fern circles in more samples (`circfit.py`, `POE_DBG_HULL_SET`), port the rule, gate `MapSteamingSprings`, then the full `grid50` regression. Files: `dumps/.../batch/grid50/grid-fails.txt`, `runtime/r2fam/` (per-sample cells, gate inputs), `runtime/gridtools/`.
 2. **The 5 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
 3. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
 4. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
