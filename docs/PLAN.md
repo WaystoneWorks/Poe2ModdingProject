@@ -2,9 +2,9 @@
 
 The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
-## Now: R3 step 1 part A, the action speed factor
+## Now: R3 step 1 part B, roll profile and stances
 
-R3 timing RE and the server clock are done ([movement.md](protocol/movement.md#timing)). Next: the action speed factor (attacks while walking, gap #6 in [movement.md](protocol/movement.md#gap-list)) from existing captures and RE. R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
+R3 timing, the server clock and the action speed factor are done ([movement.md](protocol/movement.md#speeds)). Next: the one-in-four standing roll against a diagonal wall, the one-waypoint deviation beside a moving entity, stance changes; check `clientpath.rs` and R2 collision still agree. Open in the factor: the drop to 0.3 at frame 7 is measured, not traced; no in-game test until characters have an attack skill. R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
 
 ## T: agents test in game by themselves
 
@@ -18,7 +18,7 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 
 ## R3: movement 1:1 with the official game
 
-1. **Server copies of what the client does alone:** action speed factor (attacks while walking, gap #6), sprint coasting (problem 5, needs the capture in R4.1), roll profile, the client pathfinder (`clientpath.rs`), stance changes, collision from R2. Also the one-in-four standing roll against a diagonal wall (4.8 cells off) and the one-waypoint deviation beside a moving entity (5 of 541 plans).
+1. **Server copies of what the client does alone:** sprint coasting (problem 5, needs the capture in R4.1), roll profile, the client pathfinder (`clientpath.rs`), stance changes, collision from R2. Also the one-in-four standing roll against a diagonal wall (4.8 cells off) and the one-waypoint deviation beside a moving entity (5 of 541 plans).
 2. **Replay tests** for every input sequence of all official captures (extend the `locomotion.rs` fixtures). Not run yet: W pressed or released during a sprint (needs a combined key entry in the DLL).
 
 **Done when:** every captured sequence replays identically (opcodes, fields, frame offsets).

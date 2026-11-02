@@ -99,6 +99,17 @@ PRESETS = {
         "with the end of the sprint at t0+35 (must_sprint off, MoveAck, StartAction, sprint "
         "off); cursor-follow 0x63 vectors in between",
         True),
+    "attack_while_click_walking": (
+        NEW, 3990, 4020,
+        "held click walk (repeats every 2 frames) with an attack at f4005: the walk goes on and "
+        "the client's step falls to 0.3 of walking 7 frames in, rising again from frame 13 "
+        "('track': the action speed factor)",
+        True, {"track": True}),
+    "attack_ends_sprint_then_walk": (
+        NEW, 2322, 2416,
+        "walk, roll with Space held into a sprint along the keys, sprint ended by an attack at f2393: the unscaled 0x64 restarts the walk, which "
+        "the attack slows to 0.3 from 7 frames in ('track' from the attack on)",
+        True, {"track": True, "track_from": 72}),
     # ---- click-to-move mode standing rolls (WP C1, gap #12): 'track' is the client's own path ----
     "click_mode_roll_south": (
         NEW, 3644, 3678,
