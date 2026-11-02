@@ -315,7 +315,11 @@ Algorithm and evidence: [pathfinding.md](pathfinding.md). Signature `path_plan` 
 | `0x141ed30a0` / `0x141ed3510` | | straight / diagonal jump with the jump limit `min(cap, 3 + 5 * alignment + 0.2 * excess)` |
 | `0x141ed2fb0` | | whether the neighbour in a direction is a wall (forced-neighbour test) |
 | `0x141ece070` | | `h` of a cell: distance adjusted by min/max/radius plus `0.001 * |cross|` |
-| `0x141edc970` / `0x141edc6e0` | | line-of-sight tests of the thinning passes (Bresenham over the grid) |
+| `0x141edc970` | | line-of-sight test of the thinning passes (Bresenham over the grid); called at `0x141ed1880` / `0x141ed19dc` |
+| `0x141edc6e0` | | line-of-sight variant for a test that ends at the start while the entity moves along a line (`0x141ed1848` / `0x141ed19a4`): `(cell, q, point p, d, ctx)`, steps from the cell to `q` one cell per axis, then walks the float line `p -> d` along its major axis from `q` (minor `floor(p_minor + slope * k + 0.49 or 0.5)`, 0.49 for a positive slope) |
+| `0x141eca7f0` | | inputs of that variant: `p` = the line point (`0x141ec83d0`), `q` = `round(p + v * dot(v, cell - p) / |v|^2)`, `v = d - p` |
+| `0x141ec83d0` | | the point on the entity's line (Positioned `+0x208`): `start (+0x214..) + (end cell (+0x23c..) - start) * clamp(progress)` (progress `+0x284/+0x278`, or `+0x288/+0x274` when `+0x268`), axes swapped back by `+0x22e` (0 and 2) and `+0x22d` (0 and 1); the position after the frame's step, cell-centred |
+| `0x141b87580` | | whether the variant applies: the line runs (`+0x269` 0, `+0x274` not 0) and its current cell (`+0x248..+0x250`, same swaps) is the grid cell `+0x444/+0x448`; the flag is `[rbp+0x5f8]` of `0x141ed0510` |
 | `0x141ed38e0` | | whether a cell is walkable and not marked a wall in the window |
 | `0x141d0df50` | | reads a cell's 4-bit value of layer `n` (value 5 reads as 255) |
 | `0x141dc7d00` | | the entity's pathing level from Positioned `+0x1e8` (sizes `+0x1f8/+0x1f9`, extra bytes `+0x1fc..+0x200`) |

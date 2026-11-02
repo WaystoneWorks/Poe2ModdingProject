@@ -2,9 +2,9 @@
 
 The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
-## Now: R3 step 1 part B, roll profile and stances
+## Now: R3 step 2, replay tests
 
-R3 timing, the server clock and the action speed factor are done ([movement.md](protocol/movement.md#speeds)). Next: the one-in-four standing roll against a diagonal wall, the one-waypoint deviation beside a moving entity, stance changes; check `clientpath.rs` and R2 collision still agree. Open in the factor: the drop to 0.3 at frame 7 is measured, not traced; no in-game test until characters have an attack skill. R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
+R3 step 1 is done except sprint coasting (needs the R4.1 capture): timing, server clock, action speed factor, roll profile, and the client pathfinder including its line-of-sight test from the exact point while moving ([pathfinding.md](re/pathfinding.md); 166 of 166 plans of a private run with the line state, 536 + 5 of the old log). Next: replay every input sequence of all official captures (step 2 below), including the stance change at the first attack (`0x2a6` and the `0x1000` byte are not sent yet, [movement.md](protocol/movement.md#input-mode-and-stance)). Open: the drop of the action speed factor to 0.3 at frame 7 is measured, not traced; no in-game attack test until characters have an attack skill; the standing roll that once ended 4.8 cells off against a diagonal wall (old `G1_1` layout, aimed at the cursor) was not reproduced and has no scenario (rolls re-plan every frame while moving, so the moving test applies to them). R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
 
 ## T: agents test in game by themselves
 
@@ -18,7 +18,7 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 
 ## R3: movement 1:1 with the official game
 
-1. **Server copies of what the client does alone:** sprint coasting (problem 5, needs the capture in R4.1), roll profile, the client pathfinder (`clientpath.rs`), stance changes, collision from R2. Also the one-in-four standing roll against a diagonal wall (4.8 cells off) and the one-waypoint deviation beside a moving entity (5 of 541 plans).
+1. **Server copies of what the client does alone:** left: sprint coasting (problem 5, needs the capture in R4.1); stance changes while moving and the weapon swap (gap #7, same capture).
 2. **Replay tests** for every input sequence of all official captures (extend the `locomotion.rs` fixtures). Not run yet: W pressed or released during a sprint (needs a combined key entry in the DLL).
 
 **Done when:** every captured sequence replays identically (opcodes, fields, frame offsets).
@@ -62,7 +62,7 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 | What | When |
 |---|---|
 | Install gamescope | now (T0) |
-| Official capture, including movement problem 5 | R4.1 |
+| Official capture, including movement problem 5 and gap #7 (input-mode toggle while walking, weapon swap) | R4.1 |
 | G-PARTY capture (a friend answers party invite and trade request) | any time, implementation waits for items |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |
 | Decide whether old batch run directories may be deleted (disk 481 GB free; `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small) | any time |

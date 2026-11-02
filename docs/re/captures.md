@@ -26,7 +26,8 @@ In the game (a character with at least two acts' waypoints; about 15 minutes; wa
 4. Walk through a fog-covered transition (the misty doorway kind), and back.
 5. Touch a checkpoint (the glowing marker in the field).
 6. Movement: hold W, tap Space to roll and keep W held until the sprint starts, keep going a few seconds, then release W (three times); click an attack while walking (five times).
-7. Log out normally.
+7. Stance (movement gap #7): while walking with W held, toggle the input mode to click-to-move and back (twice); swap weapon sets once standing and once while walking.
+8. Log out normally.
 After: Claude runs `cargo xtask deploy-client` (private again), turns the desktop rules back on and moves the session to `dumps/<version>/captures/official/`.
 
 ## Matched to official
