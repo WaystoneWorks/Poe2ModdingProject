@@ -108,13 +108,14 @@ Imports: `VERSION.dll` (`GetFileVersionInfoW`, `GetFileVersionInfoSizeW`, `VerQu
 | `0x141b76da0` | end of a dodge roll: decides whether it becomes a sprint (official servers decide server-side: `is_sprinting` is set 15 frames into a held roll) |
 | `0x141e5d610` | Actor "is sprinting": Actor +0x915 or the stat `is_sprinting` |
 | `0x141e4dfa0` | movement reset / stat listener: stops Move when Actor +0x2a1 bit 2 is set |
-| `0x141b773a0` | sprint end: ends Move, stops the entity (`0x141de4de0`), plays `SprintEnd` (`0x36a`, Bonk `0x36b`; ids at `0x142f58e60`) only when Actor +0x2a3 bit 0 is clear (InterruptActionsForDuration `0x141e51ce0` mode 1) and no slot-0 action runs; index from `m_ExtraAnimations` of row `0x368` (0/1, +2 with stat `0x4862`) |
+| `0x141b773a0` | sprint end: ends Move, stops the entity (`0x141de4de0`), plays `SprintEnd` (`0x36a`, Bonk `0x36b`) unless Actor +0x2a3 bit 0 (`0x141e51ce0` mode 1) or a slot-0 action; `m_ExtraAnimations` of row `0x368` (+2 with stat `0x4862`) |
 | `0x141da76c0` | Animated animation-event handler (type 0x12 MoveEventType -> `0x141f5f4a0`) |
-| `0x141f5f4a0` / `0x141f60b20` / `0x141f5f650` | animation root-motion move (event, displacement, start) |
+| `0x141f5f4a0` / `0x141f60b20` / `0x141f5f650` | animation root-motion move (event, displacement, start; rate: xmm0 at `0x141f5fa34`) |
+| `0x141d46ee0` / `0x141e5c0f0` | AnimationController +0x178 rate setter / action speed |
+| `0x141e57b80` / `0x141e56ae0` / `0x141e4db00` | play animation / movement-speed rate / speed |
+| `0x141b76da0` | sprint end check ([rules](../protocol/movement.md#coasting-after-a-sprint)) |
 | `0x141f61000` / `0x141de6030` | its target cell: grid + displacement rotated by facing +0x44c, Positioned scales +0x46c/+0x470/+0x474 |
 | `0x141da7dc0` | animation change: stops it |
-| `0x142049400` | script `Accelerate` (effect `0x96b1`, tick `0x141f7aab0`, net reader `0x141e69dc0`), unused by the player |
-| `0x141de5190` | Positioned change speed |
 | `0x141aa9250` | `dodge_roll_travel_distance` getter |
 | Actor +0x238 / +0x240 | current action (roll) / Move action slot (WASD walk); action type at action +0x120 |
 | Actor +0x2a2 bit 5 | sprint key held (set by S->C `0x2e7`) |
