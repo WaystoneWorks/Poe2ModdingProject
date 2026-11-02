@@ -25,7 +25,7 @@ In the game (a character with at least two acts' waypoints; about 15 minutes; wa
 3. In a field area: walk through a normal area transition into the next area, then back through it.
 4. Walk through a fog-covered transition (the misty doorway kind), and back.
 5. Touch a checkpoint (the glowing marker in the field).
-6. Movement: hold W, tap Space to roll and keep W held until the sprint starts, keep going a few seconds, then release W (three times); click an attack while walking (five times).
+6. Movement: hold W, tap Space to roll and keep W held until the sprint starts, keep going a few seconds, then release W (three times); click an attack while walking (five times; movement gap #6: also five attacks standing and five in a plain WASD walk without a roll, ideally once more with attack-speed gear or a speed buff on, so the attack lengths show). Held click (gap #2): hold the left mouse button for 5 s without rolling or attacking (twice; shows the 15-frame restart trigger).
    Then (movement gap #4) twice each: hold Space with no key (sprint towards the cursor), press W after the sprint starts, release Space with W still held, release W a second later; hold W, roll and keep Space held, release W while sprinting, then Space.
 7. Stance (movement gap #7): while walking with W held, toggle the input mode to click-to-move and back (twice); swap weapon sets once standing and once while walking.
 8. Log out normally.

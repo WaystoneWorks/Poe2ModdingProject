@@ -2,9 +2,9 @@
 
 The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
-## Now: R3 step 2, replay tests
+## Now: blocked on the user
 
-R3 step 1 is done except sprint coasting (needs the R4.1 capture). Step 2 (replay tests): the stance change (`0x200` StanceRequest, `0x2a6` before every stance delta, the `0x1000` value byte; toggle, first skill use in mouse mode, entry) and `0x1ca` with every non-Move action start are done; every official session is cut into 98 episodes that replay in `every_captured_episode` (64 identical, 34 listed with the reason in `fixtures/episodes/known.json`, [movement.md](protocol/movement.md#reproducing)). W pressed or released during a sprint runs in the `sprint-w` game test (existing key entries; drift at most 2.5 cells at the end, stream rules checked by `scripts/re/sprint_check.py`); it showed that the client ignores the unscaled `0x64` after a sprint with a stream too (problem 5). Next: R3 wrap-up, what waits for the R4.1 capture goes into "Needs the user". Open: the drop of the action speed factor to 0.3 at frame 7 is measured, not traced; no in-game attack test until characters have an attack skill; the standing roll that once ended 4.8 cells off against a diagonal wall (old `G1_1` layout, aimed at the cursor) was not reproduced and has no scenario. R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
+R3 is done except what needs the official R4.1 capture; R4 step 1 is that capture too, and T0 needs gamescope. Nothing else is open without the user: see "Needs the user". Done in R3: step 1 (server clock, action speed factor, client pathfinder line of sight, stance changes) except sprint coasting; step 2 replay tests (98 official episodes: 64 identical, 34 in `fixtures/episodes/known.json` with a reason; stance rules; W pressed and released during a sprint in the `sprint-w` game test, drift at most 2.5 cells at the end, stream rules by `scripts/re/sprint_check.py`, [movement.md](protocol/movement.md#test-tooling)). Waits for the capture: problem 5 (the client ignores the unscaled `0x64` after a sprint with a stream too, coasts and restarts its walk 21 frames later; the model "coast, then walk on in the key direction" is not applied), gaps #2, #4, #6, #7. Open: the drop of the action speed factor to 0.3 at frame 7 is measured, not traced; no in-game attack test until characters have an attack skill; the standing roll that once ended 4.8 cells off against a diagonal wall (old `G1_1` layout, aimed at the cursor) was not reproduced. R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
 
 ## T: agents test in game by themselves
 
@@ -18,7 +18,7 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 
 ## R3: movement 1:1 with the official game
 
-1. **Server copies of what the client does alone:** left: sprint coasting (problem 5, needs the capture in R4.1); stance changes while moving and the weapon swap (gap #7, same capture).
+1. **Server copies of what the client does alone:** left, all waiting for the R4.1 capture: sprint coasting (problem 5), stance toggle and weapon swap while moving (gap #7), attack lengths (gap #6), held-click restart (gap #2).
 2. **Replay tests:** every official episode replays or is in `known.json` with a reason (attack length from game data, entry stance timing, held-click restart trigger, and the others there). W during a sprint: ours in `sprint-w`; the official answer waits for the R4.1 capture (gap #4).
 
 **Done when:** every captured sequence replays identically (opcodes, fields, frame offsets).
@@ -62,7 +62,7 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 | What | When |
 |---|---|
 | Install gamescope | now (T0) |
-| Official capture, including movement problem 5, gap #4 (W pressed or released during a sprint, step 6 of the [checklist](re/captures.md#planned-capture-for-r4-world-map-waypoints-transitions-and-the-open-movement-cases)) and gap #7 (input-mode toggle while walking, weapon swap) | R4.1 |
+| Official capture (about 15 minutes), [checklist](re/captures.md#planned-capture-for-r4-world-map-waypoints-transitions-and-the-open-movement-cases). Movement parts, all in step 6/7: problem 5 and gap #4 (W pressed or released during a sprint, step 6), gap #2 (hold the left button 5 s without rolling or attacking, step 6), gap #6 (attacks standing and in a plain walk, with attack-speed gear, step 6), gap #7 (input-mode toggle while walking, weapon swap, step 7) | R4.1, unblocks R3 and R4 |
 | G-PARTY capture (a friend answers party invite and trade request) | any time, implementation waits for items |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |
 | Decide whether old batch run directories may be deleted (disk 481 GB free; `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small) | any time |
