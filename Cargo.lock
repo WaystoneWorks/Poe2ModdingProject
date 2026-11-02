@@ -2986,6 +2986,7 @@ dependencies = [
  "poe-hook-sig",
  "poe-proto",
  "poe-world",
+ "regex",
  "serde",
  "serde_json",
  "sha2",

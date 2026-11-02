@@ -16,6 +16,7 @@ use poe_hook_deploy::{DeployOptions, GatewayEntry, LoginMode, Mode, launch::Prot
 
 mod check_build;
 mod fingerprint;
+mod game_test;
 mod server;
 mod terrain_matrix;
 mod versions;
@@ -186,6 +187,10 @@ enum Cmd {
     /// Point the prefix's remembered gateway (`gateway_id` in `poe2_production_Config.ini`) at
     /// our server's gateway entry (`deploy-client` does it for the default prefix only).
     SelectGateway,
+    /// One unattended in-game test: deploy check, dev server, client, login, the scenario's
+    /// steps, clean shutdown, pass/fail summary; logs in runtime/game-test/ (docs/guides/setup.md,
+    /// "Game tests"). Takes runtime/client.lock.
+    GameTest(game_test::Args),
     /// Launch the client through Proton with a dedicated prefix (Steam must be running).
     RunClient {
         /// Proton installation to use (folder name under steamapps/common).
@@ -273,6 +278,7 @@ fn main() -> Result<()> {
             Ok(())
         }
         Cmd::RunClient { proton } => run_client(&config, &proton, &prefix),
+        Cmd::GameTest(args) => game_test::run(&root, &config_path, &prefix, args),
     }
 }
 

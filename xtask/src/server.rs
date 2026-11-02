@@ -135,7 +135,7 @@ pub fn run(root: &Path, config: &Path, cmd: ServerCmd) -> Result<()> {
     }
 }
 
-fn binary(server: &Path, release: bool) -> PathBuf {
+pub fn binary(server: &Path, release: bool) -> PathBuf {
     let exe = if cfg!(windows) { "poe-server.exe" } else { "poe-server" };
     server
         .join("target")

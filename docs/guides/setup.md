@@ -236,6 +236,20 @@ With Steam running (else the client logs `Unable to init Steam API` and exits wi
 - `scripts/shot.sh <name>` takes a screenshot of the game monitor (Spectacle) into `runtime/shots/`; F8 takes one inside the game.
 - `echo <entry> > GameFiles/poe-hook.keys` presses keys and moves the mouse in the client; `0x2d` is Insert (the overlay), `0x0d` Enter.
 
+### Game tests (`cargo xtask game-test`)
+`cargo xtask game-test <scenario>` runs one test with no human and no server of your own: it takes `runtime/client.lock` (refuses while it is held by a live process, a GameFiles client runs or any `poe-server` runs), builds the DLLs and the server (`--no-build` skips that), deploys with `deploy-client --no-build --login-mode standalone` when GameFiles differs from the build (refuses an official deploy), starts Steam (`-silent`) if needed, starts the server with a fresh dev config plus the scenario's overrides, signs the test account in as `scripts/test-run.sh` does, launches the client, presses Play, runs the steps, closes the client (`close`, then signals) and the server (SIGINT), and prints a pass/fail line per step. Server panics and hook `PANIC:` lines fail the run. Exit code 0 on pass, 1 on fail. Everything goes to `runtime/game-test/<scenario>-<time>/`: `summary.txt`, `server.log`, `server.toml`, `client-run.log`, `poe-hook.log`, the run's part of `Client.txt`, `hook-session.txt` (the DLL's session folder), `build.log`, `account.log`, `deploy.log`.
+
+`--display desktop` (default, the only tested one) shows the window on the normal desktop; `--display gamescope` wraps the client in gamescope with `GAME_TEST_GAMESCOPE_ARGS` (default `--backend headless -W 2560 -H 1440`), untested until gamescope is installed (PLAN T0). `--login-timeout <s>` (default 240).
+
+Scenarios are TOML files in `scripts/game-test/` (name without `.toml`, or a path). Top-level keys: `description`; `account`, `class`, `area` (the test account and the character made on first use; defaults `testrun`, `DexFourDefault`, `G1_town`); `input_mode` (`wasd` or `mouse_and_keyboard`, set in the test prefix while the client is closed, restored after); `[client_env]` (extra `POE_HOOK_*` variables); `[server]` (dev config overrides, `"dev.drift_check" = true`). Each `[[step]]` has an optional `name` and one action:
+- `keys = "<entries>"`: [`poe-hook.keys` entries](#poe-hookkeys-entries); the runner waits until the DLL read the file, then for the `wait:` and hold times inside.
+- `cmd = "<server command>"`: a `cmd:` entry (debug link).
+- `wait_ms = <ms>`.
+- `expect_log = "<regex>"`: passes when a line matches in `log` (`server` default, `hook`, `client`) after the step starts, or since the scenario started with `since = "start"`, within `timeout_s` (default 30).
+- `reject_log = "<regex>"`: fails when a line matches in `log` since the scenario started.
+
+The first failing step ends the scenario. `scripts/game-test/smoke.toml` checks the runner itself.
+
 ### `poe-hook.keys` entries
 Each entry is one line; the DLL reads the file and posts the input to the game window only (nothing goes to other windows; `SendInput` is not used, because it types into whatever window has focus). Never while read-only.
 - A plain virtual-key number (`0x0d`, `0x57:800` with a hold time in ms) is a posted key message. Plain keys (`0x20`, Space = dodge roll) reach the input bindings that are read from window messages. A plain `0x20` is down and up in one go, so the client's key state never reads "held" and a roll started that way is not steered (no `0x1a8`); for roll and sprint tests use `indown:0x20`, `0x20`, `wait:250`, `inup:0x20` ([movement spec](../protocol/movement.md#test-tooling)).

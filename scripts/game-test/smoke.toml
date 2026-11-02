@@ -1,0 +1,26 @@
+# Smoke test of the runner (PLAN T1): log in, enter the world, check the position reports and the
+# debug link, leave. Format: docs/guides/setup.md, "Game tests".
+description = "log in, enter the world, debug link answers, clean exit"
+
+[[step]]
+name = "position reports"
+expect_log = "client position reports started"
+since = "start"
+timeout_s = 30
+
+[[step]]
+name = "debug link command"
+cmd = "help"
+
+[[step]]
+name = "command answered"
+expect_log = "dev command from the client DLL .*command=help"
+since = "start"
+timeout_s = 15
+
+[[step]]
+wait_ms = 3000
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "
