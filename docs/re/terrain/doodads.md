@@ -296,5 +296,8 @@ neither on `poe-game` nor on `poe-config`; the instance server is the adapter
   other 50 rows are `G_login`: the client's grid hash is 0 and its export has no `grids.bin`, so there
   is nothing to compare. Client mode only.
 - Every client grid export on disk (`check_grids`, 5,318 from all runs): 5,312 identical, 0 grids
-  differ, and 6 dir-list lines differ in the layout already (`G2_12`, `G4_WorldMap`,
-  `MapUberBoss_CopperCitadel`, [PLAN.md](../../PLAN.md#now-r2-server-side-collision)).
+  differ. The other 6 lines (5 jobs; `G2_12` seed 392042115 in two runs) are bad client exports, not
+  a generator gap: they come only from the traced runs `w6-b-1`, `w7-1`, `w10-1` and `w11-2`/`w11-4`
+  (relaunches after hangs, 5-48 s per layout). Every plain run (`full`, `d1`, `fails1`, `grid50`, and a
+  fresh `layout5` re-export of the 5 jobs) gives one other layout, and the server matches it (5 of 5
+  identical). Do not use a traced run's export as a reference.
