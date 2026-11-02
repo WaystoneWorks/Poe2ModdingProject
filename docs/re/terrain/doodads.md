@@ -129,13 +129,11 @@ this order for each entry, after the `AOSet` pick and, for room doodads, after t
    (`+0x2d0`: 1 `server_only`, 2 `client_only`) exists only on its own side: server mode (globals
    `0x1445c995c` or `0x14458c74c` set) keeps `server_only` and drops `client_only`, a client process
    does the opposite. A `league_category` must equal the area's. Port: `Doodad::exists(Side)`;
-   `collision::build` takes the side. The instance server builds `Side::Server`. **Open question:**
-   the batch exports were assumed to show client-side filtering, but the server-only scatter in
-   `TerrainGen_Doodads` (draws `below(w*23)`, `below(h*23)` at `0x141ff61c9` / `0x141ff61d6`, guarded
-   by the same two globals; it saves and restores the RNG `0x142cb75c0`, 5000 bytes, so it does not
-   move the stream) ran in the batch process trace (7,686 pairs), so at least one global is set in
-   batch generation. To verify: which global, and whether `0x141ff48e0` then keeps `server_only`
-   types in batch exports.
+   `collision::build` takes the side. The batch exports filter as the client: `grid50` matches
+   `Side::Client` (218,655 identical), although the server-only scatter in `TerrainGen_Doodads`
+   (draws `below(w*23)`, `below(h*23)` at `0x141ff61c9` / `0x141ff61d6`, guarded by the same two
+   globals, RNG saved and restored around it, `0x142cb75c0`, 5000 bytes) ran in the batch process trace
+   (7,686 pairs). The instance server builds `Side::Client` ([Live grid](#live-grid-and-server-side-objects)).
 2. **Angle rules** (`0x141fe8860`, `0x141fe86f0`). With `a = angle - 0.7603982` (+2pi when
    negative), `AntiTallWallDoodad` is dropped for `a >= 3.1915927`, the upper-tile types
    (`TileUpperDoodad`, `TileUpperDoodadNoOverlap`, `TileUpperDoodad_ExtendDistance`, the two
@@ -277,6 +275,38 @@ lattice dumps ([batch.md](batch.md#traces-in-batch-mode)) and `check_lattice` wi
   doodads near a cell), `POE_DBG_TILEONLY` (the grid after the tile stage), `POE_DBG_CELL=x,y,l` (the
   object that lowers a cell), `POE_DBG_FLOOD=x|all`, `POE_DBG_TMD_DRAWS`, `POE_DBG_TMD_LIST`,
   `POE_NO_TILE_OBJECTS`, `POE_NO_COVERS`, `POE_NO_ANGLE_DROP`, `POE_NO_DGR_UNWALKABLE`.
+
+## Live grid and server-side objects
+
+The client's live grid is its own generation plus the hull of every static entity in the world,
+including entities the server sends:
+- **On placement** `0x142145340` calls `0x141d0ce70`, which stamps the entity's hull
+  (`0x141d10650`) when its type is static (`[Positioned+0x158]+0x20`) and `Positioned+0x1e6` bit 1
+  is clear.
+- **Full rebuild** `0x141d11ac0`: every static entity of the world (`TriggerableBlockage` ones only
+  while that component's `+0x30` is set). It runs on S→C `0x0181` (world `+0x666` set), after the
+  base layers `+0x100`/`+0x118` are copied back to the live `+0xd0`/`+0xe8` (`0x141d15a00`), and in
+  the hideout editor (`0x140239060`, `0x140239550`) and `0x1420824c0` (which rebuilds the tiles with
+  `0x141d0e770` first).
+- **`TriggerableBlockage`** stamps when activated (`0x141e00be0`, keeps the delta) and removes the
+  stamp with that delta (`0x141e015a0`).
+
+So an official client ends with the `Side::Server` grid once the server's `server_only` objects
+have arrived. Evidence: in the official capture `2026-10-20_21-51-49` (`G1_town`), the server sent
+`HealingWell` at (349, 237), facing 1.3627, and `CraftingBenchEzomyte` at (354, 395), facing
+0.0027 (AddObject Positioned). These are the cells and angles the port places for `G1_town` seed 1,
+and they are its only two solid `server_only` objects. No live grid of an official session was
+compared byte for byte.
+
+Size of the difference (`side_diff`, every 50th `grid50` layout, 4,375): the `Side::Server` grid
+differs from `Side::Client` in 812 layouts (86 areas, every town, median 3,300 cells). Only solid
+`server_only` types cause it (198 types: towers, `StoneHengeAct1`..`6`, healing wells, crafting
+benches, chairs); no `client_only` type is solid. Output in `runtime/r2side/step50.tsv`.
+
+Until the instance server sends these objects, its grid must be `Side::Client`; a `Side::Server`
+grid blocks cells the client walks through. Two open points remain, both relevant once it sends
+them. Quest-state variants: `G1_11` places all six `StoneHengeAct*` at one spot, but the official
+server may send only one. The server-only scatter is not ported.
 
 ## Server use
 

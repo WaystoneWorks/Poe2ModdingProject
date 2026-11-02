@@ -8,12 +8,11 @@ The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_
 
 **State (2026-11-01):** the generated grid equals the client's in the broad sample (all 432 areas, 50 seeds per topology and orientation, run `grid50`, `terrain_batch.py plan <run> --seeds 50`): 225,400 client jobs, 218,705 ok, 6,695 client generation exceptions (2.97%). `forced_verify` over the 218,705: tile and doodad hashes all identical; **grids 218,655 identical, 0 differ**; the other 50 are `G_login`, where the client has no grid to compare (hash 0, no `grids.bin`). Rules and results: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points), [status/terrain.md](status/terrain.md).
 
-**Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
+**Limits of that number:** client side only. The client adds the hulls of the static entities the server sends, so the instance server builds the client-side grid until it sends the `server_only` objects ([doodads.md](re/terrain/doodads.md#live-grid-and-server-side-objects)). The `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
-1. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
-2. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
-3. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
+1. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
+2. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
 
 **Pending:** ask the user before deleting old batch run directories (disk 481 GB free; the new runs take `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small).
 
@@ -43,7 +42,7 @@ Built before the R2 live test, because every later step needs it. The official-s
 
 1. **Official capture (the user's, about 15 minutes):** checklist in [captures.md](re/captures.md#planned-capture-for-r4-world-map-waypoints-transitions-and-the-open-movement-cases). Tell the user when ready and stop every client job first.
 2. **Object stage in `poe-world`:** objects of placed tiles (`.tmd`), rooms (`.arm`) and node tags, with cell and orientation, checked against the client's `entities.tsv` at scale. Sources: [entities.md](protocol/entities.md#where-world-objects-come-from).
-3. **`AddObject` (`0x2f7`)** for transitions (including fog doors), waypoints and checkpoints, with the components the capture shows, spawned per instance.
+3. **`AddObject` (`0x2f7`)** for transitions (including fog doors), waypoints and checkpoints, with the components the capture shows, spawned per instance. Static `server_only` objects with a hull (healing wells, benches, `StoneHengeAct*`) change the client's grid when sent: once the server sends them, stamp the hulls of the objects it actually spawned into its grid ([doodads.md](re/terrain/doodads.md#live-grid-and-server-side-objects)).
 4. **Interaction:** clicking a transition sends the player to the connected area (`WorldAreas` connections or the object's target) at the matching transition; waypoint travel between unlocked waypoints.
 4. **World map (M)** for acts 1 to 4 and the interludes, not the endgame: per-character unlock state (locked by default), what the client needs to show unlocks (from the capture), admin command `unlock <character> [acts|waypoints|all]` and lock, a web admin button.
 
