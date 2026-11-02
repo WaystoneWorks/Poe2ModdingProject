@@ -4,7 +4,7 @@ The only list of what is left to do and the only status source. Edit it in place
 
 ## Now: R3 step 2, replay tests
 
-R3 step 1 is done except sprint coasting (needs the R4.1 capture): timing, server clock, action speed factor, roll profile, and the client pathfinder including its line-of-sight test from the exact point while moving ([pathfinding.md](re/pathfinding.md); 166 of 166 plans of a private run with the line state, 536 + 5 of the old log). Next: replay every input sequence of all official captures (step 2 below), including the stance change at the first attack (`0x2a6` and the `0x1000` byte are not sent yet, [movement.md](protocol/movement.md#input-mode-and-stance)). Open: the drop of the action speed factor to 0.3 at frame 7 is measured, not traced; no in-game attack test until characters have an attack skill; the standing roll that once ended 4.8 cells off against a diagonal wall (old `G1_1` layout, aimed at the cursor) was not reproduced and has no scenario (rolls re-plan every frame while moving, so the moving test applies to them). R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
+R3 step 1 is done except sprint coasting (needs the R4.1 capture). Step 2 (replay tests): the stance change (`0x200` StanceRequest, `0x2a6` before every stance delta, the `0x1000` value byte; toggle, first skill use in mouse mode, entry) and `0x1ca` with every non-Move action start are done; every official session is cut into 98 episodes that replay in `every_captured_episode` (64 identical, 34 listed with the reason in `fixtures/episodes/known.json`, [movement.md](protocol/movement.md#reproducing)). Next: the DLL key entry for W pressed or released during a sprint and its game test (step 2 below). Open: the drop of the action speed factor to 0.3 at frame 7 is measured, not traced; no in-game attack test until characters have an attack skill; the standing roll that once ended 4.8 cells off against a diagonal wall (old `G1_1` layout, aimed at the cursor) was not reproduced and has no scenario. R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
 
 ## T: agents test in game by themselves
 
@@ -19,7 +19,7 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 ## R3: movement 1:1 with the official game
 
 1. **Server copies of what the client does alone:** left: sprint coasting (problem 5, needs the capture in R4.1); stance changes while moving and the weapon swap (gap #7, same capture).
-2. **Replay tests** for every input sequence of all official captures (extend the `locomotion.rs` fixtures). Not run yet: W pressed or released during a sprint (needs a combined key entry in the DLL).
+2. **Replay tests:** every official episode replays or is in `known.json` with a reason (attack length from game data, entry stance timing, held-click restart trigger, and the others there). Left: W pressed or released during a sprint in a private game test (needs a DLL key entry that presses W while Space is held; `modules/client-hook/poe-hook-core/src/auto_keys.rs`).
 
 **Done when:** every captured sequence replays identically (opcodes, fields, frame offsets).
 

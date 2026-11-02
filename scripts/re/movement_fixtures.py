@@ -26,6 +26,7 @@ older x 550/180).
 """
 
 import argparse
+import collections
 import json
 import math
 import os
@@ -150,6 +151,27 @@ PRESETS = {
         NEW, 4660, 4666,
         "input mode toggled back to WASD: AimMode(1) and the stance request in one frame, "
         "stance 1 one frame later", False, {"stance": False}),
+    # ---- stance at the first skill use in mouse mode (the intro wake-up click; its skill
+    # messages are left out with `stance_only`) and at entry --------------------------------
+    "stance_first_skill_in_mouse_mode": (
+        "2026-10-14_22-13-22_336", 600, 606,
+        "first skill use in mouse mode: 0x200 value 4 and AimMode(1) with the click; 0x2a6 0.05 "
+        "and stance 1 with the value in the next batch", False,
+        {"stance": False, "stance_only": True}),
+    "stance_first_skill_merged": (
+        "2026-10-14_22-23-02_336", 391, 396,
+        "as stance_first_skill_in_mouse_mode; the official delta also carries flag words "
+        "(mask 0x1402), the stance and value are the same", False,
+        {"stance": False, "stance_only": True}),
+    "stance_entry_with_request": (
+        "2026-10-14_22-23-02_336", 0, 12,
+        "entry: AimMode(1), the stance request value 1 and AimMode(0) at f1; stance 1 with 0x2a6 "
+        "0.05 nine frames later, then stance 0 with the value and 0x2a6 0.2 one frame after",
+        False, {"stance_only": True}),
+    "stance_entry": (
+        "2026-10-15_23-03-45_340", 0, 12,
+        "entry: AimMode(1) at f1, stance 1 with 0x2a6 0.05 nine frames later", False,
+        {"stance_only": True}),
 }
 
 
@@ -183,7 +205,29 @@ def to_input(m):
         return {"op": "aim", "x": d["x"], "y": d["y"]}
     if m.op == 0x62 and d["mode"] in (0, 1):
         return {"op": "aim_mode", "mode": d["mode"]}
+    if m.op == 0x200:
+        return {"op": "stance_request", "value": d["value"]}
     return None
+
+
+def player_delta(hexstr):
+    """The Player component delta (`poe_proto::entity::PlayerDelta`): mask, then experience
+    (`0x1`), flag words (`0x2`), stance (`0x400`) and the `0x1000` byte in this order."""
+    b = bytes.fromhex(hexstr)
+    if len(b) < 2:
+        return {}
+    mask, i, out = b[0] | b[1] << 8, 2, {}
+    if mask & 0x1:
+        i += 4
+    if mask & 0x2:
+        n = b[i] | b[i + 1] << 8
+        i += 2 + 9 * n
+    if mask & 0x400:
+        out["combat"] = bool(b[i])
+        i += 1
+    if mask & 0x1000 and i < len(b):
+        out["request"] = b[i]
+    return out
 
 
 def to_event(m, buff_base):
@@ -209,11 +253,12 @@ def to_event(m, buff_base):
     if m.op == 0x2F9:
         if d.get("comp") != 6:
             return None
-        b = bytes.fromhex(d["delta"])
-        mask = b[0] | b[1] << 8
-        if not mask & 0x0400:
+        pd = player_delta(d["delta"])
+        if not pd:
             return None
-        return {"ev": "stance", "combat": bool(b[2])}
+        return {"ev": "stance", **pd}
+    if m.op == 0x2A6:
+        return {"ev": "orientation_lerp", "value": round(d["f32"], 3)}
     if m.op == 0x1CA:
         return {"ev": "action_event"}
     if m.op == 0x1D3:
@@ -233,9 +278,12 @@ def to_event(m, buff_base):
 
 
 PAIR = {0x63: (0x64,), 0x1A5: (0x1AE,), 0x1A8: (0x1AF,), 0x1AC: (0x1B1,), 0x2E6: (0x2E7,),
-        0x62: (0x1DC,), 0x1AD: (0x1B2,)}
+        0x62: (0x1DC,), 0x1AD: (0x1B2,), 0x200: (0x2A6,)}
 REPLY_OPS = (0x64, 0x1C8, 0x1AE, 0x1AF, 0x1B1, 0x1B2, 0x1CA, 0x1D3, 0x1EB, 0x1EC, 0x2E7, 0x1DC,
-             0x2F9)
+             0x2F9, 0x2A6)
+# Option `stance_only`: only the stance messages of a window (the intro wake-up click that
+# comes with the first stance request in mouse mode is not a movement sequence).
+STANCE_IN, STANCE_OUT = (0x200, 0x62), (0x2A6, 0x2F9)
 
 
 # Cells per world unit of the client's position log (a cell is 250 / 23 world units).
@@ -264,10 +312,13 @@ def window(session, lo, hi, name="", desc="", drop_aim=False, opts=None):
     shift = opts.get("shift", {})
     msgs = ms.load(ms.resolve(session))
     pe = ms.player_entity(msgs)
+    only = opts.get("stance_only")
     ins = [m for m in msgs if m.dir == "out" and lo <= m.frame <= hi and to_input(m)
-           and not (drop_aim and m.op == 0x62)]
+           and not (drop_aim and m.op == 0x62)
+           and not (only and (m.op not in STANCE_IN or m.op == 0x62 and m.d["mode"] > 1))]
     outs = [m for m in msgs if m.dir == "in" and lo <= m.frame <= hi + 3 and m.d
-            and m.d.get("ent") == pe and m.op in REPLY_OPS and not (drop_aim and m.op == 0x1DC)]
+            and m.d.get("ent") == pe and m.op in REPLY_OPS and not (drop_aim and m.op == 0x1DC)
+            and not (only and m.op not in STANCE_OUT)]
     used, arrive, prev = set(), {}, lo
     for m in ins:
         kinds = PAIR.get(m.op, ())
@@ -331,6 +382,171 @@ def window(session, lo, hi, name="", desc="", drop_aim=False, opts=None):
     }
 
 
+# ---- episodes: every input sequence of every official session ---------------------------------
+
+EPISODES_DIR = os.path.join(OUT_DEFAULT, "episodes")
+# Stats and buff rows the movement simulation sends (`poe_game::locomotion::MoveStat`, the three
+# sprint buffs); the captures' other stats and buffs (hits, energy shield, skills) are not part of
+# a movement episode.
+MOVE_STATS = {
+    "is_dodge_rolling", "stun_threshold_+%_final_while_performing_action",
+    "virtual_heavy_stun_threshold_+%_final", "virtual_light_stun_threshold_+%_final",
+    "sprint_blend_time_override_ms", "is_sprinting", "must_sprint", "all_hits_stun_you",
+    "virtual_skill_ignore_namelocking_dynamically", "base_move_speed_+%_from_sprint",
+    "movement_velocity_+permyriad",
+}
+SPRINT_BUFFS = {2758, 2737, 2853}
+# Frames without a key input (aims do not count) that end an episode when nothing is held, and
+# frames kept after its last input for the replies (sprint end t0+35, roll end t0+30).
+EPISODE_GAP, EPISODE_TAIL = 45, 40
+
+
+def pause_input(m):
+    """`0x1ff` PauseRequest (`u8, u8 paused`), not decoded by movement_sequences."""
+    if m.dir == "out" and m.op == 0x1FF:
+        b = bytes.fromhex(m.hex)
+        return {"op": "pause", "paused": bool(b[3])}
+    return None
+
+
+def key_input(m):
+    """A client input of an episode: everything `to_input` knows except cursor aims, plus the
+    pause request; `0x1aa` (entity target) is kept as `unsupported`."""
+    if m.dir != "out":
+        return None
+    if m.op == 0x1AA:
+        return {"op": "unsupported", "opcode": "0x1aa"}
+    if m.op == 0x62:
+        if m.d and m.d.get("mode") in (0, 1):
+            return to_input(m)
+        return None
+    return pause_input(m) or to_input(m)
+
+
+def episode_events(outs, base, buff_base):
+    events, added = [], set()
+    for q in outs:
+        e = to_event(q, buff_base)
+        if e is None or q.op == 0x1DC:
+            continue
+        if e["ev"] == "stats":
+            e["stats"] = [s for s in e["stats"] if s[0] in MOVE_STATS]
+            if not e["stats"]:
+                continue
+        if e["ev"] == "buff_added":
+            if e["row"] not in SPRINT_BUFFS:
+                continue
+            added.add(e["index"])
+        # A buff the episode did not add (the entry buff removed with the first action, buffs
+        # of hits and skills) is not a movement message.
+        if e["ev"] == "buff_removed" and e["index"] not in added:
+            continue
+        events.append(dict(f=q.frame - base, **e))
+    return events
+
+
+def session_episodes(session):
+    msgs = ms.load(ms.resolve(session))
+    keys = [(m, key_input(m)) for m in msgs]
+    # Inputs in the capture's last frames have no recorded reply.
+    end = msgs[-1].frame - 3
+    keys = [(m, k) for m, k in keys if k and m.frame <= end]
+    # Held state while scanning: an episode does not end while a key, Space or a click is held.
+    eps, cur = [], None
+    wasd, space, click_until = (0, 0), False, -1
+    for m, k in keys:
+        if cur and m.frame - cur["last"] > EPISODE_GAP and wasd == (0, 0) and not space \
+                and m.frame > click_until + EPISODE_GAP:
+            eps.append(cur)
+            cur = None
+        if cur is None:
+            cur = {"lo": m.frame, "last": m.frame, "msgs": []}
+        cur["msgs"].append((m, k))
+        cur["last"] = m.frame
+        if k["op"] == "wasd":
+            wasd = (k["x"], k["y"])
+        elif k["op"] == "sprint":
+            space = k["held"]
+        elif k["op"] == "use_skill" and k["skill"] == ms.MOVE_SKILL:
+            click_until = m.frame + 6
+    if cur:
+        eps.append(cur)
+    # Stance state from the Player deltas, per frame (episodes after the entry start with it).
+    stance = []
+    for m in msgs:
+        if m.dir == "in" and m.op == 0x2F9 and m.d and m.d.get("comp") == 6:
+            pd = player_delta(m.d["delta"])
+            if "combat" in pd:
+                stance.append((m.frame, pd["combat"]))
+    out = []
+    for ep in eps:
+        lo, hi = ep["lo"], ep["last"] + EPISODE_TAIL
+        ins = [m for m, _ in ep["msgs"]]
+        acks = collections.Counter(q.d["ent"] for q in msgs
+                                   if q.dir == "in" and lo <= q.frame <= hi and q.d
+                                   and q.op in (0x1AE, 0x64, 0x2E7, 0x1B1) and "ent" in q.d)
+        pe = acks.most_common(1)[0][0] if acks else ms.player_entity(msgs)
+        outs = [q for q in msgs if q.dir == "in" and lo <= q.frame <= hi and q.d
+                and q.d.get("ent") == pe and q.op in REPLY_OPS]
+        # Arrival frames as in `window`: one frame before the first matching reply (which can
+        # be in the input's own frame, f+0).
+        used, arrive, prev = set(), {}, lo - 1
+        for m, k in ep["msgs"]:
+            kinds = PAIR.get(m.op, ())
+            if m.op == 0x62:
+                kinds = (0x2F9,)
+            r = None
+            if k["op"] not in ("pause", "unsupported", "aim_mode"):
+                want = (m.d.get("x"), m.d.get("y"))
+                for q in outs:
+                    if q.i <= m.i or q.i in used or q.op not in kinds or q.frame > m.frame + 3:
+                        continue
+                    if m.op == 0x63:
+                        ln = math.hypot(*want) or 1.0
+                        sc = (int(want[0] * 550 / 180), int(want[1] * 550 / 180))
+                        nm = (int(want[0] * 550 / ln), int(want[1] * 550 / ln))
+                        if (q.d["dx"], q.d["dy"]) not in (want, sc, nm):
+                            continue
+                    r = q
+                    break
+            if r is not None:
+                used.add(r.i)
+                a = max(prev, r.frame - 1)
+            else:
+                a = max(prev, m.frame)
+            arrive[m.i] = a
+            prev = a
+        base = arrive[ins[0].i]
+        buffs = [q.d["index"] for q in outs if q.op == 0x1EB and q.d.get("buff") in SPRINT_BUFFS]
+        events = episode_events(outs, base, min(buffs) if buffs else 0)
+        events = [e for e in events if e["f"] >= 1]
+        before = [c for f, c in stance if f < lo]
+        cell = next((e["cell"] for e in events if "cell" in e), [50, 50])
+        out.append({
+            "name": f"{lo}",
+            "capture_frames": [lo, hi],
+            **({"combat_stance": before[-1]} if before else {}),
+            "start_cell": cell,
+            "frames": hi - base,
+            "inputs": [dict(f=arrive[m.i] - base, **k) for m, k in ep["msgs"]],
+            "expect": events,
+        })
+    return out
+
+
+def cmd_episodes(a):
+    os.makedirs(a.out, exist_ok=True)
+    sessions = sorted(os.listdir(os.path.join(ms.CAPS, "official")))
+    for session in sessions:
+        eps = session_episodes(session)
+        path = os.path.join(a.out, session + ".json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"source": session, "episodes": eps}, f, separators=(",", ":"))
+            f.write("\n")
+        print(f"{session}: {len(eps)} episodes, {sum(len(e['inputs']) for e in eps)} inputs, "
+              f"{sum(len(e['expect']) for e in eps)} events, {os.path.getsize(path)} bytes")
+
+
 def cmd_show(a):
     print(json.dumps(window(a.session, a.start, a.end, drop_aim=a.drop_aim,
                             opts={"track": a.track}), indent=None, separators=(",", ":")).replace("},{", "},\n{"))
@@ -358,6 +574,9 @@ def main():
     p.add_argument("--track", action="store_true", help="add the client's positions (poe-hook.log)")
     p.add_argument("--drop-aim", action="store_true", help="leave out the aim inputs and echoes")
     p.set_defaults(fn=cmd_show)
+    p = sub.add_parser("episodes", help="write every input sequence of every official session")
+    p.add_argument("--out", default=EPISODES_DIR)
+    p.set_defaults(fn=cmd_episodes)
     p = sub.add_parser("build")
     p.add_argument("--out", default=OUT_DEFAULT)
     p.set_defaults(fn=cmd_build)
