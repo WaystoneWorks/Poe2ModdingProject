@@ -6,22 +6,19 @@ The only list of what is left to do and the only status source. Edit it in place
 
 The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_grid`, off by default) must equal the client's.
 
-**State (2026-11-01):** broad sample done (all areas, 50 seeds per topology and orientation, `terrain_batch.py plan <run> --seeds 50`; [status/terrain.md](status/terrain.md)). Pilot (2 seeds): 9,016 jobs, 8,739 ok, grids 8,428 identical. Full: 225,400 jobs, client 1 h 29 min, no crash, 218,705 ok, 6,695 errors (2.97%, client generation exceptions). `forced_verify` over the 218,705: tile 218,705 and doodad 218,705 identical (the R1 area-generation check passes broad); **grids 210,766 identical (96.4%), 7,889 differ** at the time, all in 9 of 432 areas (8 closed since, step 1) (every other area is 100% identical). Layout (tile and doodad) always matches in the differing grids. Details: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
+**State (2026-11-01):** the generated grid equals the client's in the broad sample (all 432 areas, 50 seeds per topology and orientation, run `grid50`, `terrain_batch.py plan <run> --seeds 50`): 225,400 client jobs, 218,705 ok, 6,695 client generation exceptions (2.97%). `forced_verify` over the 218,705: tile and doodad hashes all identical; **grids 218,655 identical, 0 differ**; the other 50 are `G_login`, where the client has no grid to compare (hash 0, no `grids.bin`). Rules and results: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points), [status/terrain.md](status/terrain.md).
 
 **Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
-1. **Fix the grid families** (hard RE, Opus; `check_grids --blame`; runs `grid50`, `grid50ex`: 6 differing layouts per area). Closed and gated with area-limited `forced_verify` ([doodads.md](re/terrain/doodads.md#what-decides-whether-an-object-exists)): `TN_WorldMap` (`DoNotFillOutside`, 4,116/4,116); the art `.tmd` only without `+0x16c & 8` plus the per-sub-tile objects of `+0x16d & 2` tiles (`G3_1`, `G2_5_1`, `G2_2`, `MapLostTowers`, `P3_1`, `G2_5_2`: 12,848/12,848); anim-driven fence hulls stamped twice (`MapPlantation` 800/800). `MapSteamingSprings` (2,399/2,399; `MapPlantation` re-gated 800/800): the room placement list is chronological, so overlay phase 1 rooms come before the fill pass's rooms ([doodads.md](re/terrain/doodads.md#what-decides-whether-an-object-exists)). `grid50ex`: 54 of 54 identical. **WIP, NOT GATED:** the art rule, the anim rule and the placement order are global, so a full `grid50` regression (batch-runner or `forced_verify dumps/0.5.5e.hotfix1/terrain/batch/grid50/batch-results.tsv --threads 8 --grid-fails <out>`) must show 0 differ.
-
-   Next: that regression; fix anything new. Files: `dumps/.../batch/grid50/grid-fails.txt`, `runtime/r2fam/` (per-sample cells, gate inputs), `runtime/gridtools/`.
-2. **The 5 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
-3. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
-4. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
-5. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
+1. **The 5 layout failures** (old exports on disk, 6 dir-list lines: `G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`; none in `grid50`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
+2. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
+3. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
+4. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
 
 **Pending:** ask the user before deleting old batch run directories (disk 481 GB free; the new runs take `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small).
 
-**Done when:** the broad sample is byte-identical (all 9 families closed), live movement collides like the client, and the defaults are flipped. The finish line is the full match, not an area-by-area fallback (user, 2026-10-31).
+**Done when:** live movement collides like the client, and the defaults are flipped. The finish line is the full match, not an area-by-area fallback (user, 2026-10-31).
 
 ## T: agents test in game by themselves
 

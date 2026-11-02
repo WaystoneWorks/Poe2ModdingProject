@@ -18,7 +18,7 @@ the tiles' own objects come from the tile-object pass ([below](#what-decides-whe
 The list grows as rooms are placed: the graph's rooms, pre-placed (league, hosted) rooms, overlay
 phase 1 (each room, then its refill rooms), the fill pass, overlay phase 2 (`Overlays::placements`).
 Inferred from the client's generator entity ids (`entities.tsv`), not read from the list's code, and
-gated by `MapSteamingSprings`. The order matters only when an `AOSet` draws: most sets draw the same
+confirmed by the full `grid50` result. The order matters only when an `AOSet` draws: most sets draw the same
 number of times and hash the set's path, so a wrong order leaves the doodad hash intact and swaps
 leaves (`BlackFernTrunk_set.ao`: other trunks' hulls, ramp cells one off). A leaf mismatch looks like
 a hull-transform bug; `circfit.py` over each leaf of the set tells them apart.
@@ -291,26 +291,10 @@ neither on `poe-game` nor on `poe-config`; the instance server is the adapter
 
 ### Results
 
-- Doodads: every tile-matching export equals `doodads.tsv` (set, hash, draws) except the
-  `MapVaalVault` angle case below, and every tile match of the 50-seed batch (72,718 of 218,705
-  client layouts) matches the client's doodad hash.
-- Collision grid: 5,084 of 5,256 client grid exports on disk equal `grids.bin` (96.7%; a sample biased
-  toward earlier failures), 172 differ, 5 layouts (6 dir-list lines) differ in the layout already. Layers 2 and 3 always agree. Total differing cells 143,143 (was 192,575, originally 346,364); no regressions, no export worse. The `disable_rotation` hull flag cleared every `G3_8`, `G3_14`, `MapVaalCity`, `MapBazaar`, `BossRush_Area3`, `MapReservoir`, `G3_16`, `G4_town` and `ExpeditionLogBook_Atoll` export and 7 of the `G3_1` exports: the whole `VaalExterior` Street family is closed. The `random_orientation` list fix (the `G3_8` RNG offset) came first. The `outside_tiles` rule
-  ([above](#unwalkable-corners)) cleared `MapRazedFields`, `MapOasis`, `MapMonument`, `MapSlash`; the
-  binary `.tmd` reader cleared `HideoutArenaMaven`, `HideoutCanal`, `G4_5_1`, `G4_7`, `P1_5` and
-  `ExpeditionLogBook_Peninsula`. Open layouts, count of unique failing layouts / average differing
-  cells: [PLAN.md](../../PLAN.md#now-r2-server-side-collision).
-- All 16 `G4_11_2_*` and `MapUberBoss_JadeCitadel_*` exports are byte-identical (the two-run
-  `doodads_post` above).
-
-### Open: grid families
-
-All differ in layer 0 unless noted. Tools: `check_grids --blame`, `POE_DBG_GRID_TILE`,
-`lattice_probe`, `POE_DBG_NEAR`.
-
-| Family | Cells | What differs | Findings |
-|---|---|---|---|
-| `MapSeepage`, `MapUberBoss_IronCitadel` (partly) | 250 to 690 | The port blocks more than the client: whole tiles cleared with the margin ramp, or a wall plane 4 cells longer | The port flags corners the client does not, which fits the `sealed_inside` stub (a sealed tile stops the flood). The `.tdt` field behind `+0x16f` is not mapped (the flag word of `0x142915630` is set bit by bit through a vtable slot `+0x40`) |
-| `MapCrimsonShores` | 400 to 1,800 | A circular blob of radius about 10 with the 1..4 clearance ramp is blocked in the client, absent in the port, centred in a `fill_01.tdt` tile (3 x 3, flags 0x03, plane-less) | Not a tile plane and not one of the room doodads. Probably a generator object that is not in `doodads.tsv` (an entity from tile data `+0x1b8`, or a scatter object); an export with `entities.tsv` of a failing layout decides |
-| `MapMonument`, `MapFortress`, `G4_5_2`, `G2_10_1`, `MapReservoir` | 150 to 4,900 | Feature tiles (`PrecursorGroundAnchor_*`, `fortress_boss_01`, `Warden_Office`, `JamanraRitualSite_02`) and fill tiles | Same two suspects (unported unwalkable-corner rules, objects outside `doodads.tsv`) |
-| `MapVaalVault` | 53 | Two doodads (`SunkenPillar_set.ao`, `random_orientation`, `AOSet` with one choice) have the angle off by pi/2 (ours 3pi and 2.5pi after the pick, the client 2.5pi and 2pi; the seed 35611400 topology 1 orientation 0 layout) | `0x1421c3f40` is ported as decompiled (`mask 0xff`: `u & 7`) and the picks of all other sets (`random_flip`, 1,879 doodads) agree, so the draw `u` (99 and 314, `below(0x348)`) or the mapping from the picked orientation to the angle differs for the full eight-way case. A client trace of `MapVaalVault 35611400 1 0` shows the real draws |
+- `grid50` (all 432 areas, 50 seeds per topology and orientation, 218,705 ok client layouts,
+  `forced_verify`): tile and doodad hashes all identical; grid hashes 218,655 identical, 0 differ. The
+  other 50 rows are `G_login`: the client's grid hash is 0 and its export has no `grids.bin`, so there
+  is nothing to compare. Client mode only.
+- Every client grid export on disk (`check_grids`, 5,318 from all runs): 5,312 identical, 0 grids
+  differ, and 6 dir-list lines differ in the layout already (`G2_12`, `G4_WorldMap`,
+  `MapUberBoss_CopperCitadel`, [PLAN.md](../../PLAN.md#now-r2-server-side-collision)).
