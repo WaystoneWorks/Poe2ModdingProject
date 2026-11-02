@@ -158,13 +158,27 @@ The type hashes of these sets are the `ObjectHASH32` column of `Data/Balance/Mis
 
 **Tile-object pass** (`0x141ff4030`, vtable `+0x28`, after the doodad pass; `doodads::tile_objects`).
 Row by row over tile records that are a tile's corner: the objects of the `.tmd` beside the `.tgt`
-(tile data `+0x178`), then of the `.tdt`'s `tmd` (`+0x180`), each through `0x141ff43d0`: the `AOSet`
+(tile data `+0x178`, loaded by `0x141d082a0` only when `+0x16c & 8` is clear: the low byte of
+`Tdt::body_flags`), then of the `.tdt`'s `tmd` (`+0x180`, `0x141d05520` from `0x141d068b0`), each through `0x141ff43d0`: the `AOSet`
 pick continues the doodad pass's RNG stream, then the entry's orientation mask (trailing `I R90 R180
 R270 FI FR90 FR180 FR270`, entry `+0x1e`), the cell turned within the tile's size. They are not in
 the hash. A `.tmd` line is `x y flag [wx wy] z angle q0 q1 q2 q3 flip scale "ao" "name" "fmt" "type"
-n [orientations]`; the flag says whether the world `x y` is present. Not ported: the
-`alttiles/<env>/<env>_<name>.tmd` variant of the art list (`0x141d11c50`) and the per-sub-tile
-objects of tiles with data `+0x16d & 2` (`0x141d07630`).
+n [orientations]`; the flag says whether the world `x y` is present. P3_1's
+`ambush_CenterHoleLarge_01.tdt` (flags `0x9a`) proves the bit-8 rule: its art `.tmd` repeats the
+own list's 11 `SkeletonCave_set.ao` picks, and drawing them twice shifted every later pick.
+Not ported: the `alttiles/<env>/<env>_<name>.tmd` variant of the art list (`0x141d07eb0`,
+`0x141d11c50`; used when the file exists) and the **per-sub-tile objects** of tiles with
+`+0x16d & 2` (body flag 0x200; `0x141d07630`; the port gives these tiles no art list). Then
+the `.tgt` is a `;` list (`0x141d080d0` returns segment i only in this case) and each group
+origin sub-tile (record `+0x90`, 0x38 bytes, row-major, `+0x60` wide; `+0x31` = `SubTile::b1`:
+8 skip, 2 joined to the left, 4 joined above; none of them = origin) places the `.tmd` of
+segment `+0x36 >> 2` (`SubTile::parts[0]`, `0x141d07c80`). Its span (`0x141d074a0`): 1 + the
+run of right neighbours with b1 2, 1 + the run of lower neighbours with b1 4. Orientation
+`+0x37 >> 5` (`parts[1]`); height `+0x37 & 0xf`, sign 0x10, times `+0x177` times 7.8125. Each
+entry's world point turns in the span box (swapped for odd orientations; `0x142f02118` table),
+plus (x, y) * 250, cell = floor(world * 0.092); angle as `turn_angle`; flip toggles for
+orientations 4..7; the orientation mask maps through the table `0x143512a00[o + mask * 8]`.
+The result goes to the same `0x141ff43d0` as the other lists.
 
 **Binary `.tmd`** (805 of the game's 9,706; 742 version 5, 63 version 6; `doodads::tmd_binary`).
 Client parser `0x14291aab0` (entries go to the sink vtable `0x1434bfe70`, slot 0 `0x141d01c60`; the text
@@ -186,7 +200,7 @@ feature string's length (`0x141d161c0`).
 ## Unwalkable corners
 
 `0x141ff7b90` (called from `TerrainGen_Layout`) runs, per region: outer fill and outer buffer, then
-`0x141fe1150` on the region's rectangle if the master's `RoomOcclusion` (`+0x166`) is clear (regions
+`0x141fe1150` on the region's rectangle if the master's `DoNotFillOutside` (`+0x166`) is clear (regions
 past the main count only with `+0x164`), and `0x141fe1020` (the map border). `0x141fe1150` runs for
 `.tgr` graphs and dungeons alike (`finish_dungeon` runs it on the region, which `regions.tsv` shows
 is the whole buffered map) and returns at once for area kinds 0x20 and 0x21 (world-map panels).
@@ -195,8 +209,15 @@ The tail of `0x141fe1150`: the enclosed-fill test requires an **empty feature**,
 inheriting" (`mark_enclosed_fills`); with the master's `OuterGroundIsOutside` (`+0x165`) and an
 `OuterGroundType` (`+0x230`), tiles with body flag 0x40, first sub-tile flag 8, all corner grounds
 the outer ground and only empty or wildcard edges get their footprint marked
-(`mark_outside_tiles`). Master offsets: `DisableDoors` is `+0x167`, so the keys parsed by
-`0x142928820` line up as `OuterGroundIsOutside` `+0x165`, `RoomOcclusion` `+0x166`.
+(`mark_outside_tiles`). Master `+0x166` is `DoNotFillOutside`: the DLL's `regions.tsv` shows it set for
+`TN_WorldMap` and `MapUniqueLake` (the only masters with that key besides the kind-0x21 world
+maps) and clear for the `RoomOcclusion` masters `G2_4_2` and `MapChannel` (run `flags3`). Port:
+`area::do_not_fill_outside`, dungeon and `.tgr` paths. `0x142928820` parses the keys into
+stack slots `FillOutside` 0x31e, `DoNotFillOutside` 0x31f, `OuterGroundIsOutside` 0x320,
+`RoomOcclusion` 0x321, `DisableDoors` 0x322 and hands them to a vtable call (`0x14292c836`), so
+the copy is not one block (the door code reads `DisableDoors` at `+0x167`). No master sets
+`OuterGroundIsOutside`; which key is `+0x165` is not proven. Ruled out: `RoomOcclusion` at
+`+0x166` (it cost `TN_WorldMap` 74,088 cells per layout).
 
 **`outside_tiles` zones** (`0x141ffbab0`, runs after the layout, after `0x141ff7b90`): walks every
 region's room placements (region `+0x58`, 0x38-byte entries; corner = placement min, orientation

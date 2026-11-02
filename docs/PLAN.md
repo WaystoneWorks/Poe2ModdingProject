@@ -11,27 +11,25 @@ The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_
 **Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
-1. **Fix the grid families** (hard RE: an Opus thread, `re-tracer`; per-pass snapshots and `check_grids --blame`). From the broad sample (runs `grid50`, `grid50ex`: 6 re-exported differing layouts per area; 0 of 54 match):
+1. **Fix the grid families** (hard RE, Opus; `check_grids --blame`; runs `grid50`, `grid50ex`: 6 differing layouts per area). Closed: `TN_WorldMap` (master `+0x166` is `DoNotFillOutside`; gate 4,116/4,116 in the affected areas). **WIP, NOT GATED** (server `9233967`): the art `.tmd` list only without tile data `+0x16c & 8` ([doodads.md](re/terrain/doodads.md#what-decides-whether-an-object-exists)): `grid50ex` 21 of 54 samples identical (`P3_1` 6/6, `G2_5_2` 6/6, `G2_2` 3/6, `TN_WorldMap` 6/6); one regression, `G2_2_1242428274_8_7` L1 72 -> 109 cells. Next: port the per-sub-tile objects (`0x141d07630`, specified in doodads.md; a rough whole-tile try also cleared 3 `MapLostTowers`, 2 `G3_1`, all `G2_2`), then per-family `forced_verify`. Open:
 
-   | Area | Differing / ok grids | Layers and differing cells |
+   | Area | Differing / ok grids (grid50) | Layers and differing cells |
    |---|---|---|
-   | `P3_1` | 175 / 199 | L0 3,196-23,925 and L1 2,461-11,694 (topology 1/3, orientation 0) |
-   | `TN_WorldMap` (new) | 50 / 50 | L0 only, 74,088 cells in every sample (topology 1, orientation 0); first cell (23,23) ours 0, client 1; a whole-area rule (blame: list0 40/250 tiles) |
    | `G3_1` | 1,666 / 3,099 | L0, 112-565 |
-   | `G2_5_2` | 1,590 / 1,600 | L0, 29-505 |
-   | `G2_5_1` | 3,253 / 4,800 | L0, 11-145 |
-   | `G2_2` | 462 / 778 | L1, 37-72 (ours and client differ by 1) |
+   | `G2_5_1` | 3,253 / 4,800 | L0, 11-145 (`+0x16d & 2` tiles, `Landmark_feature_02.tdt`) |
+   | `G2_2` | 462 / 778 | L1, 37-109 |
    | `MapLostTowers` | 184 / 2,372 | L0, 46-175 |
-   | `MapPlantation` | 384 / 800 | L0, 41 (125 in one sample; blame flags `0x26` b1 5 list1 1 tile) |
+   | `MapPlantation` | 384 / 800 | L0, 41 (125 in one; blame `0x26` b1 5 list1) |
    | `MapSteamingSprings` | 125 / 2,399 | L0, 30-367 (blame flags `0x07` b1 0 list0) |
+   | `P3_1`, `G2_5_2` | 175 / 199, 1,590 / 1,600 | samples identical with the WIP rule |
 
-   Cells mostly differ by 1 in the value (ours 4 / client 5, 1 / 0). Files: `dumps/0.5.5e.hotfix1/terrain/batch/grid50/{batch-results.tsv,grid-fails.txt}`, `runtime/grid50-fv.out`, `runtime/grid50ex-blame.out`.
+   Files: `dumps/.../batch/grid50/grid-fails.txt`, `runtime/r2fam/` (per-sample cells), `runtime/gridtools/`.
 2. **The 5 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
 3. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
 4. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
 5. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
 
-**Pending:** ask the user before deleting old batch run directories (disk 481 GB free; the new runs take `grid50` 24 MB and `grid50ex` 691 MB).
+**Pending:** ask the user before deleting old batch run directories (disk 481 GB free; the new runs take `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small).
 
 **Done when:** the broad sample is byte-identical (all 9 families closed), live movement collides like the client, and the defaults are flipped. The finish line is the full match, not an area-by-area fallback (user, 2026-10-31).
 
