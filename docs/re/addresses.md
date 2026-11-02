@@ -78,11 +78,11 @@ Imports: `VERSION.dll` (`GetFileVersionInfoW`, `GetFileVersionInfoSizeW`, `VerQu
 | Address | What |
 |---|---|
 | `0x14211fa00` | game-session send (`packet->vtable[1](packet, stream)`); senders build the packet on the stack (opcode at +8) |
-| `0x1421497c0` | Actor component simulation handler: `0x64` WASD, `0x65`, `0x1c8` start action, `0x1c9`..`0x1ce`, `0x1d8`/`0x1d9` skill stats, `0x1f9`..`0x1fc`, `0x2e7`, `0x30e` action update, `0x316`..`0x324`. `0x64` (`0x14214992e`) snaps only when the server cell is >=46 cells away (distance^2 >= `0x844`), else bends the walk direction |
+| `0x1421497c0` | Actor component simulation handler: `0x64` WASD, `0x65`, `0x1c8` start action, `0x1c9`..`0x1ce`, `0x1d8`/`0x1d9` skill stats, `0x1f9`..`0x1fc`, `0x2e7`, `0x30e` action update, `0x316`..`0x324`. `0x64` (`0x14214992e`): non-zero and cell != grid +0x444: snap `0x141ddb6f0` (predictive mode only: <46 cells, `0x844`, bends instead) |
 | `0x141f6b260` | S->C `0x64` MoveDirectionUpdate reader |
 | `0x141f69830` | S->C `0x1c8` StartAction reader |
 | `0x141e41c60` (`0x141e41d20`) | StartAction apply: same 46-cell snap threshold |
-| `0x141ddb6f0` | SetLocationForcedNoCallbacks (moves an entity to a cell) |
+| `0x141ddb6f0` | SetLocationForcedNoCallbacks (stops a running move, `0x141de5f50`) |
 | `0x141e892b0` | create an action from an actor skill |
 | `0x14016e780` | C->S `0x2e6` sender (`u8 player, u8`) |
 | `0x14016ba40` | `AimReport_Tick`: per frame, AimTarget mode 2/3 via `0x14016b820` (33 ms) only while mode 1 was sent (+0x418, WASD), `GetForegroundWindow() == *[0x1445d8350]`, Player component (`local player +0x188`) combat stance (+0x20d) and UI checks pass |
