@@ -84,6 +84,11 @@ struct Scenario {
     server: toml::Table,
     #[serde(default, rename = "step")]
     steps: Vec<Step>,
+    /// Checks run from the hub root after the client and server are closed, one shell command
+    /// each, `{session}` replaced by the DLL's session folder (packets, hook log); a check passes
+    /// on exit code 0. Output goes to `after-<n>.txt`, its last line to the summary.
+    #[serde(default)]
+    after: Vec<String>,
 }
 
 fn default_account() -> String {
@@ -190,7 +195,24 @@ pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result
     if let Err(e) = &outcome {
         results.push(("setup".into(), false, format!("{e:#}")));
     }
-    run.collect();
+    let session = run.collect();
+    for (n, cmd) in scenario.after.iter().enumerate() {
+        let label = format!("after {}", n + 1);
+        let Some(session) = &session else {
+            results.push((label, false, "no DLL session folder".into()));
+            continue;
+        };
+        let cmd = cmd.replace("{session}", &session.display().to_string());
+        match Command::new("sh").arg("-c").arg(&cmd).current_dir(&run.root).output() {
+            Ok(out) => {
+                let text = format!("$ {cmd}\n{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+                let _ = fs::write(dir.join(format!("after-{}.txt", n + 1)), &text);
+                let last = text.lines().rev().find(|l| !l.trim().is_empty()).unwrap_or("").to_string();
+                results.push((label, out.status.success(), last));
+            }
+            Err(e) => results.push((label, false, format!("{cmd}: {e}"))),
+        }
+    }
     for (label, re) in [("server panic", "panicked at"), ("hook panic", "PANIC:")] {
         let log = if label.starts_with("server") { "server" } else { "hook" };
         if let Some(line) = run.find(log, re, 0)? {
@@ -890,8 +912,9 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         }
     }
 
-    /// Copies the hook log and the run's part of Client.txt into the run folder.
-    fn collect(&self) {
+    /// Copies the hook log and the run's part of Client.txt into the run folder; returns the
+    /// DLL's session folder.
+    fn collect(&self) -> Option<PathBuf> {
         let _ = fs::copy(self.game.join("poe-hook.log"), self.dir.join("poe-hook.log"));
         let _ = fs::copy(self.game.join(STATE_FILE), self.dir.join("state-final.json"));
         if let Ok(bytes) = fs::read(self.game.join("logs/Client.txt")) {
@@ -901,10 +924,14 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         // The DLL's per-process session folder (packets, snapshots): the newest one.
         let sessions = self.game.join("logs/poe-hook");
         if let Some(newest) = fs::read_dir(&sessions).ok().and_then(|d| {
-            d.flatten().max_by_key(|e| e.metadata().and_then(|m| m.modified()).ok())
+            d.flatten()
+                .filter(|e| e.file_type().is_ok_and(|t| t.is_dir()))
+                .max_by_key(|e| e.metadata().and_then(|m| m.modified()).ok())
         }) {
             let _ = fs::write(self.dir.join("hook-session.txt"), format!("{}\n", newest.path().display()));
+            return Some(newest.path());
         }
+        None
     }
 }
 

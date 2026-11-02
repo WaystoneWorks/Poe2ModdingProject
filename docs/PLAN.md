@@ -4,7 +4,7 @@ The only list of what is left to do and the only status source. Edit it in place
 
 ## Now: R3 step 2, replay tests
 
-R3 step 1 is done except sprint coasting (needs the R4.1 capture). Step 2 (replay tests): the stance change (`0x200` StanceRequest, `0x2a6` before every stance delta, the `0x1000` value byte; toggle, first skill use in mouse mode, entry) and `0x1ca` with every non-Move action start are done; every official session is cut into 98 episodes that replay in `every_captured_episode` (64 identical, 34 listed with the reason in `fixtures/episodes/known.json`, [movement.md](protocol/movement.md#reproducing)). Next: the DLL key entry for W pressed or released during a sprint and its game test (step 2 below). Open: the drop of the action speed factor to 0.3 at frame 7 is measured, not traced; no in-game attack test until characters have an attack skill; the standing roll that once ended 4.8 cells off against a diagonal wall (old `G1_1` layout, aimed at the cursor) was not reproduced and has no scenario. R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
+R3 step 1 is done except sprint coasting (needs the R4.1 capture). Step 2 (replay tests): the stance change (`0x200` StanceRequest, `0x2a6` before every stance delta, the `0x1000` value byte; toggle, first skill use in mouse mode, entry) and `0x1ca` with every non-Move action start are done; every official session is cut into 98 episodes that replay in `every_captured_episode` (64 identical, 34 listed with the reason in `fixtures/episodes/known.json`, [movement.md](protocol/movement.md#reproducing)). W pressed or released during a sprint runs in the `sprint-w` game test (existing key entries; drift at most 2.5 cells at the end, stream rules checked by `scripts/re/sprint_check.py`); it showed that the client ignores the unscaled `0x64` after a sprint with a stream too (problem 5). Next: R3 wrap-up, what waits for the R4.1 capture goes into "Needs the user". Open: the drop of the action speed factor to 0.3 at frame 7 is measured, not traced; no in-game attack test until characters have an attack skill; the standing roll that once ended 4.8 cells off against a diagonal wall (old `G1_1` layout, aimed at the cursor) was not reproduced and has no scenario. R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
 
 ## T: agents test in game by themselves
 
@@ -19,7 +19,7 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 ## R3: movement 1:1 with the official game
 
 1. **Server copies of what the client does alone:** left: sprint coasting (problem 5, needs the capture in R4.1); stance changes while moving and the weapon swap (gap #7, same capture).
-2. **Replay tests:** every official episode replays or is in `known.json` with a reason (attack length from game data, entry stance timing, held-click restart trigger, and the others there). Left: W pressed or released during a sprint in a private game test (needs a DLL key entry that presses W while Space is held; `modules/client-hook/poe-hook-core/src/auto_keys.rs`).
+2. **Replay tests:** every official episode replays or is in `known.json` with a reason (attack length from game data, entry stance timing, held-click restart trigger, and the others there). W during a sprint: ours in `sprint-w`; the official answer waits for the R4.1 capture (gap #4).
 
 **Done when:** every captured sequence replays identically (opcodes, fields, frame offsets).
 
@@ -62,7 +62,7 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 | What | When |
 |---|---|
 | Install gamescope | now (T0) |
-| Official capture, including movement problem 5 and gap #7 (input-mode toggle while walking, weapon swap) | R4.1 |
+| Official capture, including movement problem 5, gap #4 (W pressed or released during a sprint, step 6 of the [checklist](re/captures.md#planned-capture-for-r4-world-map-waypoints-transitions-and-the-open-movement-cases)) and gap #7 (input-mode toggle while walking, weapon swap) | R4.1 |
 | G-PARTY capture (a friend answers party invite and trade request) | any time, implementation waits for items |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |
 | Decide whether old batch run directories may be deleted (disk 481 GB free; `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small) | any time |

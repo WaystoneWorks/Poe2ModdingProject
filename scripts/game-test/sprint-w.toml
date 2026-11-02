@@ -1,0 +1,104 @@
+# R3 step 2: W pressed and released while Space is held during a sprint (open ground, no walls).
+# Spot from `wall_probe G1_1 1 --runs`: (621, 1146) has 70+ free cells along every key direction.
+# Existing entries only (each adds 100 ms): `indown:0x20` holds Space for Raw Input and
+# GetKeyState, `down:0x20` / `up:0x20` hold the posted key (the roll binding reads window
+# messages: a plain `0x20` posts down and up at once, the client sends `0x2e6 held=0` two frames
+# later and only rolls). The sprint starts 15 frames (500 ms) after the roll.
+# The official answer to these cases is not captured (movement.md gap #4, PLAN "Needs the user");
+# what the server and the client did is recorded in movement.md (Test tooling).
+description = "W pressed / released during a sprint, server and client agree (G1_1 seed 1, generated grid)"
+input_mode = "wasd"
+# The stream rules on the DLL session's packets (movement.md "Sprint stream"), checked after the
+# client is closed; a local server answers in the next frame (the default slack of 1 frame).
+after = ["python3 scripts/re/sprint_check.py {session}"]
+
+# Per-frame client positions in poe-hook.log (what the client does after each sprint end).
+[client_env]
+POE_HOOK_MOVEMENT_LOG = "1"
+
+[server]
+"dev.drift_check" = true
+
+[[step]]
+name = "transfer to G1_1 seed 1"
+cmd = "transfer G1_1 1"
+
+[[step]]
+name = "in G1_1"
+expect_state = { area = "G1_1" }
+timeout_s = 60
+
+# Cursor to the right of the player (grid about (+38, -29) per 50 px): a cursor sprint goes
+# between D and WD, so W (+1, +1) is a real turn, not the cursor direction.
+[[step]]
+name = "cursor right"
+keys = "inmove:1000,300 wait:300 inmove:1700,590 wait:400"
+
+# Case 1: cursor sprint, W pressed at about t0+21, Space released with W still held (the sprint
+# ends at t0+35 at the earliest, then W walks on), then W released.
+[[step]]
+name = "teleport (case 1)"
+cmd = "teleport 621 1146"
+
+[[step]]
+name = "at the spot (case 1)"
+expect_state = { near = [621, 1146, 3] }
+
+[[step]]
+name = "W pressed during a sprint, Space up first"
+keys = "indown:0x20 down:0x20 wait:600 indown:0x57 wait:500 up:0x20 inup:0x20 wait:600 inup:0x57 wait:1500"
+
+[[step]]
+name = "moved (case 1)"
+expect_state = { moved = 20 }
+
+[[step]]
+name = "server and client agree (case 1)"
+max_drift = 5
+
+# Case 2: W held before the roll (a key roll, no stream), W released while Space stays down
+# (the client then sends the cursor direction), then Space released.
+[[step]]
+name = "teleport (case 2)"
+cmd = "teleport 621 1146"
+
+[[step]]
+name = "at the spot (case 2)"
+expect_state = { near = [621, 1146, 3] }
+
+[[step]]
+name = "W released during a sprint"
+keys = "indown:0x57 wait:300 indown:0x20 down:0x20 wait:700 inup:0x57 wait:500 up:0x20 inup:0x20 wait:1500"
+
+[[step]]
+name = "moved (case 2)"
+expect_state = { moved = 20 }
+
+[[step]]
+name = "server and client agree (case 2)"
+max_drift = 5
+
+# Case 3: cursor sprint, W pressed and released while Space is held, then Space released.
+[[step]]
+name = "teleport (case 3)"
+cmd = "teleport 621 1146"
+
+[[step]]
+name = "at the spot (case 3)"
+expect_state = { near = [621, 1146, 3] }
+
+[[step]]
+name = "W pressed and released during a sprint"
+keys = "indown:0x20 down:0x20 wait:600 indown:0x57 wait:400 inup:0x57 wait:400 up:0x20 inup:0x20 wait:1500"
+
+[[step]]
+name = "moved (case 3)"
+expect_state = { moved = 20 }
+
+[[step]]
+name = "server and client agree (case 3)"
+max_drift = 5
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "
