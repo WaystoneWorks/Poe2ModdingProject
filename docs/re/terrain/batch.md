@@ -225,6 +225,7 @@ busy.
   second, 277 errors. Per ok layout: act 1 mean 79 ms, act 2 209 ms, act 3 331 ms, act 4 375 ms,
   act 6 255 ms, act 10 231 ms (median 127 ms, p95 967 ms, max 2.7 s). The 225,300 jobs of the
   acceptance test (4,508 combinations x 50 seeds) take about 1.6 h plus about 25 restarts.
+- **Broad grid sample** (4,508 combinations x 50 seeds, 225,400 jobs, 8 threads): client run 1 h 29 min, no restart needed; `forced_verify --threads 8` over the 218,705 ok layouts takes about 2.3 h.
 - **Memory** (resident set under Proton, sampled every 10 s into `rss.tsv`): client 1.7 GB 10 s
   after the start; 5.1 to 5.2 GB at the login screen when the first job starts; act 1 peaks at 7.4
   to 8.1 GB for every thread count (a few MB per thread) and stays flat (7.7 GB over 48,300 jobs); a

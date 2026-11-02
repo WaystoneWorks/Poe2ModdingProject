@@ -6,29 +6,34 @@ The only list of what is left to do and the only status source. Edit it in place
 
 The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_grid`, off by default) must equal the client's.
 
-**State (2026-11-01):** 5,084 of the 5,256 client grid exports on disk are byte-identical (96.7%); 172 differ, 5 layouts of them (6 dir-list lines) already in the layout. No regressions; server tests pass. Details and open families: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
+**State (2026-11-01):** broad sample done (all areas, 50 seeds per topology and orientation, `terrain_batch.py plan <run> --seeds 50`; [status/terrain.md](status/terrain.md)). Pilot (2 seeds): 9,016 jobs, 8,739 ok, grids 8,428 identical. Full: 225,400 jobs, client 1 h 29 min, no crash, 218,705 ok, 6,695 errors (2.97%, client generation exceptions). `forced_verify` over the 218,705: tile 218,705 and doodad 218,705 identical (the R1 area-generation check passes broad); **grids 210,766 identical (96.4%), 7,889 differ**, all in 9 of 432 areas (every other area is 100% identical). Layout (tile and doodad) always matches in the differing grids. Details: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points).
 
-**Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); a biased sample (many exports come from failure hunts); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
+**Limits of that number:** client mode only (the server's own mode, with server-only objects, is written but was never compared); the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
-1. **Fix the grid families, largest differences first**, using per-pass snapshots:
+1. **Fix the grid families** (hard RE: an Opus thread, `re-tracer`; per-pass snapshots and `check_grids --blame`). From the broad sample (runs `grid50`, `grid50ex`: 6 re-exported differing layouts per area; 0 of 54 match):
 
-   Unique failing layouts / average differing cells (the gate's dir list has duplicates). `P3_1` is the largest family and has not been looked at.
-
-   | Area | Failing layouts | Average differing cells |
+   | Area | Differing / ok grids | Layers and differing cells |
    |---|---|---|
-   | `P3_1` | 5 | 25,289 |
-   | `G3_1` | 4 | 527 |
-   | `G2_5_2`, `G2_2`, `G2_5_1` | 33, 21, 70 | 196, 100, 73 |
-   | `MapLostTowers`, `MapPlantation`, `MapSteamingSprings` | 3, 7, 2 | 104, 72, 48 |
+   | `P3_1` | 175 / 199 | L0 3,196-23,925 and L1 2,461-11,694 (topology 1/3, orientation 0) |
+   | `TN_WorldMap` (new) | 50 / 50 | L0 only, 74,088 cells in every sample (topology 1, orientation 0); first cell (23,23) ours 0, client 1; a whole-area rule (blame: list0 40/250 tiles) |
+   | `G3_1` | 1,666 / 3,099 | L0, 112-565 |
+   | `G2_5_2` | 1,590 / 1,600 | L0, 29-505 |
+   | `G2_5_1` | 3,253 / 4,800 | L0, 11-145 |
+   | `G2_2` | 462 / 778 | L1, 37-72 (ours and client differ by 1) |
+   | `MapLostTowers` | 184 / 2,372 | L0, 46-175 |
+   | `MapPlantation` | 384 / 800 | L0, 41 (125 in one sample; blame flags `0x26` b1 5 list1 1 tile) |
+   | `MapSteamingSprings` | 125 / 2,399 | L0, 30-367 (blame flags `0x07` b1 0 list0) |
 
+   Cells mostly differ by 1 in the value (ours 4 / client 5, 1 / 0). Files: `dumps/0.5.5e.hotfix1/terrain/batch/grid50/{batch-results.tsv,grid-fails.txt}`, `runtime/grid50-fv.out`, `runtime/grid50ex-blame.out`.
 2. **The 5 layout failures** (`G2_12`, `G4_WorldMap`, `MapUberBoss_CopperCitadel`): R1 reported every layout matching, so decide whether these are stale exports or a real gap.
 3. **Server-mode export:** compare the server mode with something real, or state exactly why it cannot be compared.
-4. **Fresh sample (user, 2026-11-01): all areas, 50 seeds per topology and orientation (`terrain_batch.py plan <run> --seeds 50`, about 225,400 jobs), grids compared by hash.** The batch writes `grid_hash` per job ([batch.md](re/terrain/batch.md)); `forced_verify <run>/batch-results.tsv --threads 8 --grid-fails <file>` rechecks the tile and doodad hashes (the R1 area-generation check) and compares the grid hashes; the `--grid-fails` list is the `export.txt` of a re-run with full exports for `check_grids`. Order: a 2-seed pilot (`plan <run> --seeds 2`) first, then the 50-seed run. Ask the user before deleting old batch run directories.
-5. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
-6. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
+4. **Test tools T0 to T3** (below), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
+5. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
 
-**Done when:** the fresh sample is byte-identical, live movement collides like the client, and the defaults are flipped. The finish line is the full match, not an area-by-area fallback (user, 2026-10-31).
+**Pending:** ask the user before deleting old batch run directories (disk 481 GB free; the new runs take `grid50` 24 MB and `grid50ex` 691 MB).
+
+**Done when:** the broad sample is byte-identical (all 9 families closed), live movement collides like the client, and the defaults are flipped. The finish line is the full match, not an area-by-area fallback (user, 2026-10-31).
 
 ## T: agents test in game by themselves
 
