@@ -1,0 +1,99 @@
+# Scripted actions (PLAN T3): walk_to, walk_to blocked, roll, on the server's generated grid.
+# Spots from `wall_probe G1_town 1` (modules/server/crates/poe-world/examples/wall_probe.rs):
+# open 378 345 (clear 12 cells all round); wall 378 345 WD 28 (walking W+D, +x on the grid,
+# 28 free cells, then solid).
+description = "walk_to, a walk and a roll into a wall (G1_town seed 1, generated grid)"
+input_mode = "wasd"
+
+[server]
+"terrain.generated_grid" = true
+"dev.drift_check" = true
+
+[[step]]
+name = "transfer to the town, seed 1"
+cmd = "transfer G1_town 1"
+
+[[step]]
+name = "in the town"
+expect_state = { area = "G1_town" }
+timeout_s = 60
+
+[[step]]
+name = "teleport to the open spot"
+cmd = "teleport 378 345"
+
+[[step]]
+name = "at the open spot"
+expect_state = { near = [378, 345, 3] }
+
+[[step]]
+name = "W 0.4 s"
+keys = "indown:0x57 wait:400 inup:0x57 wait:300"
+
+[[step]]
+name = "S 0.4 s"
+keys = "indown:0x53 wait:400 inup:0x53 wait:300"
+
+[[step]]
+name = "D 0.4 s"
+keys = "indown:0x44 wait:400 inup:0x44 wait:300"
+
+[[step]]
+name = "A 0.4 s"
+keys = "indown:0x41 wait:400 inup:0x41 wait:300"
+
+[[step]]
+name = "walk to (370, 338)"
+walk_to = [370, 338, 3]
+
+[[step]]
+name = "walk to (386, 352)"
+walk_to = [386, 352, 3]
+
+[[step]]
+name = "teleport back"
+cmd = "teleport 378 345"
+
+[[step]]
+name = "at the open spot again"
+expect_state = { near = [378, 345, 3] }
+
+[[step]]
+name = "walk +x into the wall (28 cells away)"
+walk_to = [420, 345, 3]
+blocked = true
+
+[[step]]
+name = "stopped at the wall"
+expect_state = { near = [404, 345, 6] }
+
+[[step]]
+name = "server and client agree on the walk"
+max_drift = 5
+
+[[step]]
+name = "teleport 16 cells from the wall"
+cmd = "teleport 390 345"
+
+[[step]]
+name = "there"
+expect_state = { near = [390, 345, 3] }
+
+[[step]]
+name = "roll +x into the wall"
+roll = "WD"
+hold_ms = 600
+
+# The roll does not stop dead: the client plans it around the wall (it slid to (411, 326) in
+# the first runs), so only "it rolled" and "server and client agree" are checked.
+[[step]]
+name = "rolled"
+expect_state = { moved = 10 }
+
+[[step]]
+name = "server and client agree on the roll"
+max_drift = 5
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

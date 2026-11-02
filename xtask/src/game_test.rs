@@ -21,6 +21,8 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
+use std::f64::consts::FRAC_1_SQRT_2;
+
 use anyhow::{Context, Result, bail};
 use poe_config::Config;
 use regex::Regex;
@@ -115,6 +117,22 @@ struct Step {
     /// (default 10): `area`, `near = [x, y, r]`, `panel`, `no_panel`, or a dotted path with a
     /// value or a comparison (`"player.life.current" = ">= 1"`); see `game_state.rs`.
     expect_state: Option<toml::Table>,
+    /// `walk_to = [x, y, r]`: steers with W/A/S/D (scenario `input_mode = "wasd"`) until the
+    /// player's grid cell is within r cells of (x, y), within `timeout_s` (default 30). With
+    /// `blocked = true` it holds the one key combination that points at (x, y) from the start
+    /// and passes when the player stops short (a wall), fails when it gets there.
+    walk_to: Option<Vec<f64>>,
+    blocked: Option<bool>,
+    /// `roll = "W"` (keys `W`, `A`, `S`, `D`, up to two, e.g. `"WD"`; `""` rolls standing,
+    /// towards the cursor): holds the keys, presses Space as a real hold, releases the keys
+    /// after `hold_ms` (default 1000).
+    roll: Option<String>,
+    hold_ms: Option<u64>,
+    /// `max_drift = 5`: fails when a server `drift` line (scenario `"dev.drift_check" = true`)
+    /// since the last action step started (keys, cmd, walk_to, roll; `since = "start"`: since
+    /// the scenario started) shows
+    /// more than this many cells between the server's and the client's position.
+    max_drift: Option<f64>,
     /// `server` (default), `hook` (GameFiles/poe-hook.log) or `client` (Client.txt).
     log: Option<String>,
     since: Option<String>,
@@ -134,6 +152,9 @@ struct Run {
     lock_taken: bool,
     /// Player cell at the start of the previous and the current step (live state file).
     grids: (Option<(f64, f64)>, Option<(f64, f64)>),
+    /// Server log length when the last action step (keys, cmd, walk_to, roll) started
+    /// (`max_drift`).
+    action_log_at: u64,
 }
 
 pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result<()> {
@@ -159,6 +180,7 @@ pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result
         client_txt_start: 0,
         lock_taken: false,
         grids: (None, None),
+        action_log_at: 0,
     };
     println!("game-test {name}: {}", scenario.description);
     println!("logs: {}", dir.display());
@@ -242,9 +264,33 @@ impl Run {
             .wait_log("server", "player entered the world", 0, Duration::from_secs(120))
             .context("did not enter the world after Play")?;
         results.push(("login".into(), true, short(&entered)));
+        // The loading screen can outlast "entered the world" by a minute; steps start once the
+        // state file shows the player.
+        let state_file = self.game.join(STATE_FILE);
+        self.player_cell(0).or_else(|_| {
+            self.wait_until(Duration::from_secs(120), || {
+                fs::read_to_string(&state_file)
+                    .ok()
+                    .and_then(|t| crate::game_state::parse(&t).ok())
+                    .and_then(|v| crate::game_state::grid(&v))
+                    .is_some()
+            })
+            .context("no player in the state file after entering the world")?;
+            self.player_cell(0)
+        })?;
         for (i, step) in sc.steps.iter().enumerate() {
             let label = step.name.clone().unwrap_or_else(|| format!("step {}", i + 1));
-            let r = self.step(step);
+            let r = self.step(step).map(|d| match (&step.keys, &step.roll, &step.cmd) {
+                (None, None, None) => d,
+                _ => match SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .map_err(anyhow::Error::from)
+                    .and_then(|t| self.player_cell(t.as_millis() as u64))
+                {
+                    Ok((x, y)) => format!("{d}, at ({x},{y})"),
+                    Err(_) => d,
+                },
+            });
             let failed = r.is_err();
             results.push(match r {
                 Ok(detail) => (label, true, detail),
@@ -497,17 +543,50 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
             .and_then(|t| crate::game_state::parse(&t).ok())
             .and_then(|v| crate::game_state::grid(&v));
         self.grids = (self.grids.1, now);
+        if s.keys.is_some() || s.cmd.is_some() || s.walk_to.is_some() || s.roll.is_some() {
+            self.action_log_at = self.log_len("server");
+        }
+        if let Some(max) = s.max_drift {
+            // One more sample after the action (`[dev] drift_interval_ms`, 1000 by default).
+            std::thread::sleep(Duration::from_millis(1500));
+            let from = if s.since.as_deref() == Some("start") { 0 } else { self.action_log_at };
+            return self.check_drift(max, from);
+        }
         if let Some(k) = &s.keys {
             self.send_keys(k)?;
             return Ok(format!("sent {}", k.split_whitespace().count()));
         }
         if let Some(c) = &s.cmd {
-            self.send_keys(&format!("cmd:{c}"))?;
-            return Ok(format!("cmd {c}"));
+            // The DLL logs `server command "<c>" sent: false` while its debug link is not up
+            // yet (just after loading): retry for up to 20 s.
+            let sent = Regex::new(&format!(r#"server command "{}" sent: (\w+)"#, regex::escape(c)))?;
+            for _ in 0..20 {
+                let from = self.log_len("hook");
+                self.send_keys(&format!("cmd:{c}"))?;
+                let line = self.wait_log("hook", sent.as_str(), from, Duration::from_secs(5))?;
+                if sent.captures(&line).is_some_and(|m| &m[1] == "true") {
+                    return Ok(format!("cmd {c}"));
+                }
+                std::thread::sleep(Duration::from_secs(1));
+            }
+            bail!("the DLL could not send {c:?} (debug link down)");
         }
         if let Some(ms) = s.wait_ms {
             std::thread::sleep(Duration::from_millis(ms));
             return Ok(format!("{ms} ms"));
+        }
+        if let Some(w) = &s.walk_to {
+            let [x, y, r] = w[..] else { bail!("walk_to: want [x, y, r]") };
+            let t = Duration::from_secs(s.timeout_s.unwrap_or(30));
+            return self.walk_to((x, y), r, s.blocked.unwrap_or(false), t);
+        }
+        if let Some(keys) = &s.roll {
+            let vks = keys.chars().map(key_vk).collect::<Result<Vec<_>>>()?;
+            let down: String = vks.iter().map(|k| format!("indown:{k:#x} ")).collect();
+            let up: String = vks.iter().map(|k| format!(" inup:{k:#x}")).collect();
+            let hold = s.hold_ms.unwrap_or(1000);
+            self.send_keys(&format!("{down}indown:0x20 0x20 wait:250 inup:0x20 wait:{hold}{up}"))?;
+            return Ok(format!("rolled {keys:?}"));
         }
         if let Some(checks) = &s.expect_state {
             let t = Duration::from_secs(s.timeout_s.unwrap_or(10));
@@ -545,14 +624,127 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
                 if let Some(ms) = e.strip_prefix("wait:") {
                     return ms.parse::<u64>().ok();
                 }
+                // The DLL sleeps 100 ms after each raw input entry.
+                let pause = if e.starts_with("in") { 100 } else { 0 };
                 if e.starts_with("text:") || e.starts_with("cmd:") || e.matches(':').count() != 1 {
-                    return None;
+                    return Some(pause);
                 }
-                e.rsplit_once(':').and_then(|(_, ms)| ms.parse().ok())
+                Some(pause + e.rsplit_once(':').and_then(|(_, ms)| ms.parse().ok()).unwrap_or(0))
             })
             .sum();
         std::thread::sleep(Duration::from_millis(busy + 300));
         Ok(())
+    }
+
+    /// `max_drift`: the largest `cells` of the server's `drift` lines from byte `from` on.
+    fn check_drift(&self, max: f64, from: u64) -> Result<String> {
+        let re = Regex::new(r#": drift .*\bcells=Some\("([0-9.]+)"\)"#)?;
+        let bytes = fs::read(self.log_path("server")).unwrap_or_default();
+        let text = String::from_utf8_lossy(&bytes[(from as usize).min(bytes.len())..]);
+        let (mut worst, mut n, mut line) = (0.0f64, 0, String::new());
+        for l in text.lines().map(strip_ansi) {
+            if let Some(d) = re.captures(&l).and_then(|m| m[1].parse::<f64>().ok()) {
+                n += 1;
+                if d > worst {
+                    (worst, line) = (d, l);
+                }
+            }
+        }
+        if n == 0 {
+            bail!("no drift lines (scenario [server] \"dev.drift_check\" = true?)");
+        }
+        if worst > max {
+            bail!("drift {worst:.2} cells > {max}: {}", short(&line));
+        }
+        Ok(format!("max {worst:.2} cells over {n} samples"))
+    }
+
+    /// The player's cell in a fresh state file, at least `after` (unix ms) new.
+    fn player_cell(&mut self, after: u64) -> Result<(f64, f64)> {
+        let file = self.game.join(STATE_FILE);
+        let end = Instant::now() + Duration::from_secs(5);
+        loop {
+            let v = fs::read_to_string(&file).ok().and_then(|t| crate::game_state::parse(&t).ok());
+            if let Some(v) = v
+                && v.get("t").and_then(serde_json::Value::as_u64).unwrap_or(0) >= after
+                && let Some(g) = crate::game_state::grid(&v)
+            {
+                return Ok(g);
+            }
+            self.check_alive()?;
+            if Instant::now() > end {
+                bail!("no fresh player cell in the state file");
+            }
+            std::thread::sleep(Duration::from_millis(100));
+        }
+    }
+
+    /// `walk_to`: holds the W/A/S/D combination that points closest to the target for a time
+    /// sized from the distance and the speed seen so far, reads the new cell, and repeats.
+    /// Two holds in a row that move less than a fifth of what they should (and under 2 cells)
+    /// count as stopped.
+    fn walk_to(&mut self, to: (f64, f64), r: f64, blocked: bool, t: Duration) -> Result<String> {
+        let end = Instant::now() + t;
+        let start = self.player_cell(0)?;
+        let mut pos = start;
+        let mut speed = 37.0; // cells per second (WASD walk), refined from long holds
+        let fixed = blocked.then(|| best_keys((to.0 - pos.0, to.1 - pos.1)));
+        let mut stalls = 0;
+        let mut holds = 0;
+        let (mut best, mut since_best) = (f64::MAX, 0);
+        loop {
+            let d = ((to.0 - pos.0).powi(2) + (to.1 - pos.1).powi(2)).sqrt();
+            if d < best - 0.5 {
+                (best, since_best) = (d, 0);
+            } else {
+                since_best += 1;
+            }
+            if !blocked && since_best >= 8 {
+                bail!("no closer than {best:.1} cells in 8 holds, at ({},{}) (radius too small?)", pos.0, pos.1);
+            }
+            if d <= r {
+                if blocked {
+                    bail!("reached ({},{}) from ({},{}): not blocked", pos.0, pos.1, start.0, start.1);
+                }
+                return Ok(format!("({},{})->({},{}) in {holds} holds, {d:.1} off", start.0, start.1, pos.0, pos.1));
+            }
+            if stalls >= 2 {
+                if blocked {
+                    return Ok(format!("stopped at ({},{}) from ({},{}), {d:.1} short", pos.0, pos.1, start.0, start.1));
+                }
+                bail!("stuck at ({},{}) {d:.1} cells from ({},{})", pos.0, pos.1, to.0, to.1);
+            }
+            if Instant::now() > end {
+                bail!("timeout at ({},{}), {d:.1} cells from ({},{})", pos.0, pos.1, to.0, to.1);
+            }
+            let keys = fixed.unwrap_or_else(|| best_keys((to.0 - pos.0, to.1 - pos.1)));
+            let (ux, uy) = keys_dir(keys);
+            let along = (to.0 - pos.0) * ux + (to.1 - pos.1) * uy;
+            let hold = if blocked { 1000 } else { ((along / speed * 1000.0 - KEY_PAUSE_MS) * 0.8).clamp(0.0, 1500.0) as u64 };
+            let down: String = keys.chars().map(|c| format!("indown:{:#x} ", key_vk(c).unwrap_or(0))).collect();
+            let up: String = keys.chars().map(|c| format!(" inup:{:#x}", key_vk(c).unwrap_or(0))).collect();
+            self.send_keys(&format!("{down}wait:{hold}{up}"))?;
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as u64;
+            let new = self.player_cell(now)?;
+            let moved = ((new.0 - pos.0).powi(2) + (new.1 - pos.1).powi(2)).sqrt();
+            // The keys are down for the hold plus the DLL's pause after each entry.
+            let held_s = (hold as f64 + KEY_PAUSE_MS) / 1000.0;
+            let expected = speed * held_s;
+            if moved < 2.0 && moved < expected / 5.0 {
+                stalls += 1;
+            } else {
+                stalls = 0;
+                if hold >= 300 {
+                    speed = (speed + moved / held_s) / 2.0;
+                }
+            }
+            holds += 1;
+            // One line per hold in walk.tsv of the run folder.
+            if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(self.dir.join("walk.tsv")) {
+                let _ = writeln!(f, "{}\t{}\t{}\t{}\t{keys}\t{hold}\t{}\t{}\t{moved:.1}\t{speed:.1}", to.0, to.1, pos.0, pos.1, new.0, new.1);
+            }
+            pos = new;
+        }
     }
 
     fn wait_until(&mut self, t: Duration, mut f: impl FnMut() -> bool) -> Result<()> {
@@ -725,6 +917,53 @@ impl Drop for Run {
     }
 }
 
+/// The DLL sleeps this long after each raw input entry (`indown:` ...), so keys stay down that
+/// much longer than the `wait:` between them.
+const KEY_PAUSE_MS: f64 = 100.0;
+
+/// Virtual key of a movement key letter.
+fn key_vk(c: char) -> Result<u32> {
+    Ok(match c.to_ascii_uppercase() {
+        'W' => 0x57,
+        'A' => 0x41,
+        'S' => 0x53,
+        'D' => 0x44,
+        _ => bail!("movement key {c:?}: want W, A, S or D"),
+    })
+}
+
+/// Grid direction each movement key walks (unit vector; `0x63` MoveDirection vectors,
+/// docs/protocol/movement.md: W is (127, 127)).
+const KEY_DIRS: [(char, (f64, f64)); 4] = [
+    ('W', (FRAC_1_SQRT_2, FRAC_1_SQRT_2)),
+    ('S', (-FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
+    ('D', (FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
+    ('A', (-FRAC_1_SQRT_2, FRAC_1_SQRT_2)),
+];
+
+/// Unit grid direction of a key combination ("W", "WD").
+fn keys_dir(keys: &str) -> (f64, f64) {
+    let (x, y) = keys.chars().fold((0.0, 0.0), |(x, y), c| {
+        let (dx, dy) = KEY_DIRS.iter().find(|(k, _)| *k == c).map(|(_, d)| *d).unwrap_or((0.0, 0.0));
+        (x + dx, y + dy)
+    });
+    let n = (x * x + y * y).sqrt().max(1e-9);
+    (x / n, y / n)
+}
+
+/// The one- or two-key combination whose direction is closest to `(dx, dy)`.
+fn best_keys((dx, dy): (f64, f64)) -> &'static str {
+    const COMBOS: [&str; 8] = ["W", "WD", "D", "SD", "S", "AS", "A", "WA"];
+    *COMBOS
+        .iter()
+        .max_by(|a, b| {
+            let (ax, ay) = keys_dir(a);
+            let (bx, by) = keys_dir(b);
+            (ax * dx + ay * dy).total_cmp(&(bx * dx + by * dy))
+        })
+        .unwrap_or(&"W")
+}
+
 fn log_file(path: &Path) -> Result<fs::File> {
     let mut f = fs::OpenOptions::new().create(true).append(true).open(path)?;
     f.flush()?;
@@ -825,4 +1064,29 @@ fn client_pids(game: &Path) -> Vec<u32> {
         }
     }
     pids
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn key_combinations() {
+        assert_eq!(best_keys((1.0, 1.0)), "W");
+        assert_eq!(best_keys((1.0, 0.1)), "WD");
+        assert_eq!(best_keys((-1.0, -0.9)), "S");
+        assert_eq!(best_keys((-1.0, 1.0)), "A");
+        let (x, y) = keys_dir("WD");
+        assert!((x - 1.0).abs() < 1e-9 && y.abs() < 1e-9);
+    }
+}
+
+#[cfg(test)]
+mod drift_tests {
+    #[test]
+    fn drift_line() {
+        let re = regex::Regex::new(r#": drift .*\bcells=Some\("([0-9.]+)"\)"#).unwrap();
+        let l = r#"2026-11-02T16:00:00Z  INFO instance{peer=127.0.0.1:1}: instance_server: drift server=1.00,2.00 client=Some("1.00,2.00") cells=Some("0.42") max_cells=Some("3.10") samples=3 state=walk"#;
+        assert_eq!(&re.captures(l).unwrap()[1], "0.42");
+    }
 }

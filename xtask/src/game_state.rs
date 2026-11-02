@@ -67,15 +67,17 @@ fn one(state: &Value, key: &str, want: &toml::Value, ctx: &Ctx) -> Result<String
         }
         // `moved = 10`: at least that many cells from where the player was when the previous
         // step started (the step that walked).
-        "moved" => {
+        // `moved_max = 3`: at most that many (a roll or walk into a wall stopped short).
+        "moved" | "moved_max" => {
             let n = want.as_float().or(want.as_integer().map(|i| i as f64)).ok_or("moved: want a number")?;
             let (bx, by) = ctx.before.ok_or("moved: no position before the previous step")?;
             let (px, py) = grid(state).ok_or("no player")?;
             let d = ((px - bx).powi(2) + (py - by).powi(2)).sqrt();
-            if d >= n {
+            let (ok, op) = if key == "moved" { (d >= n, ">=") } else { (d <= n, "<=") };
+            if ok {
                 Ok(format!("({bx},{by})->({px},{py}) {d:.1}"))
             } else {
-                Err(format!("moved {d:.1} cells ({bx},{by})->({px},{py}), want >= {n}"))
+                Err(format!("moved {d:.1} cells ({bx},{by})->({px},{py}), want {op} {n}"))
             }
         }
         // `panel = "inventory"`: a visible UI panel path contains the text; `no_panel`: none does.
@@ -181,6 +183,8 @@ mod tests {
         let check = |s: &Value, c: &toml::Table| super::check(s, c, &ctx);
         assert!(check(&s, &t("moved = 10")).is_ok());
         assert!(check(&s, &t("moved = 10.5")).is_err());
+        assert!(check(&s, &t("moved_max = 10")).is_ok());
+        assert!(check(&s, &t("moved_max = 9.5")).is_err());
         assert!(check(&s, &t(r#"area = "G1_town""#)).is_ok());
         assert!(check(&s, &t(r#"area = "G1_1""#)).is_err());
         assert!(check(&s, &t(r#"area = "G1_.*""#)).is_ok());

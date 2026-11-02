@@ -11,7 +11,7 @@ The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_
 **Limits of that number:** client side only. The client adds the hulls of the static entities the server sends, so the instance server builds the client-side grid until it sends the `server_only` objects ([doodads.md](re/terrain/doodads.md#live-grid-and-server-side-objects)). The `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
-1. **Test tool T3** (below; T1 `cargo xtask game-test` is done, [setup.md](guides/setup.md#game-tests-cargo-xtask-game-test); T2, the live state file, is done, [setup.md](guides/setup.md#live-state-file)), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
+1. **Live test** on the generated grid with `cargo xtask game-test` ([setup.md](guides/setup.md#game-tests-cargo-xtask-game-test): `walk_to`, `blocked`, `roll`, `max_drift`, spots from `wall_probe`): walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)). `scripts/game-test/walk.toml` already passes one wall in `G1_town` seed 1 (walk stops where the grid says, drift at most 3.93 cells); still to cover: outdoor cliffs (`G1_1`), narrow passages, a dungeon (`G1_8`), rolls straight into walls.
 2. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
 
 **Pending:** ask the user before deleting old batch run directories (disk 481 GB free; the new runs take `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small).
@@ -23,7 +23,6 @@ Steps:
 Built before the R2 live test, because every later step needs it. The official-server read-only latch stays untouched.
 
 - **T0 Isolated display.** The user installs gamescope (`sudo pacman -S gamescope`). Try the client under nested or headless gamescope with Proton and the hook, and prove input injection and logs still work. It replaces the removed Agents desktop. If it fails, tell the user; tests then run on the normal desktop. **Still open** (gamescope not installed): tests run on the normal desktop meanwhile; `cargo xtask game-test --display gamescope` is where it plugs in, and T1 to T3 must be proven under it later.
-- **T3 Scripted actions.** Scenario files (walk to x,y; roll; click a transition; expect an area; expect blocked by a wall) on top of the `poe-hook.keys` channel. The R2 live test is the first scenario set.
 
 **Done when:** an agent runs the R2 wall scenarios with no human, and no window appears on the user's desktop.
 
@@ -41,7 +40,7 @@ Built before the R2 live test, because every later step needs it. The official-s
 1. **Official capture (the user's, about 15 minutes):** checklist in [captures.md](re/captures.md#planned-capture-for-r4-world-map-waypoints-transitions-and-the-open-movement-cases). Tell the user when ready and stop every client job first.
 2. **Object stage in `poe-world`:** objects of placed tiles (`.tmd`), rooms (`.arm`) and node tags, with cell and orientation, checked against the client's `entities.tsv` at scale. Sources: [entities.md](protocol/entities.md#where-world-objects-come-from).
 3. **`AddObject` (`0x2f7`)** for transitions (including fog doors), waypoints and checkpoints, with the components the capture shows, spawned per instance. Static `server_only` objects with a hull (healing wells, benches, `StoneHengeAct*`) change the client's grid when sent: once the server sends them, stamp the hulls of the objects it actually spawned into its grid ([doodads.md](re/terrain/doodads.md#live-grid-and-server-side-objects)).
-4. **Interaction:** clicking a transition sends the player to the connected area (`WorldAreas` connections or the object's target) at the matching transition; waypoint travel between unlocked waypoints.
+4. **Interaction:** clicking a transition sends the player to the connected area (`WorldAreas` connections or the object's target) at the matching transition; waypoint travel between unlocked waypoints. Add a game-test step that clicks a transition (needs a world-to-screen mapping; T3 has walk, roll and wall steps only).
 4. **World map (M)** for acts 1 to 4 and the interludes, not the endgame: per-character unlock state (locked by default), what the client needs to show unlocks (from the capture), admin command `unlock <character> [acts|waypoints|all]` and lock, a web admin button.
 
 **Done when:** an admin-unlocked character opens M in every act but the endgame, travels by waypoint and walks between areas without commands.
