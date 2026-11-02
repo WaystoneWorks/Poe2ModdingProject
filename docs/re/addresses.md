@@ -27,13 +27,15 @@ Imports: `VERSION.dll` (`GetFileVersionInfoW`, `GetFileVersionInfoSizeW`, `VerQu
 ## Entities and rendering
 | Address | What |
 |---|---|
-| `0x142130440` | game world update in frame mode: plays queued frames in real time, dt = frame ms / 1000. Lockstep speed factor world +0x670: 1.01x with 1 spare frame (the client's steady walking step is 1.2333 = 1.01 x 1.221; short steps when it waits for a frame), 1.5x with 2-29, 2x with 30-59, 5x with >=60, 1.0 when drained |
-| `0x142130840` | world frame drain (`world, f32 dt`): applies queued simulation packets, updates entities |
+| `0x142130440` | game world update in frame mode (`world, ctx, f32 real dt`): plays queued frames in real time with speed factor +0x670 (rises to 1.01/1.5/2/5 by frames left, drops to 1.0 only when drained), bank +0x66c capped at one frame: [movement.md](../protocol/movement.md#timing) |
+| `0x142130840` | world frame drain (`world, f32 frame_dt`): pops one frame length (deque world +0x688), applies that frame's packets, updates entities with frame_dt (0 when paused, +0x868). Reached through vfunc +0x3c0 `0x14212ecd0` |
+| `0x142130d80` | world vfunc +0x3c8: visual update job (`dt`, played simulation time) |
+| `0x140b27ac0` | world vfunc +0x178: `world +0x11c = frame_ms` (InitialState, `0x2f5`) |
 | `0x14212fd90` | world start (InitialState vfunc +0x1f0): applies all queued packets |
 | `0x142130360` | flush packets scheduled at the current (entity, component, sequence) position |
 | `0x141e72a00` | object registry insert ("Replacing awake/asleep/deleted object") |
 | `0x142137270` | frame-mode entity update loop (component vfunc +0x50, then `0x141e7d970`) |
-| `0x142134260` | simulation packet queue (`0x2f4` frame marker, `0x2f5` -> world vfunc +0x178) |
+| `0x142134260` | simulation packet queue (param = world +0x258): `0x2f4` pushes a separator and world +0x11c into the frame-length deque (only once started, +0x86a), `0x2f5` -> world vfunc +0x178 |
 | `0x140150cb0` | entity -> Render component by name: entity `+8` → type, `+0x28` → component lookup, sorted `{char* name, i32 index}` (16 bytes) from `+0x28` to `+0x30`; the index selects `entity+0x10[index]` |
 | `0x1416a9990` | Render: apply visibility to the AO scene node (+0x39a disabled flag) |
 | `0x141924100` | GEAL `EnableRendering` lambda body |

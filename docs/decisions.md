@@ -14,7 +14,7 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 - 2026-11-02: the generated collision grid and the generated spawn layout are the default (`generated_grid = true`); the client terrain upload (`[spawn.upload]`) is off and stays a fallback for trusted hosts and areas the generator cannot make. Chosen autonomously while the user was away, per the PLAN step; closes audit S-08 for the default config.
 
 ## Movement and world
-- Timing: measured dt after RE of `0x2f4` and frame playback; absolute deadlines, target 33 ms. What the client does alone, the server does too.
+- Timing: the simulation steps a fixed `dt = frame_ms / 1000` (33 ms) per tick, not measured time, because the client advances each frame by the `frame_ms` recorded with its marker (RE 2026-11-02, [movement.md](protocol/movement.md#timing)). Absolute 33 ms deadlines; frames missed in a stall are sent as a burst, like official servers. What the client does alone, the server does too.
 - Proof: every input sequence of the official captures replays with identical opcodes, fields and frame offsets.
 - Unlocks: per character, locked by default; admin command and web admin button.
 - The terms-of-service screen stays hidden: never set account flag byte 0 bits 2, 3, 4 or 7.

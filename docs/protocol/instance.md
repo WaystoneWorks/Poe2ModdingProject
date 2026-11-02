@@ -64,7 +64,7 @@ The server sends, in this order (`InstanceServer::enter_world`):
 ### Simulation packets (factory 2, `0x142186c20`; map in `dumps/0.5.5e.hotfix1/ghidra/instance_factory2_s2c.json`)
 1. The stream reader `0x1421c5b90` tries the registered packet handlers. Factory 2's handler (`0x1421c5a50`) builds the packet and passes it to `0x142134260`.
 2. `0x142134260` **queues** the packet in the world's frame queue (world+0x6b0):
-   - `0x2f4` (tick marker, no body) closes a frame;
+   - `0x2f4` (tick marker, no body) closes a frame and records the current `frame_ms` for it ([timing](movement.md#timing));
    - `0x2f5` (`u8`) is applied immediately: world vfunc +0x178, the frame length like InitialState's `frame_ms`.
 3. Each frame, `0x142130840` drains the queue and applies every packet with `0x1421343c0` (switch on opcode). They share a header (`0x141f4b800`, `u32 entity id, u32, u8, u16`), and fields +0x14/+0x18/+0x1a order the packets inside a frame.
 

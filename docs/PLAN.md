@@ -2,9 +2,9 @@
 
 The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
-## Now: R3 step 1, the timing RE
+## Now: R3 step 2, the server clock
 
-R2 (server-side collision) is done: the generated grid is the default and matches the client ([status/terrain.md](status/terrain.md), [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points)). Open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects. Next is R3 step 1 below.
+R3 step 1 (timing RE) is done: [movement.md](protocol/movement.md#timing). The client advances each frame by the `frame_ms` recorded with its `0x2f4` (no body; official always 33, never `0x2f5`), so the fixed dt stays; only the clock changes. R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
 
 ## T: agents test in game by themselves
 
@@ -18,10 +18,9 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 
 ## R3: movement 1:1 with the official game
 
-1. **Timing RE:** the `0x2f4` tick message, the client's frame queue and playback (`0x142130440`, speed factors), where the per-frame dt comes from (InitialState `frame_ms` at world `+0x11c`, which we send as 33; frame-queue values read by `0x142130840`), whether official ticks carry a time. Output: a timing section in [movement.md](protocol/movement.md).
-2. **Server clock:** deadline scheduling (no `tokio::time::interval` bursts), measured frame dt, catch-up rules after a stall, target 33 ms; the same dt goes to the simulation and, if the client reads one, the tick message.
-3. **Server copies of what the client does alone:** action speed factor (attacks while walking, gap #6), sprint coasting (problem 5, needs the capture in R4.1), roll profile, the client pathfinder (`clientpath.rs`), stance changes, collision from R2. Also the one-in-four standing roll against a diagonal wall (4.8 cells off) and the one-waypoint deviation beside a moving entity (5 of 541 plans).
-4. **Replay tests** for every input sequence of all official captures (extend the `locomotion.rs` fixtures). Not run yet: W pressed or released during a sprint (needs a combined key entry in the DLL).
+1. **Server clock:** replace the instance actor's `tokio::time::interval` (`MissedTickBehavior::Delay`, `servers/instance-server/src/actor.rs`) with absolute deadlines `start + n * tick_ms`. After a stall, run and send the missed frames back to back, like official servers (1,353 ms gap: 41 ticks). Cap the burst at 59 frames, below the client's 5x threshold; beyond that, move the deadline base forward. Keep `dt = tick_ms / 1000` per frame, and the same `tick_ms` as InitialState `frame_ms`. Unit test with a mocked clock; then the `walk` game test.
+2. **Server copies of what the client does alone:** action speed factor (attacks while walking, gap #6), sprint coasting (problem 5, needs the capture in R4.1), roll profile, the client pathfinder (`clientpath.rs`), stance changes, collision from R2. Also the one-in-four standing roll against a diagonal wall (4.8 cells off) and the one-waypoint deviation beside a moving entity (5 of 541 plans).
+3. **Replay tests** for every input sequence of all official captures (extend the `locomotion.rs` fixtures). Not run yet: W pressed or released during a sprint (needs a combined key entry in the DLL).
 
 **Done when:** every captured sequence replays identically (opcodes, fields, frame offsets).
 
