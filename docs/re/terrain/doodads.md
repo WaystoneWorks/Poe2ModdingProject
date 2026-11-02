@@ -15,6 +15,14 @@ placements (the list the de-repetition pass also uses, region +0x58, 0x38-byte e
 `TerrainGen_TileDoodads` `0x141ff3490` for each. This pass places the doodads of rooms (`.arm`);
 the tiles' own objects come from the tile-object pass ([below](#what-decides-whether-an-object-exists)).
 
+The list grows as rooms are placed: the graph's rooms, pre-placed (league, hosted) rooms, overlay
+phase 1 (each room, then its refill rooms), the fill pass, overlay phase 2 (`Overlays::placements`).
+Inferred from the client's generator entity ids (`entities.tsv`), not read from the list's code, and
+gated by `MapSteamingSprings`. The order matters only when an `AOSet` draws: most sets draw the same
+number of times and hash the set's path, so a wrong order leaves the doodad hash intact and swaps
+leaves (`BlackFernTrunk_set.ao`: other trunks' hulls, ramp cells one off). A leaf mismatch looks like
+a hull-transform bug; `circfit.py` over each leaf of the set tells them apart.
+
 1. **Cell and angle** (`0x141fe7a50`). An `.arm` doodad entry has a cell `(ex, ey)` inside the
    room, an angle (`radians1`), a scale, a flip flag, an object type (`stub`, e.g.
    `Metadata/MiscellaneousObjects/Doodad`) and an `.ao` path. The placed cell is the entry cell
@@ -305,5 +313,4 @@ All differ in layer 0 unless noted. Tools: `check_grids --blame`, `POE_DBG_GRID_
 | `MapSeepage`, `MapUberBoss_IronCitadel` (partly) | 250 to 690 | The port blocks more than the client: whole tiles cleared with the margin ramp, or a wall plane 4 cells longer | The port flags corners the client does not, which fits the `sealed_inside` stub (a sealed tile stops the flood). The `.tdt` field behind `+0x16f` is not mapped (the flag word of `0x142915630` is set bit by bit through a vtable slot `+0x40`) |
 | `MapCrimsonShores` | 400 to 1,800 | A circular blob of radius about 10 with the 1..4 clearance ramp is blocked in the client, absent in the port, centred in a `fill_01.tdt` tile (3 x 3, flags 0x03, plane-less) | Not a tile plane and not one of the room doodads. Probably a generator object that is not in `doodads.tsv` (an entity from tile data `+0x1b8`, or a scatter object); an export with `entities.tsv` of a failing layout decides |
 | `MapMonument`, `MapFortress`, `G4_5_2`, `G2_10_1`, `MapReservoir` | 150 to 4,900 | Feature tiles (`PrecursorGroundAnchor_*`, `fortress_boss_01`, `Warden_Office`, `JamanraRitualSite_02`) and fill tiles | Same two suspects (unported unwalkable-corner rules, objects outside `doodads.tsv`) |
-| `MapSteamingSprings` | 30 to 367 | Ramp cells one off around `walk_circle` hulls with an off-centre point (`BlackFernTrunk02.ao`: `0.471945 -0.145465 3.15566`, flipped, angle 1.464; `BlackFernTrunk03.ao`) | Angle, flip, scale and the cell code are not it (sweeps; `0x141d194f0`/`0x141d11400` match `stamp_circle`). A fit on sample `2220715731_6_2` puts the client's centre at about (0.14, -0.04) cells instead of our (0.09, -0.48): the file's y kept, x (0.47) mostly or wholly dropped. Next: fit more fern circles (other samples, other angles) to fix the rule |
 | `MapVaalVault` | 53 | Two doodads (`SunkenPillar_set.ao`, `random_orientation`, `AOSet` with one choice) have the angle off by pi/2 (ours 3pi and 2.5pi after the pick, the client 2.5pi and 2pi; the seed 35611400 topology 1 orientation 0 layout) | `0x1421c3f40` is ported as decompiled (`mask 0xff`: `u & 7`) and the picks of all other sets (`random_flip`, 1,879 doodads) agree, so the draw `u` (99 and 314, `below(0x348)`) or the mapping from the picked orientation to the angle differs for the full eight-way case. A client trace of `MapVaalVault 35611400 1 0` shows the real draws |
