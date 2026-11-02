@@ -151,7 +151,7 @@ A client with `login_mode = "standalone"` must not be pointed at an official ser
 | `state_export` | off | [Live state export](#live-state-export-state_exportrs) (`state_export_ms`, default 250). |
 | `movement_log` | off | [Movement log](#movement-log). |
 | `path_log` | off | One `PATHPLAN` line per path the client plans for the local player (goal, start, search parameters, pathing level, waypoints); also `POE_HOOK_PATH_LOG=1`. Hooks the pathfinder (signature `path_plan`), [../re/pathfinding.md](../re/pathfinding.md). |
-| `trace_addresses` | `[]` | "Logging breakpoints": Ghidra addresses whose calls are logged with argument registers and game call stack (`trace_calls`, up to `trace_limit` hits each); `POE_HOOK_TRACE` (comma-separated) adds addresses without editing `GameFiles/`. Hook only function starts or instruction boundaries `ilhook` can relocate (a bad spot crashes the client, as at `0x140ece810`). |
+| `trace_addresses` | `[]` | "Logging breakpoints": Ghidra addresses whose calls are logged with argument registers and game call stack (`trace_calls`, up to `trace_limit` hits each); `POE_HOOK_TRACE` (comma-separated) adds addresses without editing `GameFiles/`. Lines also carry xmm0-3 (f32) and the f32 at `[rdx+8]`; `POE_HOOK_TRACE_LIMIT` overrides the limit. Hook only function starts or instruction boundaries `ilhook` can relocate (a bad spot crashes the client, as at `0x140ece810`; `Positioned_MoveToWaypoint` `0x141de31a0` crashes even past its prologue). |
 | `auto_keys` | `[]` | Test input timeline `[[ms, vk], ...]` (tests pass `POE_HOOK_AUTO_KEYS="20000:13"`); `deploy-client` resets it to `[]`; only runs on the first load (a reload must not press Enter again). Never while read-only. |
 
 ## Building and deploying
