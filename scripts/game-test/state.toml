@@ -1,0 +1,53 @@
+# Live state export (PLAN T2): the DLL's poe-hook-state.json shows the area, the life pools, a
+# walk and an open panel. Format: docs/guides/setup.md, "Game tests" and "Live state file".
+description = "live state file: area, life, position after a walk, inventory and escape menu panels"
+input_mode = "wasd"
+
+[[step]]
+name = "area and life"
+expect_state = { area = "G\\w+", "player.life.max" = ">= 1", "player.life.current" = ">= 1", "player.mana.max" = ">= 1" }
+timeout_s = 20
+
+[[step]]
+name = "no panel open"
+expect_state = { no_panel = "inventory" }
+
+[[step]]
+name = "walk east (D, 1.5 s)"
+keys = "in:0x44:1500 wait:500"
+
+[[step]]
+name = "moved"
+expect_state = { moved = 10, "player.wasd.0" = 0 }
+
+[[step]]
+name = "open the inventory (I)"
+keys = "0x49 wait:800"
+
+[[step]]
+name = "inventory visible"
+expect_state = { panel = "inventory" }
+
+[[step]]
+name = "close it (I)"
+keys = "0x49 wait:800"
+
+[[step]]
+name = "inventory gone"
+expect_state = { no_panel = "inventory" }
+
+[[step]]
+name = "escape menu (Esc)"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "escape menu visible"
+expect_state = { panel = "escape_menu" }
+
+[[step]]
+name = "close it (Esc)"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

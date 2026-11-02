@@ -16,6 +16,7 @@ use poe_hook_deploy::{DeployOptions, GatewayEntry, LoginMode, Mode, launch::Prot
 
 mod check_build;
 mod fingerprint;
+mod game_state;
 mod game_test;
 mod server;
 mod terrain_matrix;

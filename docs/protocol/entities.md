@@ -241,7 +241,7 @@ The remote blob matches the official one in every part the server has data for. 
 
 | Part | Official (all 3 remote blobs; the local ones where said) | Ours now |
 |---|---|---|
-| Life pools, second field `+0x30` (`Pool::current`) | **0 in every pool of all 5 blobs**, local included, while the first field (`+0x38`) is the maximum | 0 (remote only; `Pool::full` before) |
+| Life pools, second field `+0x30` (`Pool::current`) | **0 in every pool of all 5 blobs**, local included, while the first field (`+0x38`) is the maximum (on the wire; in memory the client reads `+0x38` as the current value and `+0x34` holds its maximum, [addresses.md](../re/addresses.md#ui-elements-and-the-life-pools)) | 0 (remote only; `Pool::full` before) |
 | Life `flags` | 1 in all 5 blobs | 1 (remote only) |
 | Life `unk_48` of the life, `+0x240` and last long pool | the energy shield recharge delay as f32 seconds (4.0, 2.0 for the Witch line, whose `energy_shield_delay_-%` is 100); older sessions have negative timers (-63 to -359) in the `+0x240`/`+0x2e0`/`+0x330` pools; the `+0x240` pool's value is `maximum_energy_shield` | delay in life, `+0x240` and last pool; ES from the stat |
 | Player `flags` | `0x0c` in all three (bit 3 always set) | `0x08` idle, `0x0c` in stance |

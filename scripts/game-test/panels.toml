@@ -1,0 +1,5 @@
+# Names for UI elements without a name of their own in the DLL's live state file: the state shows
+# them as `@<vtable>` (Ghidra address, client 0.5.5e.hotfix1); `cargo xtask game-test` replaces
+# those path segments with these names before `panel` / `no_panel` checks. Found by toggling the
+# panel in game (docs/re/addresses.md, "UI elements").
+"@1430a3a28" = "inventory"

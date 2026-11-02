@@ -45,6 +45,15 @@ Imports: `VERSION.dll` (`GetFileVersionInfoW`, `GetFileVersionInfoSizeW`, `VerQu
 | `0x1421820a0` | Stats component message handler: `0x1d3` StatsUpdate (set 0 -> container at component `+0x1c8`, other sets in list `+0x1e8..+0x1f0`, container `+0xd8` = set id); `0x1d4` removes a set |
 | `0x1426acb60` | stat container set `(container, key, value)`: sorted `(i32 key, i32 value)` array at `+0xf8..+0x100` |
 
+### UI elements and the Life pools
+| Address | What |
+|---|---|
+| `0x1427af130` | UI element SetVisible `(element, bool)` (signature `ui_set_visible`, feature `ui_panels`): flags u32 `+0x168` bit 11 (`0x800`) = visible; parent `+0xb8`; name MSVC `std::wstring` at `+0x98` (size `+0xa8`, capacity `+0xb0`, inline when capacity < 8); UI context `+0x90`; children vector `+0x10..+0x18` |
+| `0x1402c4980` | escape menu constructor: names itself `escape_menu` (child `escape_menu_inner`, loads `Metadata/UI/InGameState/EscapeMenu.ui`) |
+| `0x1430a3a28` | inventory panel class vtable (constructors `0x1408e7310`, `0x1408ea0c0`), found by toggling I in game |
+| `0x141d8c260` | Life component reader. Pools: life `+0x1a8`, mana `+0x200`, `+0x240` (read as energy shield by the state export, unverified) |
+| `0x141d88e70` | pool reader: wire u32 to `+0x38`, then `0x141d8ba00` (u32 to `+0x18`, i16 to `+0x1c`), then u32 to `+0x30`; long pools (`0x141d8bec0`) add u32 to `+0x48`. In memory after login (life 28, mana 34, full): `+0x34` = 28/34 (not on the wire: the client's maximum), `+0x38` = 28/34 (first wire field), `+0x30` = 0 for life and 34 for mana. The state export reads current = `+0x38`, max = `+0x34`, reserved = `+0x30` (assumed; current not yet confirmed by damage) |
+
 ## Session, chat, pause
 | Address | What |
 |---|---|

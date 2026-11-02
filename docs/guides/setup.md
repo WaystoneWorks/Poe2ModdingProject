@@ -247,8 +247,19 @@ Scenarios are TOML files in `scripts/game-test/` (name without `.toml`, or a pat
 - `wait_ms = <ms>`.
 - `expect_log = "<regex>"`: passes when a line matches in `log` (`server` default, `hook`, `client`) after the step starts, or since the scenario started with `since = "start"`, within `timeout_s` (default 30).
 - `reject_log = "<regex>"`: fails when a line matches in `log` since the scenario started.
+- `expect_state = { ... }` (inline table): passes when all checks hold in one fresh [state](#live-state-file) (`t` at most 3 s old) within `timeout_s` (default 10). Checks: `area = "<regex>"` (whole id, e.g. `"G1_town"`, `"G\\w+"`); `near = [x, y, r]` (player grid within r cells); `moved = N` (at least N cells from the player's cell at the start of the previous step); `panel = "<text>"` / `no_panel = "<text>"` (a visible panel path contains / none contains the text, after naming `@<vtable>` segments with `scripts/game-test/panels.toml`, now `"@1430a3a28" = "inventory"`); any other key is a dotted path into the JSON (`"player.life.current" = ">= 1"`, `"player.grid.0" = 100`): a string starting with `>=`, `<=`, `>`, `<`, `==`, `!=` compares numbers, anything else is equality.
 
-The first failing step ends the scenario. `scripts/game-test/smoke.toml` checks the runner itself.
+The first failing step ends the scenario. `scripts/game-test/smoke.toml` checks the runner itself; `scripts/game-test/state.toml` checks the state file (area and life, a 1.5 s walk with `moved`, I opens and closes the inventory, Esc the escape menu, no server errors; about 1.5 minutes). The runner sets `POE_HOOK_STATE=250`, deletes the state file before launch and copies the last one to `state-final.json` in the run folder; every `expect_state` writes the state it last read to `state-last-check.json`. Code: `xtask/src/game_state.rs`, `game_test.rs`.
+
+### Live state file
+The DLL ([client-dll.md](../architecture/client-dll.md#live-state-export-state_exportrs)) writes `GameFiles/poe-hook-state.json` every 250 ms (temp file, then rename, so never half a file; deleted at DLL start). Enable with `[features] state_export` / `state_export_ms` or `POE_HOOK_STATE=1` / `=<ms>`. Fields:
+- `version` (1), `seq`, `t` (unix ms), `read_only`, `frame` (player simulation frame counter).
+- `area`: `{id, name, hash16, kind, tile_hash}` (`name` from `poe-hook-data/areas.tsv`) or null.
+- `player`: `{id, grid [x,y], world [x,y], facing, action, action2 (ActionTypes names, "" when none), wasd [x,y], life/mana/es {current, max, reserved}}` or null. Pool offsets and the unverified parts: [addresses.md](../re/addresses.md#ui-elements-and-the-life-pools).
+- `panels`: sorted paths of every UI element that is visible with all its parents, as `root/.../name`; a nameless element is `@<vtable Ghidra address>` (`root/escape_menu/escape_menu_inner`; the inventory is `root/@143167d20/@1430a3a28/...`). Only elements whose visibility went through SetVisible are known.
+- `packets`: the last 40 as `{seq, t, dir, chan, op, name, len}`.
+
+The checks on it are the `expect_state` step ([above](#game-tests-cargo-xtask-game-test)).
 
 ### `poe-hook.keys` entries
 Each entry is one line; the DLL reads the file and posts the input to the game window only (nothing goes to other windows; `SendInput` is not used, because it types into whatever window has focus). Never while read-only.

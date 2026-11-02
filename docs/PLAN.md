@@ -11,7 +11,7 @@ The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_
 **Limits of that number:** client side only. The client adds the hulls of the static entities the server sends, so the instance server builds the client-side grid until it sends the `server_only` objects ([doodads.md](re/terrain/doodads.md#live-grid-and-server-side-objects)). The `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
 
 Steps:
-1. **Test tools T2 and T3** (below; T1 `cargo xtask game-test` is done, [setup.md](guides/setup.md#game-tests-cargo-xtask-game-test)), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
+1. **Test tool T3** (below; T1 `cargo xtask game-test` is done, [setup.md](guides/setup.md#game-tests-cargo-xtask-game-test); T2, the live state file, is done, [setup.md](guides/setup.md#live-state-file)), then the **live test** on the generated grid: walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)).
 2. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
 
 **Pending:** ask the user before deleting old batch run directories (disk 481 GB free; the new runs take `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small).
@@ -23,7 +23,6 @@ Steps:
 Built before the R2 live test, because every later step needs it. The official-server read-only latch stays untouched.
 
 - **T0 Isolated display.** The user installs gamescope (`sudo pacman -S gamescope`). Try the client under nested or headless gamescope with Proton and the hook, and prove input injection and logs still work. It replaces the removed Agents desktop. If it fails, tell the user; tests then run on the normal desktop. **Still open** (gamescope not installed): tests run on the normal desktop meanwhile; `cargo xtask game-test --display gamescope` is where it plugs in, and T1 to T3 must be proven under it later.
-- **T2 Live state export.** The DLL writes player position, area, HP, open panels and recent packets to a JSON file, so agents check facts without screenshots.
 - **T3 Scripted actions.** Scenario files (walk to x,y; roll; click a transition; expect an area; expect blocked by a wall) on top of the `poe-hook.keys` channel. The R2 live test is the first scenario set.
 
 **Done when:** an agent runs the R2 wall scenarios with no human, and no window appears on the user's desktop.

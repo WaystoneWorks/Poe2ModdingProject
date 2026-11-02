@@ -29,6 +29,8 @@ use serde::Deserialize;
 /// Where scenario names are looked up.
 const SCENARIO_DIR: &str = "scripts/game-test";
 const LOCK: &str = "runtime/client.lock";
+/// The DLL's live state file in the game folder (poe-hook-core `state_export.rs`).
+const STATE_FILE: &str = "poe-hook-state.json";
 /// The client's settings file in the test prefix (input mode lives there).
 const PREFIX_INI: &str =
     "pfx/drive_c/users/steamuser/Documents/My Games/Path of Exile 2/poe2_production_Config.ini";
@@ -109,6 +111,10 @@ struct Step {
     expect_log: Option<String>,
     /// Fail when this regex appears in `log` since the scenario started.
     reject_log: Option<String>,
+    /// Pass when every check holds at once in the DLL's live state file within `timeout_s`
+    /// (default 10): `area`, `near = [x, y, r]`, `panel`, `no_panel`, or a dotted path with a
+    /// value or a comparison (`"player.life.current" = ">= 1"`); see `game_state.rs`.
+    expect_state: Option<toml::Table>,
     /// `server` (default), `hook` (GameFiles/poe-hook.log) or `client` (Client.txt).
     log: Option<String>,
     since: Option<String>,
@@ -126,6 +132,8 @@ struct Run {
     ini_backup: Option<String>,
     client_txt_start: u64,
     lock_taken: bool,
+    /// Player cell at the start of the previous and the current step (live state file).
+    grids: (Option<(f64, f64)>, Option<(f64, f64)>),
 }
 
 pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result<()> {
@@ -150,6 +158,7 @@ pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result
         ini_backup: None,
         client_txt_start: 0,
         lock_taken: false,
+        grids: (None, None),
     };
     println!("game-test {name}: {}", scenario.description);
     println!("logs: {}", dir.display());
@@ -427,6 +436,7 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
     fn launch_client(&mut self, display: Display, sc: &Scenario) -> Result<()> {
         let _ = fs::remove_file(self.game.join("poe-hook.keys"));
         let _ = fs::remove_file(self.game.join("poe-hook.log"));
+        let _ = fs::remove_file(self.game.join(STATE_FILE));
         self.client_txt_start = fs::metadata(self.game.join("logs/Client.txt")).map(|m| m.len()).unwrap_or(0);
         poe_hook_deploy::launch::quarantine_crash_dumps(&self.prefix, &self.root.join("runtime/crash-dumps"))?;
         let launch = poe_hook_deploy::launch::ProtonLaunch {
@@ -463,6 +473,7 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         cmd.env("POE_HOOK_AUTO_KEYS", "20000:13")
             .env("POE_HOOK_FAKE_FOCUS", "1")
             .env("POE_HOOK_MOVEMENT_LOG", "1")
+            .env("POE_HOOK_STATE", "250")
             .env("POE_HOOK_WINDOW_TITLE", "PoE2 Test Client");
         for (k, v) in &sc.client_env {
             let v = match v {
@@ -480,6 +491,12 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
     }
 
     fn step(&mut self, s: &Step) -> Result<String> {
+        // The player's cell at the start of this step and of the previous one (`moved`).
+        let now = fs::read_to_string(self.game.join(STATE_FILE))
+            .ok()
+            .and_then(|t| crate::game_state::parse(&t).ok())
+            .and_then(|v| crate::game_state::grid(&v));
+        self.grids = (self.grids.1, now);
         if let Some(k) = &s.keys {
             self.send_keys(k)?;
             return Ok(format!("sent {}", k.split_whitespace().count()));
@@ -491,6 +508,10 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         if let Some(ms) = s.wait_ms {
             std::thread::sleep(Duration::from_millis(ms));
             return Ok(format!("{ms} ms"));
+        }
+        if let Some(checks) = &s.expect_state {
+            let t = Duration::from_secs(s.timeout_s.unwrap_or(10));
+            return self.wait_state(checks, t);
         }
         let log = s.log.as_deref().unwrap_or("server");
         if let Some(re) = &s.expect_log {
@@ -599,6 +620,42 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         }
     }
 
+    /// Polls the live state file until `checks` hold; the error names the last mismatch.
+    fn wait_state(&mut self, checks: &toml::Table, t: Duration) -> Result<String> {
+        let file = self.game.join(STATE_FILE);
+        let aliases: toml::Table = match fs::read_to_string(self.root.join(SCENARIO_DIR).join("panels.toml")) {
+            Ok(text) => toml::from_str(&text).context("scripts/game-test/panels.toml")?,
+            Err(_) => toml::Table::new(),
+        };
+        let ctx = crate::game_state::Ctx { aliases, before: self.grids.0 };
+        let end = Instant::now() + t;
+        let mut seen = String::new();
+        loop {
+            let last = match fs::read_to_string(&file) {
+                Err(e) => format!("{}: {e}", file.display()),
+                Ok(text) => match crate::game_state::parse({
+                    seen.clone_from(&text);
+                    &text
+                }) {
+                    Err(e) => format!("{e:#}"),
+                    Ok(v) => match crate::game_state::check(&v, checks, &ctx) {
+                        Ok(seen) => {
+                            let _ = fs::write(self.dir.join("state-last-check.json"), &text);
+                            return Ok(seen);
+                        }
+                        Err(why) => why,
+                    },
+                },
+            };
+            self.check_alive()?;
+            if Instant::now() > end {
+                let _ = fs::write(self.dir.join("state-last-check.json"), &seen);
+                bail!("state after {} s: {last}", t.as_secs());
+            }
+            std::thread::sleep(Duration::from_millis(250));
+        }
+    }
+
     /// Closes the client (WM_CLOSE, then signals) and the server (SIGINT, then SIGKILL).
     fn shutdown(&mut self) {
         if self.client.is_some() {
@@ -644,6 +701,7 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
     /// Copies the hook log and the run's part of Client.txt into the run folder.
     fn collect(&self) {
         let _ = fs::copy(self.game.join("poe-hook.log"), self.dir.join("poe-hook.log"));
+        let _ = fs::copy(self.game.join(STATE_FILE), self.dir.join("state-final.json"));
         if let Ok(bytes) = fs::read(self.game.join("logs/Client.txt")) {
             let start = (self.client_txt_start as usize).min(bytes.len());
             let _ = fs::write(self.dir.join("Client.txt"), &bytes[start..]);
