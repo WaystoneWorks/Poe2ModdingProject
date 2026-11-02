@@ -1,0 +1,147 @@
+# R2 step 1: dungeon walls and rolls into them on the generated grid.
+# Spots from `wall_probe G1_8 1` (tile hash 1819364532).
+description = "dungeon walls and rolls into walls (G1_8 seed 1, generated grid)"
+input_mode = "wasd"
+
+[server]
+"dev.drift_check" = true
+
+[[step]]
+name = "transfer to G1_8 seed 1"
+cmd = "transfer G1_8 1"
+
+[[step]]
+name = "in G1_8"
+expect_state = { area = "G1_8" }
+timeout_s = 60
+
+[[step]]
+name = "teleport to wall spot SD 30 (666, 579)"
+cmd = "teleport 666 579"
+
+[[step]]
+name = "at (666, 579)"
+expect_state = { near = [666, 579, 3] }
+
+[[step]]
+name = "hold SD 1.2 s into the obstacle (30 cells)"
+keys = "indown:0x53 indown:0x44 wait:1200 inup:0x53 inup:0x44 wait:500"
+
+[[step]]
+name = "server and client agree (SD walk)"
+max_drift = 5
+
+[[step]]
+name = "teleport to wall spot AS 16 (612, 606)"
+cmd = "teleport 612 606"
+
+[[step]]
+name = "at (612, 606)"
+expect_state = { near = [612, 606, 3] }
+
+[[step]]
+name = "hold AS 1.2 s into the obstacle (16 cells)"
+keys = "indown:0x41 indown:0x53 wait:1200 inup:0x41 inup:0x53 wait:500"
+
+[[step]]
+name = "server and client agree (AS walk)"
+max_drift = 5
+
+[[step]]
+name = "teleport to wall spot WA 25 (711, 621)"
+cmd = "teleport 711 621"
+
+[[step]]
+name = "at (711, 621)"
+expect_state = { near = [711, 621, 3] }
+
+[[step]]
+name = "hold WA 1.2 s into the obstacle (25 cells)"
+keys = "indown:0x57 indown:0x41 wait:1200 inup:0x57 inup:0x41 wait:500"
+
+[[step]]
+name = "server and client agree (WA walk)"
+max_drift = 5
+
+[[step]]
+name = "teleport to wall spot SD 24 (690, 498)"
+cmd = "teleport 690 498"
+
+[[step]]
+name = "at (690, 498)"
+expect_state = { near = [690, 498, 3] }
+
+[[step]]
+name = "hold SD 1.2 s into the obstacle (24 cells)"
+keys = "indown:0x53 indown:0x44 wait:1200 inup:0x53 inup:0x44 wait:500"
+
+[[step]]
+name = "server and client agree (SD walk)"
+max_drift = 5
+
+[[step]]
+name = "teleport to 12 cells before the SD wall (720, 538)"
+cmd = "teleport 720 538"
+
+[[step]]
+name = "at (720, 538)"
+expect_state = { near = [720, 538, 3] }
+
+[[step]]
+name = "roll SD straight into the wall"
+roll = "SD"
+hold_ms = 300
+
+[[step]]
+name = "rolled"
+expect_state = { moved = 3 }
+
+[[step]]
+name = "server and client agree (SD roll)"
+max_drift = 5
+
+[[step]]
+name = "teleport to 12 cells before the WA wall (585, 565)"
+cmd = "teleport 585 565"
+
+[[step]]
+name = "at (585, 565)"
+expect_state = { near = [585, 565, 3] }
+
+[[step]]
+name = "roll WA straight into the wall"
+roll = "WA"
+hold_ms = 300
+
+[[step]]
+name = "rolled"
+expect_state = { moved = 3 }
+
+[[step]]
+name = "server and client agree (WA roll)"
+max_drift = 5
+
+[[step]]
+name = "teleport to 10 cells before the WD wall (613, 666)"
+cmd = "teleport 613 666"
+
+[[step]]
+name = "at (613, 666)"
+expect_state = { near = [613, 666, 3] }
+
+[[step]]
+name = "roll WD straight into the wall"
+roll = "WD"
+hold_ms = 300
+
+[[step]]
+name = "rolled"
+expect_state = { moved = 3 }
+
+[[step]]
+name = "server and client agree (WD roll)"
+max_drift = 5
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

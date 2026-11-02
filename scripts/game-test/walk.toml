@@ -6,7 +6,6 @@ description = "walk_to, a walk and a roll into a wall (G1_town seed 1, generated
 input_mode = "wasd"
 
 [server]
-"terrain.generated_grid" = true
 "dev.drift_check" = true
 
 [[step]]

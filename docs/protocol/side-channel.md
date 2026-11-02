@@ -54,7 +54,7 @@ Streams: the client's UDP stream (kinds 1 and 2, shared counter), the client's u
 - Reports never move the player; only the drift checker reads them ([movement.md](movement.md#drift-checker)).
 
 ## Terrain upload
-Over the instance TCP port. The server tells an upload from a game connection by peeking the first four bytes: `PSUP` is not a game opcode (a `Hello` starts with its u16 opcode).
+Off by default (`[spawn.upload] enabled = false`; the server generates the terrain, [instance-world.md](../architecture/instance-world.md#terrain-grid-sources)). Over the instance TCP port. The server tells an upload from a game connection by peeking the first four bytes: `PSUP` is not a game opcode (a `Hello` starts with its u16 opcode).
 
 ```
 client                                         server

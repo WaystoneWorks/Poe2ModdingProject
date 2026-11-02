@@ -10,7 +10,8 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 ## Terrain
 - Goal: 1:1 tile hash, doodad hash and collision grid for every area, topology and orientation in the default league mode (4,508 combinations). The 84 league-mode topologies and the client's server-only spawn scatter in the doodad pass are out of scope.
 - Acceptance: client batches with 50 random seeds; a combination counts when every seed matches or it has a documented reason (39 combinations error in the client on every seed). Out of scope: the 10 fixed areas, Incursion temples, effects of successful league rolls. Never special-case an area.
-- `[terrain] generate` and `force_layout` default on. `generated_grid` turns on when R2 is done; the client upload stays as an off-by-default fallback. Terrain upload stays on until then (audit S-08).
+- `[terrain] generate` and `force_layout` default on.
+- 2026-11-02: the generated collision grid and the generated spawn layout are the default (`generated_grid = true`); the client terrain upload (`[spawn.upload]`) is off and stays a fallback for trusted hosts and areas the generator cannot make. Chosen autonomously while the user was away, per the PLAN step; closes audit S-08 for the default config.
 
 ## Movement and world
 - Timing: measured dt after RE of `0x2f4` and frame playback; absolute deadlines, target 33 ms. What the client does alone, the server does too.

@@ -2,29 +2,19 @@
 
 The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
-## Now: R2, server-side collision
+## Now: R3 step 1, the timing RE
 
-The server's collision grid (`poe-world/src/collision.rs`, `[terrain] generated_grid`, off by default) must equal the client's.
-
-**State (2026-11-01):** the generated grid equals the client's in the broad sample (all 432 areas, 50 seeds per topology and orientation, run `grid50`, `terrain_batch.py plan <run> --seeds 50`): 225,400 client jobs, 218,705 ok, 6,695 client generation exceptions (2.97%). `forced_verify` over the 218,705: tile and doodad hashes all identical; **grids 218,655 identical, 0 differ**; the other 50 are `G_login`, where the client has no grid to compare (hash 0, no `grids.bin`). Rules and results: [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points), [status/terrain.md](status/terrain.md).
-
-**Limits of that number:** client side only. The client adds the hulls of the static entities the server sends, so the instance server builds the client-side grid until it sends the `server_only` objects ([doodads.md](re/terrain/doodads.md#live-grid-and-server-side-objects)). The `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly.
-
-Steps:
-1. **Live test** on the generated grid with `cargo xtask game-test` ([setup.md](guides/setup.md#game-tests-cargo-xtask-game-test): `walk_to`, `blocked`, `roll`, `max_drift`, spots from `wall_probe`): walls, cliffs, narrow passages, rolls into walls, drift checker on ([movement.md](protocol/movement.md)). `scripts/game-test/walk.toml` already passes one wall in `G1_town` seed 1 (walk stops where the grid says, drift at most 3.93 cells); still to cover: outdoor cliffs (`G1_1`), narrow passages, a dungeon (`G1_8`), rolls straight into walls.
-2. **Defaults:** `generated_grid` on; the client upload (`[spawn.upload]`) off as a fallback (closes audit item S-08 for servers that keep it off). Update [server-admin.md](guides/server-admin.md) and [instance-world.md](architecture/instance-world.md).
-
-**Pending:** ask the user before deleting old batch run directories (disk 481 GB free; the new runs take `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small).
-
-**Done when:** live movement collides like the client, and the defaults are flipped. The finish line is the full match, not an area-by-area fallback (user, 2026-10-31).
+R2 (server-side collision) is done: the generated grid is the default and matches the client ([status/terrain.md](status/terrain.md), [re/terrain/doodads.md](re/terrain/doodads.md#results-and-open-points)). Open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects. Next is R3 step 1 below.
 
 ## T: agents test in game by themselves
 
-Built before the R2 live test, because every later step needs it. The official-server read-only latch stays untouched.
+Every later step needs it. The official-server read-only latch stays untouched.
 
 - **T0 Isolated display.** The user installs gamescope (`sudo pacman -S gamescope`). Try the client under nested or headless gamescope with Proton and the hook, and prove input injection and logs still work. It replaces the removed Agents desktop. If it fails, tell the user; tests then run on the normal desktop. **Still open** (gamescope not installed): tests run on the normal desktop meanwhile; `cargo xtask game-test --display gamescope` is where it plugs in, and T1 to T3 must be proven under it later.
 
-**Done when:** an agent runs the R2 wall scenarios with no human, and no window appears on the user's desktop.
+Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test/cliffs-20261102-121814`), not reproduced in 4 runs.
+
+**Done when:** an agent runs the wall scenarios (`walk`, `cliffs`, `dungeon`) with no human, and no window appears on the user's desktop.
 
 ## R3: movement 1:1 with the official game
 
@@ -77,4 +67,5 @@ Built before the R2 live test, because every later step needs it. The official-s
 | Official capture, including movement problem 5 | R4.1 |
 | G-PARTY capture (a friend answers party invite and trade request) | any time, implementation waits for items |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |
+| Decide whether old batch run directories may be deleted (disk 481 GB free; `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small) | any time |
 | Optional cleanup: unused `/PathOfExileSteam.exe` in Ghidra, `GameFiles-0.5.5e/` | any time |

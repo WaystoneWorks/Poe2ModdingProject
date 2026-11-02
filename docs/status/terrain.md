@@ -10,7 +10,7 @@ The client builds its own terrain from the area and seed the server sends, so it
 - Natural choice (no forced layout): 4,173 of 4,173 (`w13-nat1`) and 8,368 of 8,368 (batch 3) unforced client generations match; world-map pins 102 of 102. The instance server forces that choice (`[terrain] force_layout`, default on) and generates each new instance in the background (`[terrain] generate`, default on, at most 2 at once).
 - Vectors: `dumps/0.5.5e.hotfix1/terrain/vectors/forced-results{,-full2,-batch3}.tsv`. Baseline: `runtime/forced-baseline.tsv`.
 - **Area-generation re-check (broad sample, 2026-11-01):** 50 seeds x every topology and orientation of all 432 areas (`grid50`): tile and doodad hashes identical in 218,705 of 218,705 ok jobs. 6,695 of 225,400 jobs are client generation exceptions that the game retries with another seed.
-- **Grid (collision) status:** `grid_hash` compared on the same 218,705 layouts: 218,655 identical, 0 differ. The other 50 are `G_login`, where the client has no grid (hash 0, no `grids.bin`). Client mode only; the rest of the work is in [PLAN.md](../PLAN.md#now-r2-server-side-collision).
+- **Grid (collision) status:** `grid_hash` compared on the same 218,705 layouts: 218,655 identical, 0 differ. The other 50 are `G_login`, where the client has no grid (hash 0, no `grids.bin`). Client mode only. The generated grid is the server default (R2 done); open points in [PLAN.md](../PLAN.md).
 - The client checks a forced topology against the unfiltered list (all league modes); the matrix counts the mode 1 list. The 11 areas with other-mode topologies need a check.
 
 ### The rows that do not match

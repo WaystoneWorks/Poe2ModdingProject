@@ -1,0 +1,173 @@
+# R2 step 1: outdoor cliffs, a narrow passage and rolls into walls on the generated grid.
+# Spots from `wall_probe G1_1 1` (tile hash 3935790039): `wall x y keys free solid`, `narrow x y keys width`.
+description = "cliffs, a narrow passage and rolls into walls; the probe's 6-cell obstacles may be walked round, so only proven walls use blocked (G1_1 seed 1, generated grid)"
+input_mode = "wasd"
+
+[server]
+"dev.drift_check" = true
+
+[[step]]
+name = "transfer to G1_1 seed 1"
+cmd = "transfer G1_1 1"
+
+[[step]]
+name = "in G1_1"
+expect_state = { area = "G1_1" }
+timeout_s = 60
+
+[[step]]
+name = "teleport to wall spot WD 16 (750, 828)"
+cmd = "teleport 750 828"
+
+[[step]]
+name = "at (750, 828)"
+expect_state = { near = [750, 828, 3] }
+
+[[step]]
+name = "walk WD into the wall (16 cells)"
+walk_to = [781, 828, 3]
+blocked = true
+
+[[step]]
+name = "did not cross the wall"
+expect_state = { moved_max = 20 }
+
+[[step]]
+name = "server and client agree (WD walk)"
+max_drift = 5
+
+[[step]]
+name = "teleport to wall spot S 20 (684, 825)"
+cmd = "teleport 684 825"
+
+[[step]]
+name = "at (684, 825)"
+expect_state = { near = [684, 825, 3] }
+
+[[step]]
+name = "walk S into the wall (20 cells)"
+walk_to = [649, 790, 3]
+blocked = true
+
+[[step]]
+name = "did not cross the wall"
+expect_state = { moved_max = 24 }
+
+[[step]]
+name = "server and client agree (S walk)"
+max_drift = 5
+
+[[step]]
+name = "teleport to wall spot SD 26 (717, 879)"
+cmd = "teleport 717 879"
+
+[[step]]
+name = "at (717, 879)"
+expect_state = { near = [717, 879, 3] }
+
+[[step]]
+name = "hold SD 1.2 s into the obstacle (26 cells)"
+keys = "indown:0x53 indown:0x44 wait:1200 inup:0x53 inup:0x44 wait:500"
+
+[[step]]
+name = "server and client agree (SD walk)"
+max_drift = 5
+
+[[step]]
+name = "teleport to wall spot W 26 (774, 753)"
+cmd = "teleport 774 753"
+
+[[step]]
+name = "at (774, 753)"
+expect_state = { near = [774, 753, 3] }
+
+[[step]]
+name = "hold W 1.2 s into the obstacle (26 cells)"
+keys = "indown:0x57 wait:1200 inup:0x57 wait:500"
+
+[[step]]
+name = "server and client agree (W walk)"
+max_drift = 5
+
+[[step]]
+name = "teleport to 12 cells before the AS wall (696, 771)"
+cmd = "teleport 696 771"
+
+[[step]]
+name = "at (696, 771)"
+expect_state = { near = [696, 771, 3] }
+
+[[step]]
+name = "roll AS straight into the wall"
+roll = "AS"
+hold_ms = 300
+
+[[step]]
+name = "rolled"
+expect_state = { moved = 3 }
+
+[[step]]
+name = "server and client agree (AS roll)"
+max_drift = 5
+
+[[step]]
+name = "teleport to 12 cells before the A wall (642, 906)"
+cmd = "teleport 642 906"
+
+[[step]]
+name = "at (642, 906)"
+expect_state = { near = [642, 906, 3] }
+
+[[step]]
+name = "roll A straight into the wall"
+roll = "A"
+hold_ms = 300
+
+[[step]]
+name = "rolled"
+expect_state = { moved = 3 }
+
+[[step]]
+name = "server and client agree (A roll)"
+max_drift = 5
+
+[[step]]
+name = "teleport to 12 cells before the WA wall (786, 891)"
+cmd = "teleport 786 891"
+
+[[step]]
+name = "at (786, 891)"
+expect_state = { near = [786, 891, 3] }
+
+[[step]]
+name = "roll WA straight into the wall"
+roll = "WA"
+hold_ms = 300
+
+[[step]]
+name = "rolled"
+expect_state = { moved = 3 }
+
+[[step]]
+name = "server and client agree (WA roll)"
+max_drift = 5
+
+[[step]]
+name = "teleport to narrow passage WD 6 (708, 1512)"
+cmd = "teleport 708 1512"
+
+[[step]]
+name = "at (708, 1512)"
+expect_state = { near = [708, 1512, 3] }
+
+[[step]]
+name = "walk WD through the 6-cell passage"
+walk_to = [743, 1512, 3]
+
+[[step]]
+name = "server and client agree (passage)"
+max_drift = 5
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "
