@@ -2,6 +2,10 @@
 
 The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
+## Now: WASD hitch (before R4)
+
+User report 2026-11-02: WASD start and direction changes hitch, like invisible walls, worse while sprinting; it has been there since movement was first built. Server trace of that session (`runtime/play-trace-summary.txt`, `scripts/re/movement_trace.py`): 101 hitches in 19,649 frames; the server position jumps by whole cells between cell centres (e.g. 1096.5 -> 1094.5 -> 1095.44), so the cells in the `0x64` replies jump and the client snaps to them ([movement.md](protocol/movement.md#coasting-after-a-sprint), `0x64` snap rule). Next: find what moves the server entity to cell centres (dev position sync from the client side channel, teleport, `Mover::place`), make the server's per-frame position follow the client's own simulation, prove it in game with `movement_log` on.
+
 ## Now: R4
 
 R4 below. The R4.1 capture is recorded: `2026-11-02_18-31-34_336` (not analysed for R4 yet). R3 is done.
