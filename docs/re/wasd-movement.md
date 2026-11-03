@@ -44,6 +44,14 @@ The player's first component is Positioned, the Actor is later. So in one frame:
 
 Checked with `LINE`: under a stream `el = 0` in every frame (plan after the advance); without one `el` alternates 0, 0.033 (Actor tick plans). The cell in a `0x64` must equal the grid after that frame's step 1. Key values of `0x64` are in the 11-byte header ([movement.md](../protocol/movement.md)): confirm it is the Actor's component index in `0x142130360`.
 
+## Frame drain and path events (read while porting)
+
+- **Drain positions.** Player components: 0 Positioned, 1 Stats, 2 Pathfinding, 3 Buffs, 4 Life, 5 Animated, 6 Player, 7 PlayerClass, 8 Inventories, 9 Actor. A message runs at its header key: order key 0 before all entities, else just before component `+0x18`'s tick. Official keys for the local player: `0x1c8` input starts and `0x2e7` `(0,0,0)`, so **before the Positioned tick** (this is the "first step" of a roll: its line advances in the same frame); `0x64` `(player,9,0)`; server `0x1c8` restarts `(player,9,1)`; sprint-on stats and buffs `(player,5,2)`; others `(5,6)`, `(5,8)`, `(3,0)`, `(9,4)`, `(9,7)`, `(9,10)`, `(0,0,9)`.
+- **Positioned listener of Pathfinding** (vtable `0x1434d19c8`): `+8` `0x141dccdb0` line done; `+0x10` `0x141dcce50` blocked = `EndPath(pf, 0)`; `+0x18` `0x141dcce60` stopped = `EndPath(pf, 1)` unless `pf+0x560` bit 2.
+- **`0x141de4c30`** (the stop of `EndPath` when entity `+0x8c` bit 3, and of `DodgeRollMove_Stop`): no line stop; sets Positioned `+0x1e5` bit 7, clears the bytes as `0x141de5f50` does, fires "stopped". `Positioned_RunLine` ends the line after its next tick: this is the measured stop step. The player uses it (replay: exact with it).
+- **Distance mode:** `L+0x60 = L+0xc9`, and `L+0xc9` is the curve's has-data flag (`L+0xa0+0x29`). `Pathfinding_StepAlongPath` passes `+0x9b = 1` (zero both curve slots) unless Player `+0x3e4` or `pf+0x53d`, and mode byte `+0x9a = 0` (`Positioned +0x1e3` decides); it restores `+0x1e3` afterwards.
+- **Dynamic obstacles change real plans:** official `goal=484,539 reached=0` on a layer-0 walkable cell (seg1 f718-726). The server's search needs its entities ([pathfinding.md](pathfinding.md#open)).
+
 ## Plan cadence
 
 `FUN_141e42650(actor)` is the only plan entry: it sets `+0x3dc` to 0.05 s (entity has a `Player` component) or 0.25 s, when the action's `vfunc +0x300` is 0, then `Pathfinding_FollowPath` (`0x141dcbf30`) with the action's target (`vfunc +0xd8`, action `+0x150`).

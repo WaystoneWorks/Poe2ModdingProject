@@ -5,7 +5,8 @@ Log frames restart per area; each segment's offset to the packet frames is found
 cells (they equal the logged grid). See docs/re/wasd-movement.md, Port design.
 
 Usage: movement_replay_trace.py <session dir> <out dir>
-Writes <out dir>/seg<N>.tsv, lines: `<frame> <kind> <args...>`:
+Writes <out dir>/seg<N>.tsv, lines: `<frame> <component> <seq> <kind> <args...>`, the message's
+place in the frame's drain (-1: header order key 0, before all entities; 99: logged state):
   M dx dy gx gy (0x64) | A move|roll|other sx sy tx ty (0x1c8) | S stat value (0x1d3) | K held (0x2e7)
   G gx gy (logged grid) | L sx sy cx cy ex ey (LINE, unswapped) | P gx gy sx sy x,y... (PATHPLAN, goal first) | I dx dy (0x63)
 """
@@ -30,7 +31,7 @@ def main(sess, out):
             if f < last or not segs:
                 segs.append([])
             last = f
-            segs[-1].append((f, "G", m[2], m[3]))
+            segs[-1].append((f, 99, 2, "G", m[2], m[3]))
             continue
         if not segs:
             continue
@@ -39,17 +40,17 @@ def main(sess, out):
             c, e = (m[6], m[7]), (m[4], m[5])
             if m[8] == "1":
                 c, e = c[::-1], e[::-1]
-            segs[-1].append((int(m[1]), "L", m[2], m[3], *c, *e))
+            segs[-1].append((int(m[1]), 99, 1, "L", m[2], m[3], *c, *e))
             continue
         m = PP.search(line)
         if m:
-            segs[-1].append((int(m[1]), "P", m[2], m[3], m[4], m[5], *m[6].split()))
+            segs[-1].append((int(m[1]), 99, 0, "P", m[2], m[3], m[4], m[5], *m[6].split()))
     os.makedirs(out, exist_ok=True)
     m64 = [m for m in msgs if m.op == 0x64 and m.dir == "in" and m.d
            and (m.d["dx"], m.d["dy"]) != (0, 0)]
     prev_hi = -1
     for n, seg in enumerate(segs):
-        grid = {r[0]: (int(r[2]), int(r[3])) for r in seg if r[1] == "G"}
+        grid = {r[0]: (int(r[4]), int(r[5])) for r in seg if r[3] == "G"}
         c = collections.Counter()
         for m in m64:
             g = (m.d["gx"], m.d["gy"])
@@ -69,23 +70,23 @@ def main(sess, out):
                 continue
             f = m.frame + off
             if m.dir == "out" and m.op == 0x63 and "dx" in m.d:
-                rows.append((f, "I", m.d["dx"], m.d["dy"]))
+                rows.append((f, 98, 0, "I", m.d["dx"], m.d["dy"]))
             if m.dir != "in" or m.d.get("ent") != me:
                 continue
             d = m.d
+            pos = (-1 if d.get("u14") == 0 else d.get("u18"), d.get("u1a"))
             if m.op == 0x64:
-                rows.append((f, "M", d["dx"], d["dy"], d["gx"], d["gy"]))
+                rows.append((f, *pos, "M", d["dx"], d["dy"], d["gx"], d["gy"]))
             elif m.op == 0x1C8:
                 k = "move" if d["skill"] == MOVE else "roll" if d["skill"] in ROLLS else "other"
-                rows.append((f, "A", k, d["gx"], d["gy"], d["tx"], d["ty"]))
+                rows.append((f, *pos, "A", k, d["gx"], d["gy"], d["tx"], d["ty"]))
             elif m.op == 0x1D3:
                 for key, v in d["stats"]:
                     if key in STATS:
-                        rows.append((f, "S", STATS[key], v))
+                        rows.append((f, *pos, "S", STATS[key], v))
             elif m.op == 0x2E7:
-                rows.append((f, "K", int(d["held"])))
-        order = {"I": 0, "M": 1, "A": 2, "S": 3, "K": 4, "P": 5, "L": 6, "G": 7}
-        rows.sort(key=lambda r: (r[0], order[r[1]]))
+                rows.append((f, *pos, "K", int(d["held"])))
+        rows.sort(key=lambda r: r[:3])
         path = os.path.join(out, f"seg{n}.tsv")
         with open(path, "w") as f:
             for r in rows:
