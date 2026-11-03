@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Claude Code PostToolUse hook: warns when a session's context passes the project limit.
+"""Claude Code PostToolUse hook: tells the agent once when its context reaches the 300k limit.
 
 Reads the hook's JSON on stdin, takes the context size from the last assistant usage in the
-transcript and prints one reminder per threshold crossed (state in runtime/context-guard/).
+transcript and prints one reminder (state in runtime/context-guard/). There is deliberately no
+earlier warning: agents stopped early on it (user decision 2026-11-02).
 Never blocks a tool call; any error exits quietly.
 """
 import json
@@ -10,7 +11,6 @@ import os
 import sys
 from pathlib import Path
 
-WARN = 250_000
 LIMIT = 300_000
 TAIL_BYTES = 2_000_000
 
@@ -34,20 +34,17 @@ def context_tokens(transcript):
 def main():
     hook = json.load(sys.stdin)
     tokens = context_tokens(hook["transcript_path"])
-    level = 2 if tokens >= LIMIT else 1 if tokens >= WARN else 0
-    if not level:
+    if tokens < LIMIT:
         return
     state = Path(__file__).resolve().parent.parent / "runtime/context-guard" / str(hook["session_id"])
-    if state.exists() and int(state.read_text() or 0) >= level:
+    if state.exists():
         return
     state.parent.mkdir(parents=True, exist_ok=True)
-    state.write_text(str(level))
+    state.write_text("1")
     text = (
         f"Context is {tokens // 1000}k: over the 300k session limit. At the next safe point: commit, update "
         "docs/PLAN.md and, if the task is unfinished, hand off to a new thread with t3_thread_launch as CLAUDE.md "
         "'Session rules' says (the handoff is the thread's first message); then stop."
-        if level == 2
-        else f"Context is {tokens // 1000}k of the 300k session limit. Plan to finish this task or stop at a safe point soon."
     )
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": text}}))
 
