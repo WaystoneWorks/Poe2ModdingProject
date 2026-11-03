@@ -144,11 +144,29 @@ finish when +0x1e5 bit 7: FUN_141ec8f00, acc = pending = 0, smoother to the cell
 
 ## Frame order
 
+### `0x64` (`0x1421497c0`, from `0x14214992e`)
+Non-zero vector and cell != grid: **snap** `0x141ddb6f0`: grid = cell, world `+0x490 = (cell + 0.5) * 10.869565`, and with a line or smoother running `FUN_141de5f50`, `acc = pending = 0`. The line is dead (`len = 0`), so the next line starts at `p = s`, the cell's centre. (Predictive mode only: under 46 cells, `0x844`, it bends instead.) So a wrong cell loses the sub-cell phase, and the next plan's line differs from the server's: wrong cells come in runs. The vector: when it and the axes are both zero and `+0x414 == 0`, nothing more; otherwise `axes = vector; +0x414 = 1; Actor_StartWasdWalk(actor, edge)`, `edge` = axes were zero and the vector is not. `Actor_StartWasdWalk` does not look at the plan timer, so **each `0x64` is a plan**, and it re-arms the timer: under a stream the tick's re-aim never fires, one plan per frame. The server must make the same plans: the plan's goal, line and (when sprinting) turn all depend on them.
+
+### Facing
+`Positioned_MoveToWaypoint` (`0x141de3962`), modes 1, 3, 4 with target != cell: `facing = atan2(target.y - cell.y, target.x - cell.x) + pi/2`, integers converted to float, `fmod 2 pi`, plus `2 pi` if negative, through `0x141ddc820`. Mode 2 the same (`0x141de3a..`, backwards variant unread). The facing therefore turns once per plan, to the integer target. Sprint turn input: this facing.
+
 `0x64` is applied before that frame's update. A roll's `0x1c8` makes one step at once (action start: plan from the `0x1c8` cell, step, second plan, all before frame log N), so during a roll `L(N).cur` leads the logged position by a frame. Walking: server `g(N) == L(N).cur`.
 
 ## Roll (`FUN_141b8c720` -> `FUN_141b8c7f0`, per frame)
 
-`+0x3e` waits for a running line to finish, then `FUN_141b8d440`. Then with `+0x3d`: `FUN_141b8cf70` = distance left; whole cells passed go to the part at `+0xa0`; with `+0x3c` and distance `> 1` step `FUN_141b8c7f0`. Goal = `round(line point + max(distance left, 10) * heading)` (`FUN_141b8d1f0`), steps by a curve in distance mode (`FUN_141ecc780`), no planning for the last 1.6 cells. Heading: [addresses](addresses.md) `DodgeRoll_InitHeading`. `ROLL_STEPS`, `ROLL_SPRINT_STEPS` in `movement.rs` come from `LINE`; the last 5 tap and last 2 sprint values are estimates: read `FUN_141ecc780`.
+Action layout: `+0x3c` steering on, `+0x3d` curve set, `+0x3e` wait for the line to end, `+0x40` heading (radians, facing convention), `+0x4c` total distance (`int`, `dodge_roll_travel_distance`), `+0x50` cells reported, `+0x20` path scratch (search args at `+0x458`, count `+0x450`), `+0x28` animation state, `+0x30` animation name, `+0x48` optional bend.
+
+Per frame `FUN_141b8c720`: `+0x3e` waits while a line runs, then `FUN_141b8d440`. Then with `+0x3d`: `left = FUN_141b8cf70`; whole cells passed since last time go to the part at `+0xa0`; with `+0x3c` and `left > 1`: `FUN_141b8c7f0`.
+
+**The curve is the animation's.** `FUN_141b8d440`: `FUN_141dde090(pos, name, 0, length)` loads the roll animation's movement curve into both Positioned curve slots (`+0x2a8` = `L + 0xa0`, `+0x330`, `FUN_141ecc540`), with `length = +0x1bc - +0x1b8` of the animation state, and `FUN_141dde3f0(pos, elapsed +0x1a4, length)` sets the time. `left = (1 - clamp((value(+0x2a8) - +0x2b4) / (+0x2b8 - +0x2b4))) * total`, where value is `FUN_141eccb30` when the curve has data (`+0x2d1`), else `+0x2c8`.
+
+`FUN_141ecc780(curve, dt, rate, out, stop_segment)`: `x = rate * length * dt` unless looping; adds to position `+0x20`; segments of 0x38 bytes at `curve_data + 0x48` (time `+0x28`, duration `+0x2c`, rate `+0x30`, `+0x34`), `FUN_141ecd190` finds the value. Returns the curve's progress delta over the segment. **So the table of steps per frame comes from data: dump it from the animation (`.ast`) or read the segments at runtime with the hook, instead of the `LINE`-fitted `ROLL_STEPS`, `ROLL_SPRINT_STEPS`** (last 5 tap, last 2 sprint values there are estimates).
+
+Step `FUN_141b8c7f0`: `(goal, flag) = FUN_141b8d1f0`; target = `FUN_141b8d000(goal)` (unread); stop when `|goal - cell| <` `FUN_140132800` (a constant, 1.6 measured). `speed = FUN_141b8d770` (unread); speed 0: if a line runs, `+0x3e = 1` and `FUN_141de4de0`. `FUN_141dde3f0(pos)`; flag sets Positioned `+0x1e4` bit 2. `FUN_141b8fe20`, `FUN_141b90060`: line checks that shorten the target (unread). Bend `+0x48` rotates the target. Then `Positioned_MoveToWaypoint(pos, {target, speed, ...})`, so the facing and line rules above apply.
+
+`FUN_141b8d1f0`: `v = rotate((0, -max(left, 10)), heading)`; without `FUN_141b87580(pos)`: `goal = cell + round(v)`, with it: `goal = round(line point + v)`. Then the search (`FUN_141ed0510`) from the cell; the path's first waypoint, or the cell when under 2 nodes.
+
+Heading `DodgeRoll_InitHeading` (`0x141b8bda0`): axes non-zero and action `+0x5e`: `atan2` of the axes through `0x142193270` (floored cells) `+ pi/2`; else towards the target `+0x150`; else the facing. `+0x3f = 1` when Actor `+0x8fa` and at least 90 degrees from the facing.
 
 ## Sprint part (vtable `0x1434525d8`)
 
@@ -178,10 +196,10 @@ Ends Move (`0x141e45da0(actor, 0)`). Clears Positioned `+0x1e7` bit 0 unless slo
 In this order, keeping notes here. Decompiles are large: batch a few at a time and filter scripts' output (a `ghidra` xref listing cost 40k tokens).
 
 1. Which option sets Player `+0x20a`; log `+0x380`, `+0x2a0` and `is_sprinting` for the tap-then-hold case: **the sprint with no animation** (the open bug). `0x141e57b80` if needed.
-2. `0x64` handler `0x1421497c0` (`0x14214992e`): snap and the restart that gives a plan every frame; `0x141ddb6f0`.
+2. Frame order of the `0x64`, Actor tick and Positioned tick inside one frame (entity update loop, `0x14016ba40`'s caller; the hook logs `player entity tick #`).
 3. Pathfinding's handler of the Positioned done delegate (`FUN_14020ad94` on `+0x18`, `0x141dccac0`): next waypoint, use of overshoot `+0x454`; how the Actor ends Move then; who sets Positioned `+0x1e7` bits 1, 2 and `+0x1e4` bit 2.
-4. `atan2` arguments of `0x141de31a0` (`0x141de3962`), `0x141ddc820`.
-5. Roll: `0x141b8bda0`, `FUN_141b8d440`, `FUN_141b8cf70`, `FUN_141b8c7f0`, `FUN_141b8d000`, `FUN_141b8d1f0`, `FUN_141ecc780`.
+4. `0x141ddc820` (sets the facing; side effects), mode 2's facing.
+5. Roll: `FUN_141b8d000`, `FUN_141b8d770` (speed), `FUN_141b87580`, `FUN_141b8fe20`, `FUN_141b90060`, `FUN_141ecd190`, `FUN_141ecc540`, `FUN_141eccb30`, `FUN_141dde3f0`, the action start and the first step (`0x1c8`), and the roll animation's curve data.
 6. Move action end `0x141e45da0`, queued start `0x141e3ff70`, `0x141e40b50`, `FUN_141e3fcb0`.
 7. Bonk `0x36b`, the coast `0x141f5f650` ([coast](../protocol/movement.md#coasting-after-a-sprint) already holds the rate), and who sets `pf+0x580` (`0x141dcce80`).
 8. Value of `dodge_roll_sprint_turn_rate`: check the stats the official server sends (the data gives 5 degrees).
