@@ -22,6 +22,19 @@ Only what moves the player, in code order. Offsets are from the Actor. Slot 0 ac
 12. Speed factor ramp (`+0x444`, target `+0x448`), written to Pathfinding `+0x55c`; a change re-issues the step (`Pathfinding_StepAlongPath`).
 13. **Tail: `+0x41c`, `+0x3dc`, `+0x420`, `+0x418` go down by `dt`, clamped at 0.**
 
+## Frame order (`0x142137270(entities, dt...)`)
+
+For each entity in key order (key at entity `+0x88`, frame state at world `+0x678`, `+0x67c` component, `+0x67e` phase): packets with a smaller key (`0x1421343c0`), then for each component in list order: set `+0x67c` = its index, **`0x142130360` drains the packets keyed to this component**, then `vtable +0x50(dt)`. Then component `0xff`, drain, and `0x141e7d970(entity + 0x58, dt)` (the hook's `entity_tick`, where `LINE` and `frame #N` are logged, so they show the state **after** the whole frame).
+
+The player's first component is Positioned, the Actor is later. So in one frame:
+
+1. Positioned tick: advance the line by `dt`, make its steps. The grid moves here.
+2. Packets for the Actor: `0x64` (snap against the grid of step 1, then a plan), `0x1c8`, ...
+3. Actor tick: re-aim if the timer is out, sprint end check, timer down.
+4. Log.
+
+Checked with `LINE`: under a stream `el = 0` in every frame (plan after the advance); without one `el` alternates 0, 0.033 (Actor tick plans). The cell in a `0x64` must equal the grid after that frame's step 1. Key values of `0x64` are in the 11-byte header ([movement.md](../protocol/movement.md)): confirm it is the Actor's component index in `0x142130360`.
+
 ## Plan cadence
 
 `FUN_141e42650(actor)` is the only plan entry: it sets `+0x3dc` to 0.05 s (entity has a `Player` component) or 0.25 s, when the action's `vfunc +0x300` is 0, then `Pathfinding_FollowPath` (`0x141dcbf30`) with the action's target (`vfunc +0xd8`, action `+0x150`).
@@ -150,7 +163,7 @@ Non-zero vector and cell != grid: **snap** `0x141ddb6f0`: grid = cell, world `+0
 ### Facing
 `Positioned_MoveToWaypoint` (`0x141de3962`), modes 1, 3, 4 with target != cell: `facing = atan2(target.y - cell.y, target.x - cell.x) + pi/2`, integers converted to float, `fmod 2 pi`, plus `2 pi` if negative, through `0x141ddc820`. Mode 2 the same (`0x141de3a..`, backwards variant unread). The facing therefore turns once per plan, to the integer target. Sprint turn input: this facing.
 
-`0x64` is applied before that frame's update. A roll's `0x1c8` makes one step at once (action start: plan from the `0x1c8` cell, step, second plan, all before frame log N), so during a roll `L(N).cur` leads the logged position by a frame. Walking: server `g(N) == L(N).cur`.
+A roll's `0x1c8` makes one step at once (action start: plan from the `0x1c8` cell, step, second plan, all before frame log N), so during a roll `L(N).cur` leads the logged position by a frame. Walking: server `g(N) == L(N).cur`.
 
 ## Roll (`FUN_141b8c720` -> `FUN_141b8c7f0`, per frame)
 
@@ -162,7 +175,9 @@ Per frame `FUN_141b8c720`: `+0x3e` waits while a line runs, then `FUN_141b8d440`
 
 `FUN_141ecc780(curve, dt, rate, out, stop_segment)`: `x = rate * length * dt` unless looping; adds to position `+0x20`; segments of 0x38 bytes at `curve_data + 0x48` (time `+0x28`, duration `+0x2c`, rate `+0x30`, `+0x34`), `FUN_141ecd190` finds the value. Returns the curve's progress delta over the segment. **So the table of steps per frame comes from data: dump it from the animation (`.ast`) or read the segments at runtime with the hook, instead of the `LINE`-fitted `ROLL_STEPS`, `ROLL_SPRINT_STEPS`** (last 5 tap, last 2 sprint values there are estimates).
 
-Step `FUN_141b8c7f0`: `(goal, flag) = FUN_141b8d1f0`; target = `FUN_141b8d000(goal)` (unread); stop when `|goal - cell| <` `FUN_140132800` (a constant, 1.6 measured). `speed = FUN_141b8d770` (unread); speed 0: if a line runs, `+0x3e = 1` and `FUN_141de4de0`. `FUN_141dde3f0(pos)`; flag sets Positioned `+0x1e4` bit 2. `FUN_141b8fe20`, `FUN_141b90060`: line checks that shorten the target (unread). Bend `+0x48` rotates the target. Then `Positioned_MoveToWaypoint(pos, {target, speed, ...})`, so the facing and line rules above apply.
+Step `FUN_141b8c7f0`: `(goal, flag) = FUN_141b8d1f0`; target = `FUN_141b8d000(goal)` (unread); stop when `|goal - cell| <` `FUN_140132800` (a constant, 1.6 measured). `speed = FUN_141b8d770` = `left / ((length - elapsed) / rate)`, `rate` = animation state `+0x178` (1 with `+0x1d4`) x `+0x1b0`: the distance left over the animation time left, recomputed each frame (so `sp` in the `LINE` log rises and falls with the curve); speed 0: if a line runs, `+0x3e = 1` and `FUN_141de4de0`. `FUN_141dde3f0(pos)`; flag sets Positioned `+0x1e4` bit 2. `FUN_141b8fe20`, `FUN_141b90060`: line checks that shorten the target (unread). Bend `+0x48` rotates the target. Then `Positioned_MoveToWaypoint(pos, {target, speed, ...})`, so the facing and line rules above apply.
+
+`FUN_141b87580(pos)` = a line runs (`len != 0`, `+0x269` clear) and its start cell is the current cell. `FUN_141b8d000` (target): the same point as the goal below with `left` itself instead of `max(left, 10)`, heading taken as `atan2` of the vector to it.
 
 `FUN_141b8d1f0`: `v = rotate((0, -max(left, 10)), heading)`; without `FUN_141b87580(pos)`: `goal = cell + round(v)`, with it: `goal = round(line point + v)`. Then the search (`FUN_141ed0510`) from the cell; the path's first waypoint, or the cell when under 2 nodes.
 
@@ -196,10 +211,10 @@ Ends Move (`0x141e45da0(actor, 0)`). Clears Positioned `+0x1e7` bit 0 unless slo
 In this order, keeping notes here. Decompiles are large: batch a few at a time and filter scripts' output (a `ghidra` xref listing cost 40k tokens).
 
 1. Which option sets Player `+0x20a`; log `+0x380`, `+0x2a0` and `is_sprinting` for the tap-then-hold case: **the sprint with no animation** (the open bug). `0x141e57b80` if needed.
-2. Frame order of the `0x64`, Actor tick and Positioned tick inside one frame (entity update loop, `0x14016ba40`'s caller; the hook logs `player entity tick #`).
+2. `0x142130360` and the `0x64` header key: confirm the packet drain order above.
 3. Pathfinding's handler of the Positioned done delegate (`FUN_14020ad94` on `+0x18`, `0x141dccac0`): next waypoint, use of overshoot `+0x454`; how the Actor ends Move then; who sets Positioned `+0x1e7` bits 1, 2 and `+0x1e4` bit 2.
 4. `0x141ddc820` (sets the facing; side effects), mode 2's facing.
-5. Roll: `FUN_141b8d000`, `FUN_141b8d770` (speed), `FUN_141b87580`, `FUN_141b8fe20`, `FUN_141b90060`, `FUN_141ecd190`, `FUN_141ecc540`, `FUN_141eccb30`, `FUN_141dde3f0`, the action start and the first step (`0x1c8`), and the roll animation's curve data.
+5. Roll: `FUN_141b8fe20`, `FUN_141b90060`, `FUN_141ecd190`, `FUN_141ecc540`, `FUN_141eccb30`, `FUN_141dde3f0`, the action start and the first step (`0x1c8`), and the roll animation's curve data.
 6. Move action end `0x141e45da0`, queued start `0x141e3ff70`, `0x141e40b50`, `FUN_141e3fcb0`.
 7. Bonk `0x36b`, the coast `0x141f5f650` ([coast](../protocol/movement.md#coasting-after-a-sprint) already holds the rate), and who sets `pf+0x580` (`0x141dcce80`).
 8. Value of `dodge_roll_sprint_turn_rate`: check the stats the official server sends (the data gives 5 degrees).
