@@ -26,6 +26,7 @@ older x 550/180).
 """
 
 import argparse
+import bisect
 import collections
 import json
 import math
@@ -445,6 +446,60 @@ def episode_events(outs, base, buff_base):
     return events
 
 
+def area_entries(msgs):
+    """Frames where the client entered an area: `0x62` mode 0 and mode 1 in one frame (sent
+    after every area load; a toggle sends one mode with `0x200`)."""
+    modes = collections.defaultdict(set)
+    for m in msgs:
+        if m.dir == "out" and m.op == 0x62 and m.d and m.d.get("mode") in (0, 1):
+            modes[m.frame].add(m.d["mode"])
+    return sorted(f for f, s in modes.items() if s == {0, 1})
+
+
+def player_by_area(msgs, entries):
+    """The local player's entity per area (its id changes with every area): the entity of the
+    replies that match the client's own inputs (other players and monsters get `0x64`, `0x1ae`
+    and Player deltas too). Returns [(first frame, entity)]."""
+    bounds = [msgs[0].frame] + entries
+    votes = [collections.Counter() for _ in bounds]
+    ins = [m for m in msgs if m.dir == "out" and m.d and m.op in (0x63, 0x1A5)]
+    outs = collections.defaultdict(list)
+    for q in msgs:
+        if q.dir == "in" and q.d and q.op in (0x64, 0x1AE) and "ent" in q.d:
+            outs[q.frame].append(q)
+    for m in ins:
+        want = (m.d.get("x"), m.d.get("y"))
+        for f in range(m.frame, m.frame + 3):
+            hit = None
+            for q in outs.get(f, ()):
+                if m.op == 0x63 and q.op == 0x64:
+                    ln = math.hypot(*want) or 1.0
+                    ok = (q.d["dx"], q.d["dy"]) in (
+                        want, (int(want[0] * 550 / 180), int(want[1] * 550 / 180)),
+                        (int(want[0] * 550 / ln), int(want[1] * 550 / ln)))
+                elif m.op == 0x1A5 and q.op == 0x1AE:
+                    ok = q.d.get("skill") == m.d.get("skill") and (q.d.get("x"), q.d.get("y")) == want
+                else:
+                    ok = False
+                if ok:
+                    hit = q.d["ent"]
+                    break
+            if hit is not None:
+                votes[bisect.bisect_right(bounds, m.frame) - 1][hit] += 1
+                break
+    # Areas with no matched input: the entity of the first Player delta after the entry.
+    out = []
+    for i, b in enumerate(bounds):
+        if votes[i]:
+            out.append((b, votes[i].most_common(1)[0][0]))
+            continue
+        nxt = bounds[i + 1] if i + 1 < len(bounds) else 1 << 60
+        d = next((q.d["ent"] for q in msgs if b <= q.frame < nxt and q.dir == "in" and q.d
+                  and q.op == 0x2F9 and q.d.get("comp") == 6), None)
+        out.append((b, d if d is not None else ms.player_entity(msgs)))
+    return out
+
+
 def session_episodes(session):
     msgs = ms.load(ms.resolve(session))
     keys = [(m, key_input(m)) for m in msgs]
@@ -454,7 +509,19 @@ def session_episodes(session):
     # Held state while scanning: an episode does not end while a key, Space or a click is held.
     eps, cur = [], None
     wasd, space, click_until = (0, 0), False, -1
+    entries = area_entries(msgs)
+    players = player_by_area(msgs, entries)
+    entry_set = set(entries)
+
+    def player_at(f):
+        return players[bisect.bisect_right([b for b, _ in players], f) - 1][1]
+
     for m, k in keys:
+        # An area entry starts a new episode (new entity, new place; held keys are reset).
+        if cur and m.frame in entry_set and cur["lo"] != m.frame:
+            eps.append(cur)
+            cur = None
+            wasd, space, click_until = (0, 0), False, -1
         if cur and m.frame - cur["last"] > EPISODE_GAP and wasd == (0, 0) and not space \
                 and m.frame > click_until + EPISODE_GAP:
             eps.append(cur)
@@ -476,16 +543,16 @@ def session_episodes(session):
     for m in msgs:
         if m.dir == "in" and m.op == 0x2F9 and m.d and m.d.get("comp") == 6:
             pd = player_delta(m.d["delta"])
-            if "combat" in pd:
+            if "combat" in pd and m.d.get("ent") == player_at(m.frame):
                 stance.append((m.frame, pd["combat"]))
     out = []
     for ep in eps:
         lo, hi = ep["lo"], ep["last"] + EPISODE_TAIL
+        # Not into the next area.
+        hi = min([hi] + [e - 1 for e in entries if e > lo])
+        entry = lo in entry_set
         ins = [m for m, _ in ep["msgs"]]
-        acks = collections.Counter(q.d["ent"] for q in msgs
-                                   if q.dir == "in" and lo <= q.frame <= hi and q.d
-                                   and q.op in (0x1AE, 0x64, 0x2E7, 0x1B1) and "ent" in q.d)
-        pe = acks.most_common(1)[0][0] if acks else ms.player_entity(msgs)
+        pe = player_at(lo)
         outs = [q for q in msgs if q.dir == "in" and lo <= q.frame <= hi and q.d
                 and q.d.get("ent") == pe and q.op in REPLY_OPS]
         # Arrival frames as in `window`: one frame before the first matching reply (which can
@@ -520,12 +587,26 @@ def session_episodes(session):
         buffs = [q.d["index"] for q in outs if q.op == 0x1EB and q.d.get("buff") in SPRINT_BUFFS]
         events = episode_events(outs, base, min(buffs) if buffs else 0)
         events = [e for e in events if e["f"] >= 1]
-        before = [c for f, c in stance if f < lo]
+        before = [c for f, c in stance if f < lo and player_at(f) == pe]
+        if entry:
+            before = []
+        elif not before and lo > msgs[0].frame + EPISODE_GAP:
+            # Nothing seen yet (the capture started inside an area): a stance request answered
+            # in the episode changed the stance, so it was the other one before.
+            first = next((m for m in msgs if lo <= m.frame <= hi and m.dir == "in" and m.op == 0x2F9
+                          and m.d and m.d.get("comp") == 6
+                          and "request" in player_delta(m.d["delta"])), None)
+            if first is not None:
+                before = [not player_delta(first.d["delta"])["combat"]]
         cell = next((e["cell"] for e in events if "cell" in e), [50, 50])
+        # Login (the first episode) or area change: the official entry stance's frame.
+        entry_stance = next((e["f"] for e in events if e["ev"] == "stance"), None) \
+            if entry or ep is eps[0] else None
         out.append({
             "name": f"{lo}",
             "capture_frames": [lo, hi],
             **({"combat_stance": before[-1]} if before else {}),
+            **({"entry_stance_frame": entry_stance} if entry_stance else {}),
             "start_cell": cell,
             "frames": hi - base,
             "inputs": [dict(f=arrive[m.i] - base, **k) for m, k in ep["msgs"]],
