@@ -8,7 +8,7 @@ Cell and world: `world = (cell + 0.5) * 10.869565` (`0x142193230`), `cell = floo
 
 Only what moves the player, in code order. Offsets are from the Actor. Slot 0 action `+0x238`, Move slot `+0x240` (type at action `+0x120`, Move = `0x2909`), axes `+0x400/+0x404`, axes-fresh flag `+0x414`, plan timer `+0x3dc`, animation `+0x380`.
 
-1. `+0x3fc` timer down; `0x141f5e630`; `0x141e40b50` (queued action start).
+1. `+0x3fc` timer down; `0x141f5e630`; `0x141e40b50` (start of the queued action `+0x248`, re-entry guard `+0x2a2` bit 0: an animation `0x36a`, `0x36b`, `0x371`, `0x372` drops an action with `vfunc +0x70`; sets `+0x41c = 0.03`; a non-slot-0 action goes to the Move slot through `0x141e41c60` then a plan `0x141e42650`, a slot-0 action through `0x141e41c60` then `0x141e4ea40`).
 2. No action or Move with timer `<= 0`: `0x141e3ff70` (next queued action).
 3. Without a Pathfinding group (`Player` modes 2, 3 at Player `+999`): `+0x3e8`, `+0x3ec` timers.
 4. Group leader branch (Positioned `+0x4c0` set): follows the leader's axes. Not used for a solo player.
@@ -69,6 +69,8 @@ return floor((world(cell) + r * 180 * 10.869565) * 0.092)
 ```
 
 So the line's end is 180 cells along the turned facing, and the facing then turns to that target in `Positioned_MoveToWaypoint` (below), which rounds it through the integer cell. This explains the `LINE` data (`runtime/poe-hook-port1.log` frames 405-421: -5.1, -9.9, -14.8 ... -34.6 degrees, then the goal), the "5 degrees per plan", and why plans under 8.1 degrees go straight. Frame 1216, the earlier "48 degree jump", was a walk (`is_sprinting` 0). `0x141dcce80` sets `pf+0x580` (no direct callers, vtable or delegate: find who, it also replans).
+
+**End of a line, same tick** (Pathfinding listener vtable `0x1434d19c8`, `+8` = `0x141dccdb0`, the Positioned done delegate): arrived (`0x141dcb810`) -> `0x141dccac0(pf, 0)` ends the path. Else `index -= 1`: above 0 -> `Pathfinding_StepAlongPath(next)`; otherwise `0x141dcc6a0` plans again. The new line has `p = s` (the old one is done, `len = 0`), and the tick loop's `advance(0)` gives it the `pending` overshoot from `FUN_141ec8f00`. `0x141dccac0` with arg 0: `FUN_141de4de0` (stop), then done or failed delegates on `+0x18` (`FUN_14020ad50` arrived, `FUN_14020ad94` failed).
 
 The step then: speed = `Pathfinding_GetSpeed`, delegates at Pathfinding `+0x20..+0x28` get the request (`vfunc +0x18`), then `Positioned_MoveToWaypoint(positioned, request)` (`0x141de31a0`), or `0x141de3c20` when Positioned `+0x1e6` bit 8.
 
@@ -198,7 +200,7 @@ Only when the action's `+0x144` has bit 1 and not bit 2.
 3. Otherwise `must_sprint` != 0: keeps going.
 4. Otherwise, with Player `+0x20a` set: keeps going while Actor `+0x2a2` bit 5 or an axis is set, ends when neither. Without: keeps going while `+0x2a2` bit 5 is set. End = `vfunc +0xb0(0, 0)`.
 
-Actor `+0x2a2` bit 5 is the sprint key held (setter `0x141e5c1f0(actor, held)`, clearing also zeroes `+0x915`). Player `+0x20a` is a **client setting**, not server state: written only from UI/option code (`0x14100f436`, `0x1410138c1`, `0x142763fc8`, `0x142bb543e`; which option: unread). The `0x140132800` call before it reads a local 0.0, so "timer > 0" never holds (Ghidra shows `0 < xmm0`; `0x141b76ef0`, same in `0x141b77110`). This is why the official client's end of a sprint can differ from ours with the same replies.
+Actor `+0x2a2` bit 5 is the sprint key held (setter `0x141e5c1f0(actor, held)`, clearing also zeroes `+0x915`). Player `+0x20a` is the **client option `sprint_continues_with_move_input`** (key compared at `0x141013881`, value through `0x1419395f0`, stored at `0x1410138c1`; also `0x14100f436`, `0x142763fc8`, `0x142bb543e`), not server state. Read how it reaches the client (config file or a message) and whether the server can know it: with it on, a sprint runs on after the key's release while an axis is set. The `0x140132800` call before it reads a local 0.0, so "timer > 0" never holds (Ghidra shows `0 < xmm0`; `0x141b76ef0`, same in `0x141b77110`). This is why the official client's end of a sprint can differ from ours with the same replies.
 
 ### Which animation (`0x141e4f750`, `0x141e4f860`)
 Move animation: Actor `+0x91c` if not `0x43f`; else `is_sprinting` != 0 -> **`0x368` (sprint)**; `+0x8fa` -> `0xc3`; by orientation mode (Move action's `vfunc +0x100`, Buff `0xe4fa`, or Positioned `+0x1e3`): 2 -> `0x97`, 3 -> `0x9b`, 4 -> `0x9a`, else 4 (run). Only re-chosen at the tail of a plan (`0x141e42650`): Actor `+0x2a0` bit 7 set before and after the plan and (`+0x8fa` or the animation `+0x380` differs from the choice or the speed changed) -> `0x141e4f860(actor, -1)`, and on a speed factor change in the tick. So the sprint animation starts at the first plan after `is_sprinting` arrives, if bit 7 is set: the tap-then-hold case with no animation is either bit 7 clear or `is_sprinting` not set while the line runs sprint speed; check with a log of `+0x380`, `+0x2a0` and the stat.
@@ -210,9 +212,9 @@ Ends Move (`0x141e45da0(actor, 0)`). Clears Positioned `+0x1e7` bit 0 unless slo
 
 In this order, keeping notes here. Decompiles are large: batch a few at a time and filter scripts' output (a `ghidra` xref listing cost 40k tokens).
 
-1. Which option sets Player `+0x20a`; log `+0x380`, `+0x2a0` and `is_sprinting` for the tap-then-hold case: **the sprint with no animation** (the open bug). `0x141e57b80` if needed.
-2. `0x142130360` and the `0x64` header key: confirm the packet drain order above.
-3. Pathfinding's handler of the Positioned done delegate (`FUN_14020ad94` on `+0x18`, `0x141dccac0`): next waypoint, use of overshoot `+0x454`; how the Actor ends Move then; who sets Positioned `+0x1e7` bits 1, 2 and `+0x1e4` bit 2.
+1. Log `+0x380`, `+0x2a0` and `is_sprinting` for the tap-then-hold case: **the sprint with no animation** (the open bug). `0x141e57b80` if needed.
+2. The `0x64` header's component key (drain `0x142130360` confirmed: `+0x67c` component, `+0x67e` phase).
+3. How the Actor ends Move on the path's delegates; use of overshoot `+0x454`; who sets Positioned `+0x1e7` bits 1, 2 (the sprint's `0x141b77110` sets `+0x1fc..+0x200`; `0x141b773a0` clears `+0x1e7` bit 0). The curve file: which data holds "movement animations" (segments of 0x38 bytes with a float frame table; `FUN_141ecd190`, `FUN_141ecc540`).
 4. `0x141ddc820` (sets the facing; side effects), mode 2's facing.
 5. Roll: `FUN_141b8fe20`, `FUN_141b90060`, `FUN_141ecd190`, `FUN_141ecc540`, `FUN_141eccb30`, `FUN_141dde3f0`, the action start and the first step (`0x1c8`), and the roll animation's curve data.
 6. Move action end `0x141e45da0`, queued start `0x141e3ff70`, `0x141e40b50`, `FUN_141e3fcb0`.
