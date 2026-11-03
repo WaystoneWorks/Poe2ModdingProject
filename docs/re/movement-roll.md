@@ -311,7 +311,17 @@ At rate 1 and dt 1/30 the clip ends after 30 frames: the 30-frame action.
 - Segments (count line after the positions) and `meta+0x68` for segment curves (none for unarmed).
 - The animation event time (`0xb91f`) that starts the sprint, from the animation's event data (`.ast`?).
 
+## Start order, end, re-aim (checked by replay)
+- **Start order:** `Actor_InstallQueuedMove` `0x141e41c60` snaps, then `0x141e4ea40`: a running Move (`+0x2a0` bit 7) with `vf50 == 0` gets `Actor_EndMoveAction(A, 1)` (next-tick stop `0x141de4c30`, path ended, curves cleared), and only then `0x141e4ecc0` starts the action. So the path's end does not clear the roll's curve.
+- **End:** the end of the clip ends the action in the Animated tick (inferred: 31st tick, f913; the Actor tick of that frame plans the walk).
+- **Vtable** `0x143427ab0`: `+0x30` `DodgeRoll_OnEnd`, `+0x130` `0x141aa8ed0` -> `0x141b8c6a0` (**set heading**: `part+0x40 = ang(target - grid)`), `+0x1a0` `DodgeRoll_OnStart`, `+0x1c0` update `0x141a3b010` -> `0x141974090` (base update).
+- **Re-aim by axes:** `0x14197d060(act)`, from the base update, needs action `+0x240`: stat `0x479e` `dynamic_target_updating_prioritises_movement_vector` with axes != 0 -> `target = grid + floor(axes*0.092)`, `0x14197cf50(act, target)`, `act+0x24d = 1`; else stat `0x479d` `dynamic_target_updating_uses_movement_vector` with axes != 0 and Player `+0x214` != the skill -> same without `+0x24d`. Condition around the call in `0x141974090` (`0x141974813`) unread; replay fits "every frame, before the part's tick".
+- **Re-aim by `0x1af`:** `0x141e5b250` -> if `act+0x240` and `!act+0x24d`: `0x14197cf50`. So a key held locks out the cursor.
+- `0x14197cf50(act, target)`: with `+0x244 > 0`, `+0x260 +0x74 > 0`, `+0x268 > 0` or `+0x26c > 0` it only stores `+0x250`, `+0x258 = 1`; else `vf130(target)`, then `vf138` -> `0x141971b80`.
+- **Stat listener** `0x141b8d4f0` (slot `+0xc0` of `0x143454070`, `this = part+0x18`): with `part+0x5f`: rate `0x141d46c80` = `(1+stat(0xec)/1e4) / (1+part+0x38/1e4) * ((int)((0x14020af80(1+part+0x38/1e4) - 1)*100)/100 + 1)`; with `part+0x3e` set: a new line from the running line's end at `DodgeRollMove_Speed`. Not ported yet.
+
 ## Not read / open
+- **Float drift in `clientsim`:** rolls f883..f1081 of the reference capture match the client's `p`, `len`, `acc` to 0.002; from f1133 the first advance is 0.7% short in the client (3.7065 against 3.7329 cells), as if `ac+0x1a4` or the rate differed. Something between f1097 and f1133 persists; it flips rounding (f1192, f1282, f1375 snap).
 - `0x141ed0510` path storage order (is element `count-1` the first step?).
 - Value and meaning of Actor `+0x8fa` for a normal player; object `0xe4fa`; `0x141f832b0`.
 - `0x141b912d0` dynamic blockers; who sets `part+0xa0` (cells-travelled listener).

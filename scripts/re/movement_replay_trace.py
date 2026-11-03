@@ -7,8 +7,8 @@ cells (they equal the logged grid). See docs/re/wasd-movement.md, Port design.
 Usage: movement_replay_trace.py <session dir> <out dir>
 Writes <out dir>/seg<N>.tsv, lines: `<frame> <component> <seq> <kind> <args...>`, the message's
 place in the frame's drain (-1: header order key 0, before all entities; 99: logged state):
-  M dx dy gx gy (0x64) | A move|roll|other sx sy tx ty (0x1c8) | S stat value (0x1d3) | K held (0x2e7)
-  G gx gy (logged grid) | L sx sy cx cy ex ey (LINE, unswapped) | P gx gy sx sy x,y... (PATHPLAN, goal first) | I dx dy (0x63)
+  M dx dy gx gy (0x64) | A move|roll|other sx sy tx ty (0x1c8) | S stat value (0x1d3) | K held (0x2e7) | T x y (0x1af)
+  G gx gy (logged grid) | L sx sy cx cy ex ey px py len acc (LINE, unswapped) | P gx gy sx sy x,y... (PATHPLAN, goal first) | I dx dy (0x63)
 """
 import collections, os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
@@ -17,7 +17,7 @@ import movement_sequences as ms
 STATS = {22342: "is_sprinting", 22426: "must_sprint", 236: "permyriad", 174: "sprint_pct"}
 MOVE, ROLLS = 0x20002909, (0x80000040, 0x80000041)
 FR = re.compile(r"frame #(\d+) dt=[\d.]+ world \(\S+, \S+\) step \(\S+, \S+\) grid \((\d+), (\d+)\)")
-LI = re.compile(r"LINE frame=(\d+) s=(-?\d+),(-?\d+) .*?e=(-?\d+),(-?\d+) cur=(-?\d+),(-?\d+) flag=\d swap=(\d)")
+LI = re.compile(r"LINE frame=(\d+) s=(-?\d+),(-?\d+) p=(-?[\d.]+),(-?[\d.]+) .*?e=(-?\d+),(-?\d+) cur=(-?\d+),(-?\d+) flag=\d swap=(\d).*? len=([\d.]+) .*? acc=(-?[\d.]+)")
 PP = re.compile(r"PATHPLAN #\d+ frame=(\d+) goal=(-?\d+),(-?\d+) start=(-?\d+),(-?\d+).*? path=(.*)$")
 
 def main(sess, out):
@@ -37,10 +37,10 @@ def main(sess, out):
             continue
         m = LI.search(line)
         if m:
-            c, e = (m[6], m[7]), (m[4], m[5])
-            if m[8] == "1":
-                c, e = c[::-1], e[::-1]
-            segs[-1].append((int(m[1]), 99, 1, "L", m[2], m[3], *c, *e))
+            c, e, q = (m[8], m[9]), (m[6], m[7]), (m[4], m[5])
+            if m[10] == "1":
+                c, e, q = c[::-1], e[::-1], q[::-1]
+            segs[-1].append((int(m[1]), 99, 1, "L", m[2], m[3], *c, *e, *q, m[11], m[12]))
             continue
         m = PP.search(line)
         if m:
@@ -80,6 +80,8 @@ def main(sess, out):
             elif m.op == 0x1C8:
                 k = "move" if d["skill"] == MOVE else "roll" if d["skill"] in ROLLS else "other"
                 rows.append((f, *pos, "A", k, d["gx"], d["gy"], d["tx"], d["ty"]))
+            elif m.op == 0x1AF:
+                rows.append((f, *pos, "T", d["x"], d["y"]))
             elif m.op == 0x1D3:
                 for key, v in d["stats"]:
                     if key in STATS:
