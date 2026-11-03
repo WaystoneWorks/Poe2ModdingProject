@@ -218,6 +218,25 @@ Ends Move (`0x141e45da0(actor, 0)`). Clears Positioned `+0x1e7` bit 0 unless slo
 
 A roll released before `t0+15` never sprints, even with the key down again at `t0+15`: a press during the roll is queued, the new roll starts at `t0+30` and sprints at its own `+15` (official `2026-11-02_18-31-34_336` f12190: release +6, press +23, `0x1c8` +30, sprint +45; same f3713, f1047). A press before `t0+15` held past it was never captured: same rule assumed. Our server sent the sprint into the released roll, which is the sprint with no animation: `Due::SprintStart` must test `released`, not `held`.
 
+## Rules measured with the harness
+
+From `examples/line_compare.rs`. Unless an address is given, the reason in the client is unread.
+
+- **Sprint end:** the check runs in the Actor tick after the re-aim, and `SprintEnd` refuses walks until `0.75 / rate` has passed. `rate` = speed x 10.869565 / (600 x `offset_scale`). A frame with a non-zero `0x64` plan uses the speed at the frame's start (T 0.671), a frame without one the speed after its stats (T 1.007).
+- **Coast:** starts in the next frame's Animated tick. Target = grid + round(facing x curve end x `offset_scale` / 10.869565), speed = |target - grid| / time. The animation's end stops it.
+- **Bonk:** a blocked step (`FUN_141ddcfc0`) or a plan with no way on (all waypoints on the start cell) ends the path with no replan, then the end check plays the Bonk: same clip and rate, no move (wall run: 21 still frames at both walls). Ruled out: the sprint's layer 2 grid as the blocker (5 on every cell there).
+- **Sprint sent into a released roll:** the client takes the stats (turn, speed) but runs no sprint part: no sprint curve, no 300-cell line, no `SprintEnd`, level 0. Confirms the tap-then-hold fix.
+- **Roll:** the search level is fixed at the action's start. The 300-cell line runs along the waypoint direction (differs from the target once `left` < 10). A roll stops making lines when |target - cell| < 1.6 (1.41 to 2 fit), but the curve restart still runs that frame while `left` > 1.
+- **Backward roll** (`+0x3f`, `0x141b8c494` mode 2, `0x141de3afa`: facing `atan2 + pi/2 - pi`): `_bwd_` curves. Weak rule: at least 90 degrees between the heading and the direction to the target, and not while `SprintEnd` plays (one roll each way). `+0x8fa` should gate it (`0x141b8bf27`), its value there is unread.
+- **First step of a roll:** none when a line runs and made no step this frame, and the roll is one step shorter (weak: f85, f386 in `stuck`; the curve then drifts 0.006 cells, which causes f574).
+- **`0x64 (0, 0)`:** the line runs through the next Positioned tick, then stops, and the next line does not continue it (`+0x61`).
+
+Open: wall run f400-410, f2456-2512 (1 cell behind, no `LINE` there); frames after f1090 in `stuck` are old server bugs (rolls the client refused), not a test.
+
+## Port design
+
+Drive the model only from what the server sends, as the harness does, instead of `mover.start(..)` calls. `Locomotion::tick`: `positioned_tick` at step 1 (`mover.grid()` then goes in the frame's `0x64`); inputs and timeline unchanged; at the end apply the tick's `out` events in batch order (`MoveAck` first, then `SprintState`, then the rest), then `actor_tick`. `MoveAck` -> snap check and `set_axes`; `ActionStart` -> `start_roll` or `walk_to`; `Stats` -> `set_sprinting`, `must_sprint`, scale; `Teleport` -> place. Curve switch and `extend_roll` only when the roll was not released. A bonk detected after `positioned_tick` triggers `end_sprint_at_wall`. `Locomotion`'s message timing stays as it is.
+
 ## What is left to read
 
 In this order, keeping notes here. Decompiles are large: batch a few at a time and filter scripts' output (a `ghidra` xref listing cost 40k tokens).
