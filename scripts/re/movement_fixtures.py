@@ -187,7 +187,11 @@ def struct_f32(u):
 def to_input(m):
     d = m.d
     if m.op == 0x63:
-        return {"op": "wasd", "x": d["x"], "y": d["y"]}
+        o = {"op": "wasd", "x": d["x"], "y": d["y"]}
+        # Third trailer byte 1: click-to-move mode, the vector is the cursor direction.
+        if d.get("tail", "")[4:6] == "01":
+            o["cursor"] = True
+        return o
     if m.op == 0x1A5:
         o = {"op": "use_skill", "skill": d["skill"], "flags": d["flags"], "unk": d["u13"],
              "target_flags": d["tf"], "x": d["x"], "y": d["y"]}
