@@ -20,9 +20,9 @@ One `World` per instance. It knows nothing about sockets, packets or opcodes: se
 | `world.rs` | `World`, `WorldConfig`, `Entity`, `EntityId`, `Event`, `WorldEvent` |
 | `locomotion.rs` | the movement component: `Locomotion`, `MoveInput`, `MoveEvent`, `MoveState`, `MovementConfig` |
 | `grid.rs` | `GridSource` (terrain for the simulation), `Grid` (the client's dump), `VecGrid` |
-| `movement.rs` | `Walkable`, `Mover` (advance, slide, roll speed profile, `Motion`) |
-| `clientpath.rs` | port of the client's pathfinder (jump point search, level-dependent wall clearance, [../re/pathfinding.md](../re/pathfinding.md)); `Mover` plans walks, WASD, sprints and rolls with it (`[movement] pathfinder = "client"`) |
-| `pathfinding.rs` | the older A* (`find_path`) with line-of-sight smoothing, selected by `pathfinder = "approx"` |
+| `movement.rs` | `Walkable` and the roll vector helpers |
+| `clientmotion.rs` | the client's movement model (`ClientMotion`, `MotionCurves`), driven by `Locomotion` from its outgoing events ([../re/wasd-movement.md](../re/wasd-movement.md#port-design)) |
+| `clientpath.rs` | port of the client's pathfinder (jump point search, level-dependent wall clearance, [../re/pathfinding.md](../re/pathfinding.md)) |
 
 ### World
 ```rust
@@ -44,7 +44,7 @@ pub trait GridSource: Walkable + Send + Sync {
     fn nearest_walkable(&self, cell, radius) -> Option<(i32, i32)>;   // default impl
 }
 ```
-`Walkable` (per cell `walkable(x, y)`, optional `clearance`) is the trait `Mover` and the A* use. Implementations: `Grid` (the DLL's `terrain_grid_<tile hash>.bin`; parsing lives here, `instance-server/src/spawn.rs` re-exports it), `VecGrid` (tests, tools), `Open` (no terrain). The world only sees the trait.
+`Walkable` (per cell `walkable(x, y)`, optional `clearance`) is the trait the pathfinder uses. Implementations: `Grid` (the DLL's `terrain_grid_<tile hash>.bin`; parsing lives here, `instance-server/src/spawn.rs` re-exports it), `VecGrid` (tests, tools), `Open` (no terrain). The world only sees the trait.
 
 ### Terrain grid sources
 The instance server (`servers/instance-server/src/lib.rs`) chooses where the grid comes from:

@@ -1,6 +1,6 @@
 # WASD movement: the client's whole path
 
-The one spec for the port (user decision 2026-11-02: full RE first, then one module replacing the fit-based code on `Mover`). All addresses are Hotfix 1. Status: **RE in progress**, see [What is left to read](#what-is-left-to-read). Wire messages stay in [movement.md](../protocol/movement.md); the search itself is in [pathfinding.md](pathfinding.md).
+The one spec for the port (user decision 2026-11-02: full RE first, then one module replacing the fit-based code). All addresses are Hotfix 1. Status: **port wired, tests pass, not proven in game** ([Port design](#port-design)); remaining RE: [What is left to read](#what-is-left-to-read). Wire messages stay in [movement.md](../protocol/movement.md); the search itself is in [pathfinding.md](pathfinding.md).
 
 Cell and world: `world = (cell + 0.5) * 10.869565` (`0x142193230`), `cell = floor(world * 0.092)` (`0x142193270`). Stats are keyed `Stats.dat row + 1` (`GameFiles/poe-hook-data/stats.tsv`).
 
@@ -222,11 +222,11 @@ A roll released before `t0+15` never sprints, even with the key down again at `t
 
 From `examples/line_compare.rs`. Unless an address is given, the reason in the client is unread.
 
-- **Sprint end:** the check runs in the Actor tick after the re-aim, and `SprintEnd` refuses walks until `0.75 / rate` has passed. `rate` = speed x 10.869565 / (600 x `offset_scale`). A frame with a non-zero `0x64` plan uses the speed at the frame's start (T 0.671), a frame without one the speed after its stats (T 1.007).
+- **Sprint end:** the check runs in the Actor tick after the re-aim, and `SprintEnd` refuses walks until `0.75 / rate` has passed. After a sprint with no `0x64` stream `SprintEnd` coasts ~19 cells, then refuses walks until 0.75/rate with the speed after the stats (T 1.007 s, 30 frames), then the held key walks on. `rate` = speed x 10.869565 / (600 x `offset_scale`). A frame with a non-zero `0x64` plan uses the speed at the frame's start (T 0.671), a frame without one the speed after its stats (T 1.007).
 - **Coast:** starts in the next frame's Animated tick. Target = grid + round(facing x curve end x `offset_scale` / 10.869565), speed = |target - grid| / time. The animation's end stops it.
 - **Bonk:** a blocked step (`FUN_141ddcfc0`) or a plan with no way on (all waypoints on the start cell) ends the path with no replan, then the end check plays the Bonk: same clip and rate, no move (wall run: 21 still frames at both walls). Ruled out: the sprint's layer 2 grid as the blocker (5 on every cell there).
 - **Sprint sent into a released roll:** the client takes the stats (turn, speed) but runs no sprint part: no sprint curve, no 300-cell line, no `SprintEnd`, level 0. Confirms the tap-then-hold fix.
-- **Roll:** the search level is fixed at the action's start. The 300-cell line runs along the waypoint direction (differs from the target once `left` < 10). A roll stops making lines when |target - cell| < 1.6 (1.41 to 2 fit), but the curve restart still runs that frame while `left` > 1.
+- **Roll:** a 46-cell roll on open ground runs 49 cells (stand-in and game curves alike): each frame's line runs from the cell to `left` past the line's point. The search level is fixed at the action's start. The 300-cell line runs along the waypoint direction (differs from the target once `left` < 10). A roll stops making lines when |target - cell| < 1.6 (1.41 to 2 fit), but the curve restart still runs that frame while `left` > 1.
 - **Backward roll** (`+0x3f`, `0x141b8c494` mode 2, `0x141de3afa`: facing `atan2 + pi/2 - pi`): `_bwd_` curves. Weak rule: at least 90 degrees between the heading and the direction to the target, and not while `SprintEnd` plays (one roll each way). `+0x8fa` should gate it (`0x141b8bf27`), its value there is unread.
 - **First step of a roll:** none when a line runs and made no step this frame, and the roll is one step shorter (weak: f85, f386 in `stuck`; the curve then drifts 0.006 cells, which causes f574).
 - **`0x64 (0, 0)`:** the line runs through the next Positioned tick, then stops, and the next line does not continue it (`+0x61`).
@@ -236,6 +236,8 @@ Open: wall run f400-410, f2456-2512 (1 cell behind, no `LINE` there); frames aft
 ## Port design
 
 Drive the model only from what the server sends, as the harness does, instead of `mover.start(..)` calls. `Locomotion::tick`: `positioned_tick` at step 1 (`mover.grid()` then goes in the frame's `0x64`); inputs and timeline unchanged; at the end apply the tick's `out` events in batch order (`MoveAck` first, then `SprintState`, then the rest), then `actor_tick`. `MoveAck` -> snap check and `set_axes`; `ActionStart` -> `start_roll` or `walk_to`; `Stats` -> `set_sprinting`, `must_sprint`, scale; `Teleport` -> place. Curve switch and `extend_roll` only when the roll was not released. A bonk detected after `positioned_tick` triggers `end_sprint_at_wall`. `Locomotion`'s message timing stays as it is.
+
+Status: wired (server commit `37a5b61`), NOT proven in game. `Locomotion` drives `ClientMotion` (`clientmotion.rs`) only from its outgoing events, as above; deleted: `Mover`, `Motion`, `ROLL_STEPS`, `ROLL_SPRINT_STEPS`, `pathfinding.rs` (A*), the `sprint_coast_*` and `pathfinder` config keys. Curves load from game data at player setup (instance-server `lib.rs`: `MotionCurves::load`, `load_offset_scale` from the class `.ao`); without game data `MotionCurves::stand_in()`, a table labelled NOT game data. The tap-then-hold fix is in (`Due::SprintStart` tests `released`). All server tests pass (453, 2 ignored). Harness `line_compare` after the wiring: `port1` 1770/1770 grid and line end; wall run 2705/2732 grid (`--free`); `stuck` clean up to f1090 but for f574 (f575 only its line end). Next: the user's game test with `movement_log` on, then `line_compare` on its log ([PLAN](../PLAN.md)).
 
 ## What is left to read
 

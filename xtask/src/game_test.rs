@@ -9,8 +9,8 @@
 //! the new part of `Client.txt`, `summary.txt`).
 //!
 //! Scenario files are TOML in `scripts/game-test/` (format: docs/guides/setup.md, "Game tests").
-//! The display is behind `--display`: `desktop` (the normal desktop, the only tested one) or
-//! `gamescope` (nested headless gamescope, PLAN T0, untested until gamescope is installed).
+//! The display is behind `--display`: `gamescope` (default: headless gamescope, no window on the
+//! user's desktop) or `desktop` (the normal desktop).
 
 use std::{
     fs,
@@ -50,7 +50,7 @@ pub struct Args {
     /// Scenario name (`scripts/game-test/<name>.toml`) or a path to a scenario file.
     scenario: String,
     /// Where the client window goes.
-    #[arg(long, value_enum, default_value = "desktop")]
+    #[arg(long, value_enum, default_value = "gamescope")]
     display: Display,
     /// Do not build the client DLLs and the server first (still deploys when GameFiles differs
     /// from the last build).
@@ -519,7 +519,7 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
             Display::Desktop => Command::new(inner.get_program()),
             Display::Gamescope => {
                 if !Path::new("/usr/bin/gamescope").exists() && !which("gamescope") {
-                    bail!("--display gamescope: gamescope is not installed (PLAN T0)");
+                    bail!("--display gamescope: gamescope is not installed (`sudo pacman -S gamescope`, or pass --display desktop)");
                 }
                 let mut c = Command::new("gamescope");
                 let extra = std::env::var("GAME_TEST_GAMESCOPE_ARGS")
