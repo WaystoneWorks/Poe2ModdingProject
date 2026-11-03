@@ -16,7 +16,7 @@ Game files (what they are: [../re/datamining.md](../re/datamining.md)), from the
 ```sh
 T=third_party/poe_data_tools/poe_data_tools
 $T -p 2 --steam GameFiles list 'data/balance/*.datc64'
-$T -p 2 --steam GameFiles extract 'metadata/characters/str/*' out/
+$T -p 2 --steam GameFiles extract out/ 'metadata/characters/str/*'   # output folder first
 $T -p 2 --steam GameFiles dump-tables ...      # tables -> CSV/JSON using the schema
 ```
 
