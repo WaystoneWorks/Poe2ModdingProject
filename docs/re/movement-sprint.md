@@ -153,10 +153,14 @@ then state rate (AnimationController state `+0x30`) = rate. Walks are refused wh
 long as that animation is current: clip 0.75 s / rate.
 
 Bonk: `sprinting_end_*_01_bonk` views the same `sprint_end_*` clip and inherits `AU_sprinting_end_base_01`
--> `GP_sprinting_end_base_01`, so it **does** carry the MoveEvent; there is no move because the coast
-target is clipped to a walkable cell (section 4, `MoveEvent_ClipToWalkable`/0x141f63640) and at a wall
-that is the start cell (no line when end == cell). Inferred from the code path, not traced: confirm with
-a hook at 0x141f5fbe1 during a wall Bonk.
+-> `GP_sprinting_end_base_01`, so it **does** carry the MoveEvent, which coasts like SprintEnd. The target is
+clipped to walkable (`MoveEvent_ClipToWalkable` 0x141f63640): a head-on wall leaves under 2 cells (no move, the 3
+official wall Bonks); a wall met at an angle gives a coast along the wall to the clip's end. Seen in game test
+`sprint-turn` case 4 (G1_8 seed 1, 2026-11-03): after the Bonk the client coasted 6 cells along the wall at about
+0.55 cells/frame. The port does the same (`ClientSim::sprint_part_end` always queues the coast), and the coast's
+speed uses the clip's rate when the MoveEvent fires (the sprint-off stats have already dropped the speed), not the
+rate at the sprint's end. Before the fix the model stood at the wall and the next roll started 6 cells behind the
+client (a snap).
 
 ## 4. SprintEnd coast: MoveEvent
 

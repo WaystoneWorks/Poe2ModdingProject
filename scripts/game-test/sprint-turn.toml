@@ -1,0 +1,149 @@
+# Movement restart (e): the user's sprint snaps (2026-11-03 session 1 f2142-2358: a WASD sprint
+# with the 0x64 stream, a key turn during it). Records the client's grid every frame
+# (POE_HOOK_MOVEMENT_LOG) and the server's movement trace, to compare the 0x64 cells with the
+# client's own grid (scripts/re/movement_gridcmp.py). Spot as in sprint-w.toml (70+ free cells every way).
+description = "Sprint with a key turn and a straight sprint, client grid and server trace recorded (G1_1 seed 1)"
+input_mode = "wasd"
+
+[client_env]
+POE_HOOK_MOVEMENT_LOG = "1"
+
+[server]
+"dev.drift_check" = true
+"dev.movement_trace" = "runtime/game-test/sprint-turn-trace.tsv"
+
+[[step]]
+name = "transfer to G1_1 seed 1"
+cmd = "transfer G1_1 1"
+
+[[step]]
+name = "in G1_1"
+expect_state = { area = "G1_1" }
+timeout_s = 60
+
+# Case 1 (the user's f2088-2175): W held (one key: a diagonal vector), Space held: a key roll;
+# D added during the roll (W+D: an axis vector, the roll turns), W released near the roll's end
+# (D alone: the other diagonal, the sprint stream starts on it), W pressed again during the
+# stream (the axis again), then Space and the keys released.
+[[step]]
+name = "teleport (case 1)"
+cmd = "teleport 621 1146"
+
+[[step]]
+name = "at the spot (case 1)"
+expect_state = { near = [621, 1146, 3] }
+
+[[step]]
+name = "key roll with turns, sprint stream with a turn"
+keys = "indown:0x57 wait:200 indown:0x20 down:0x20 wait:250 indown:0x44 wait:500 inup:0x57 wait:500 indown:0x57 wait:700 up:0x20 inup:0x20 wait:300 inup:0x57 inup:0x44 wait:1200"
+
+[[step]]
+name = "moved (case 1)"
+expect_state = { moved = 20 }
+
+# Case 2: W held, Space held: a straight sprint with the stream.
+[[step]]
+name = "teleport (case 2)"
+cmd = "teleport 621 1146"
+
+[[step]]
+name = "at the spot (case 2)"
+expect_state = { near = [621, 1146, 3] }
+
+[[step]]
+name = "straight sprint"
+keys = "indown:0x57 wait:200 indown:0x20 down:0x20 wait:1500 up:0x20 inup:0x20 wait:300 inup:0x57 wait:1200"
+
+[[step]]
+name = "moved (case 2)"
+expect_state = { moved = 20 }
+
+# Case 3: the user's own sprint (2026-11-03 session 1 f2088-2240, G1_8 seed 1 from (754, 594)):
+# A held (-127,127), Space: a key roll; S added in the roll (-180,0); A up at the roll's end
+# (-127,-127); A down (-180,0); S up (-127,127); W down (0,180); the long stream, then all up.
+# Keys: W (127,127), D (127,-127), S (-127,-127), A (-127,127); two keys make the axis between.
+[[step]]
+name = "transfer to G1_8 seed 1"
+cmd = "transfer G1_8 1"
+
+[[step]]
+name = "in G1_8"
+expect_state = { area = "G1_8" }
+timeout_s = 60
+
+[[step]]
+name = "teleport (case 3)"
+cmd = "teleport 754 594"
+
+[[step]]
+name = "at the spot (case 3)"
+expect_state = { near = [754, 594, 3] }
+
+[[step]]
+name = "the user's sprint"
+keys = "indown:0x41 wait:200 indown:0x20 down:0x20 wait:300 indown:0x53 wait:590 inup:0x41 wait:360 indown:0x41 wait:1150 inup:0x53 wait:100 indown:0x57 wait:2000 up:0x20 inup:0x20 wait:300 inup:0x57 inup:0x41 wait:1200"
+
+[[step]]
+name = "moved (case 3)"
+expect_state = { moved = 20 }
+
+# Case 4: a roll pressed about 700 ms after a sprint's release, while the client's SprintEnd
+# coast still plays (the user's f2089 roll came 21 frames after the release at f2068), then a
+# stream with a turn (S added: the axis).
+[[step]]
+name = "teleport (case 4)"
+cmd = "teleport 754 594"
+
+[[step]]
+name = "at the spot (case 4)"
+expect_state = { near = [754, 594, 3] }
+
+[[step]]
+name = "roll in the sprint end coast (700 ms)"
+keys = "indown:0x41 wait:100 indown:0x20 down:0x20 wait:1400 up:0x20 inup:0x20 wait:500 indown:0x20 down:0x20 wait:300 indown:0x53 wait:1500 up:0x20 inup:0x20 wait:300 inup:0x53 inup:0x41 wait:1200"
+
+[[step]]
+name = "moved (case 4)"
+expect_state = { moved = 20 }
+
+# Case 5: a roll pressed about 500 ms after a sprint's release, while the client's SprintEnd
+# coast still plays (the user's f2089 roll came 21 frames after the release at f2068), then a
+# stream with a turn (S added: the axis).
+[[step]]
+name = "teleport (case 5)"
+cmd = "teleport 754 594"
+
+[[step]]
+name = "at the spot (case 5)"
+expect_state = { near = [754, 594, 3] }
+
+[[step]]
+name = "roll in the sprint end coast (500 ms)"
+keys = "indown:0x41 wait:100 indown:0x20 down:0x20 wait:1400 up:0x20 inup:0x20 wait:300 indown:0x20 down:0x20 wait:300 indown:0x53 wait:1500 up:0x20 inup:0x20 wait:300 inup:0x53 inup:0x41 wait:1200"
+
+[[step]]
+name = "moved (case 5)"
+expect_state = { moved = 20 }
+
+# Case 6: the user's f2128-2240 sprint into the narrow passage west of (662, 586) (rows 583-589
+# have clearance 4 there): S held (-127,-127), Space: a roll and sprint with the stream; A added
+# (the axis (-180,0)) heads west into the passage, then W+A ((0,180)) as the user did.
+[[step]]
+name = "teleport (case 6)"
+cmd = "teleport 700 612"
+
+[[step]]
+name = "at the spot (case 6)"
+expect_state = { near = [700, 612, 3] }
+
+[[step]]
+name = "sprint into the passage"
+keys = "indown:0x53 wait:200 indown:0x20 down:0x20 wait:900 indown:0x41 wait:1100 inup:0x53 wait:100 indown:0x57 wait:1500 up:0x20 inup:0x20 wait:300 inup:0x57 inup:0x41 wait:1200"
+
+[[step]]
+name = "moved (case 6)"
+expect_state = { moved = 20 }
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

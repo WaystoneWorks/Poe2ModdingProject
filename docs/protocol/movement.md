@@ -282,12 +282,8 @@ Hold Space after the roll: the sequences above. `0x2e6` is sent once on down and
 - **Weapon swap** (3 of 3, standing, 2026-10-20_18-41-14 f2573/f2620 and 2026-11-02 f6088): C>S **`0xfe` WeaponSetSwap `{player, set}`** (sender `0x1421150d0`; `0x142114f60` cycles to the next non-empty set, `(set + 1) % count`, count 3 with stat `0x433f` else Stats data +0x21). In lockstep (world +0x661 = 2) the client **applies nothing itself** and sets session +0x7a90: while it is set the client sends no `0x1a5` (`0x14210fad3`), ignores skill keys (`0x140179e90`) and further swaps. The server answers in `r+0` with **`0x1d5` SetWeaponSet** (header `(player,0,0,0)`, `u8 set`; Stats handler `0x1421820a0` -> Stats vfunc +0xf0 `0x141dfc590`: index >= count is logged and ignored, else Stats +0x168 = set, stats recomputed (vfunc +0x118), listeners notified) and then the session message **`0xff` `{1}`** (case `0xff` of `0x142106bb0` clears +0x7a90). Server: `MoveInput::WeaponSwap` -> `MoveEvent::WeaponSet` (0xff to the owner only). **A skill of the other weapon set swaps by itself** (skill ids `0x8000_0000` ending `0x40 + set`; punch `0x80410041`; the second set's roll `0x80000041`): ack at once, after the frame's `0x64` the `0x1d5` without `0xff`; during a sprint also the sprint-off halves and `0x1ca`, and the unscaled `0x64` at r+1 (2026-11-02 f5464 standing, f11798 ending a sprint). A held roll repeat (target flags `0x10`) outside a roll or sprint is only acked (f11801, f12757).
 - Other Player deltas: `mask 0x0402/0x0002` flag words after the first skill release and new areas, `mask 0x0201` experience after kills, `mask 0x2000 (00)` on level-ups.
 
-### Aim
-- C→S `0x62` mode 2 with the **absolute** cell under the cursor, at most one per frame, about every frame while the mouse moves; none in click-to-move mode. S→C `0x1dc` kind 0 with the same cell, header `(player,0,0,0)`, at `f+1` (94 %). Not every input is echoed: **never while rolling or sprinting**, mostly not while an attack runs (204/237), 0.5 % of idle/walking inputs.
-- Mode 3 (entity, hovered) is sent often but only 11 `0x1dc` with kind 1 exist: not echoed one-to-one. Facing is entirely a `0x1dc` effect; there is no `0x1df`.
-
-### Stun
-One light stun (f4072, a monster hit the player while attacking): `0x1d3` `is_light_stunned=1, is_immobilised=1` (header `(7,11)`), `0x1eb` buff row 2404 (flag `0x02`), `0x1d3 on_full_energy_shield=0` (`(7,14)`); 7 frames later `0x1d3 number_of_times_stunned_in_past_duration_from_ot=1` and `virtual_light_stun_threshold_+%_final=50`; **15 frames after the start the stats go back** (`is_light_stunned=0, is_immobilised=0`, header `(5,1)`) and the attack asked for meanwhile starts (`0x1c8` flags `0x410`, header `(5,2)`, `0x1ca`). Attacks and Move presses during the stun get their `0x1ae` only; the server cell stays put. Knockback (`0x1e0`) and stuns while walking or rolling: not captured.
+### Aim and stun
+Aim (`0x62` mode 2/3, `0x1dc`) and stun (`0x1d3`, `0x1eb`) messages: [movement-positioned.md](../re/movement-positioned.md#aim-and-stun-messages-moved-verbatim-from-the-protocol-doc).
 
 ### Attack lengths
 Chained attack starts measured from acked-only presses (`runtime/r3-attack-lengths.txt`, 2026-11-02): `0x80400040` 25 frames (19 of 26 bounded pairs, 26 three times), `0x85000040` 28, punch `0x80410041` 19-22. A press during an attack is acked and the latest one starts when the attack ends. The server has no attack length (weapon, skill and attack-speed data), so those episodes stay in `known.json`.
@@ -371,8 +367,6 @@ Replay episodes: `cursor: true` = a `0x63` with third trailer byte 1 (`MoveInput
 
 Drift test method: [agent-workflow.md](../guides/agent-workflow.md#movement-checks).
 
-Problem 5 (sprint ended with W held since before the roll, was 8.9 to 21 cells of drift) is solved by the `SprintEnd` gate ([coasting](#coasting-after-a-sprint)).
-
 **W during a sprint (private game test `sprint-w`, [setup.md](../guides/setup.md#game-tests-cargo-xtask-game-test); the official sequences are in the [2026-11-02 index](#capture-index-2026-11-02-session))**: three cases from G1_1 (621, 1146), cursor right of the player; all pass `scripts/re/sprint_check.py` (slack 1 frame) and end 0.4-2.5 cells from the client (worst inside a 1 s window 4.7):
 - **W pressed at `t0+21` of a cursor sprint, Space released with W held, W released 0.6 s later**: the stream starts at the first cursor `0x63` (`t0+16`), the W `0x63` turns it, Space up ends the sprint (`t0+40`), the unscaled `(127, 127)` follows at off+1. The client coasts (1.73 falling about 0.105 per frame, 20 frames) and walks by itself 21 frames after the sprint-off: the `SprintEnd` gate ([coasting](#coasting-after-a-sprint)); "no `0x63` after the roll" is ruled out.
 - **W held before the roll, released at `t0+24` with Space down**: no stream until the release; the cursor `0x63` then starts it; Space up at `t0+42`, unscaled cursor vector at off+1, the client's `(0, 0)` answered at off+2, both coast to a stop (23 frames).
@@ -381,6 +375,8 @@ Ruled out (sprint towards a diagonal wall, drift 11 cells): not the sprint end b
 
 ## Movement trace
 `[dev] movement_trace` (empty = off) writes `runtime/movement-trace.tsv`; `scripts/re/movement_trace.py` lists the frames where the player moved backwards or stalled. The trace also has a `pos` line per tick (server x, y and the modelled client grid cell); `report` lines are the client's own positions (DLL), and report frame N = server tick N.
+
+The client's grid per frame: `POE_HOOK_MOVEMENT_LOG=1` writes `frame #n ... grid (x, y)` lines to `poe-hook.log` (same frame counter as the reports; only frames where the position changed). `scripts/re/movement_gridcmp.py TRACE POE_HOOK_LOG [PORT] [--show N] [--window LO HI]` compares each non-zero `0x64` cell and the modelled grid (`pos` line) with it. Report frame N is the client frame that handled server batch N. The report x, y is the Positioned world position, not the grid cell; it trails click-to-move by one frame and is smoothed in rolls, so use the grid, not positions. `runtime/replay/snaps.py` stays a runtime tool.
 
 ## Gap list
 What the seven official captures **still do not cover**. A new capture is one read-only official session by the user (DLL in `Official` mode); keep the recording intact (`packets.jsonl`, `poe-hook.log` with `movement_log` on). The markers `UNVERIFIED (gap #n)` in the server code use these numbers.
