@@ -208,6 +208,8 @@ def to_input(m):
         return {"op": "aim_mode", "mode": d["mode"]}
     if m.op == 0x200:
         return {"op": "stance_request", "value": d["value"]}
+    if m.op == 0xFE:
+        return {"op": "weapon_swap", "set": d["set"]}
     return None
 
 
@@ -249,6 +251,8 @@ def to_event(m, buff_base):
         return {"ev": "target_ack", "skill": d["skill"], "x": d["x"], "y": d["y"]}
     if m.op == 0x1B1:
         return {"ev": "input_end_ack"}
+    if m.op == 0x1D5:
+        return {"ev": "weapon_set", "set": d["set"]}
     if m.op == 0x1B2:
         return {"ev": "released_ack", "skill": d["skill"], "flag": d["flag"]}
     if m.op == 0x2F9:
@@ -279,9 +283,9 @@ def to_event(m, buff_base):
 
 
 PAIR = {0x63: (0x64,), 0x1A5: (0x1AE,), 0x1A8: (0x1AF,), 0x1AC: (0x1B1,), 0x2E6: (0x2E7,),
-        0x62: (0x1DC,), 0x1AD: (0x1B2,), 0x200: (0x2A6,)}
+        0x62: (0x1DC,), 0x1AD: (0x1B2,), 0x200: (0x2A6,), 0xFE: (0x1D5,)}
 REPLY_OPS = (0x64, 0x1C8, 0x1AE, 0x1AF, 0x1B1, 0x1B2, 0x1CA, 0x1D3, 0x1EB, 0x1EC, 0x2E7, 0x1DC,
-             0x2F9, 0x2A6)
+             0x2F9, 0x2A6, 0x1D5)
 # Option `stance_only`: only the stance messages of a window (the intro wake-up click that
 # comes with the first stance request in mouse mode is not a movement sequence).
 STANCE_IN, STANCE_OUT = (0x200, 0x62), (0x2A6, 0x2F9)
@@ -606,6 +610,10 @@ def session_episodes(session):
             "name": f"{lo}",
             "capture_frames": [lo, hi],
             **({"combat_stance": before[-1]} if before else {}),
+            **({"weapon_set": wsets[-1]} if (wsets := [q.d["set"] for q in msgs if q.frame < lo
+                                                       and q.dir == "in" and q.op == 0x1D5 and q.d
+                                                       and q.d.get("ent") == player_at(q.frame)])
+               and wsets[-1] else {}),
             **({"entry_stance_frame": entry_stance} if entry_stance else {}),
             "start_cell": cell,
             "frames": hi - base,

@@ -145,6 +145,8 @@ def decode(m):
                 return dict(player=r.u8(), held=r.u8())
             if op == 0x200:
                 return dict(player=r.u8(), value=r.u8())
+            if op == 0xFE:
+                return dict(player=r.u8(), set=r.u8())
             if op == 0x62:
                 d = dict(player=r.u8(), mode=r.u8())
                 if d["mode"] == 2:
@@ -199,6 +201,8 @@ def decode(m):
             d.update(kind=r.u8(), x=r.i32(), y=r.i32())
         elif op == 0x2E7:
             d["held"] = r.u8()
+        elif op == 0x1D5:
+            d["set"] = r.u8()
         elif op == 0x1D3:
             d["set"] = r.u8()
             n = r.varuint()
@@ -317,9 +321,9 @@ def fmt(m):
     return f"{arrow} {m.op:#06x} {nm:<20} {body}"
 
 
-MOVE_OPS_OUT = {0x63, 0x1A5, 0x1A8, 0x1AA, 0x1AC, 0x1AD, 0x2E6, 0x200}
+MOVE_OPS_OUT = {0x63, 0x1A5, 0x1A8, 0x1AA, 0x1AC, 0x1AD, 0x2E6, 0x200, 0xFE}
 MOVE_OPS_IN = {0x64, 0x1C8, 0x1CB, 0x1DF, 0x1AE, 0x1AF, 0x1B0, 0x1B1, 0x1B2, 0x1CA, 0x1EB, 0x1EC,
-               0x2E7, 0x1D3, 0x1D8, 0x2F9, 0x2A6}
+               0x2E7, 0x1D3, 0x1D5, 0x1D8, 0x2F9, 0x2A6}
 AIM_OPS = {0x62, 0x1DC}
 
 
