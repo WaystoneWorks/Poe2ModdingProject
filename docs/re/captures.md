@@ -54,6 +54,8 @@ Before: no client or batch running. Claude runs `cargo xtask deploy-client --off
 
 After: Claude runs `cargo xtask deploy-client` (private again) and moves the session folder to `dumps/<version>/captures/official/`.
 
+Recorded: `2026-11-03_13-16-29_336` (230 s in the instance, `G1_4`/`G1_5`, WASD, then click-to-move, then gamepad; not analysed yet). `poe-hook.log`: read-only latch on, `path_log`, `packets`, `dump_object_types`, `state_export` on; 4,436 `frame #` lines, 4,428 `LINE`, 3,186 `PATHPLAN`, 433 action starts. Client messages by phase: WASD to about 90 s (`0x63` with `AimTarget`), click-to-move about 90-150 s (400+ `UseSkill`, `UpdateSkillTarget`, `0x63` trailer byte `1`: 291 of 1,115), gamepad about 180-230 s (678 `0x63`). `SprintInput` in every phase.
+
 ## Matched to official
 | What | Official (ours now matches) |
 |---|---|
