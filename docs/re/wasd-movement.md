@@ -73,11 +73,74 @@ Other callers of the line setup: `0x141dddcc0` (next waypoint, end of a line), `
 
 Layout, stepping and the frame order are measured from the `LINE` log; offsets from `L = Positioned + 0x208`: `+0` s; `+0xc` p; `+0x18` q; `+0x24` flag (walk s to q); `+0x25` swap major/minor; `+0x26` swap z; `+0x28` sign; `+0x2c` slope; `+0x34` end (major, minor, z); `+0x40` current major; `+0x44` current minor; `+0x48` z; `+0x4c` minor accumulator; `+0x60` distance mode (rolls, thr = 1); `+0x6c` len; `+0x70` T = len/speed; `+0x74` 1/T; `+0x7c` elapsed; `+0x80` distance; `+0x84` thr = T/|major delta| (distance mode: len/|major delta|); `+0x88` acc; `+0x8c` count; `+0x90` pending; `+0x94` time per step.
 
-- `FUN_141ec86a0` sets it up. `FUN_141ec82e0` adds `dt` (+pending) to elapsed and acc.
-- `FUN_141ddc9d0` (Positioned tick, called by `FUN_141ddc950(pos, dt)`) loops while `thr <= acc` (or flag and `acc > 0`): `FUN_141ec8cb0` makes ONE step, `FUN_141ddcfc0` checks it (non-zero = blocked: `FUN_141de5f50` stop, unread), `FUN_141dddcc0` applies the grid cell and, at a line's end, starts the next waypoint's line (new `FUN_141ec86a0`, speed from a list) or finishes and stores overshoot at `+0x454`.
-- `acc` starts at `thr * (|e-q| - |e-p|)`. With flag set, as soon as `acc > 0` the grid walks s to q in one go.
-- New line's `p`: the old line point if the line ran, its current cell == s and `|s-p|^2 < 4`; otherwise `p = s`.
-- True state: line point `= p + (e-p) * clamp(el/T)` (`FUN_141ec83d0`); its step is exactly `speed * dt` (sprint 55.5 cells/s, 3.663 per 2 frames). **World position `+0x490` is not the line:** a separate smoother `+0x2e0` drives it (`FUN_141ec9fe0`, `FUN_141eca2d0`). Fits to the logged position are invalid (ruled out: 1.2333 bumpy step, `sprint_line_fit.py`'s 69 %).
+**Setup `FUN_141ec86a0(L, s, z, e, z2, speed, index)`** (read from code; 2D here, with `z` ignored when `0x7fffffff`):
+
+```
+running = (+0x61 == 0) and len != 0 and old current cell == s
+p = s
+if running:
+    p' = old line point
+    if p' != e and |s - p'|^2 < 4: p = p'
+    else: running = false
+dir = e - p
+if running:
+    t = dot(dir, s - p) / |dir|^2
+    q = round(p + dir * t); flag = (q != s)
+else:
+    q = s; flag = false
+d = e - q                                  // integers
+swap = |d.x| < |d.y|, or on a tie while running |dir.x| < |dir.y|    // major = y when swapped
+distance_mode = +0xc9                      // stored at +0x60
+len = |dir|; T = len / speed; 1/T at +0x74
+D = |dir.major|
+step_time +0x94 = T / D
+thr +0x84 = distance_mode ? len / D : T / D
+slope +0x2c = dir.minor / D; sign +0x28 = sign(e.major - q.major)
+k = |e.major - q.major| - D
+acc +0x88 = thr * k
+minor_acc +0x4c = p.minor - slope * k + (slope > 0 ? 0.49 : 0.5)
+current (+0x40, +0x44) = s; elapsed, distance, count, +0x61 = 0; +0x98 = 1
+```
+
+**Advance `FUN_141ec82e0(L, dt)`:** `x = dt + pending; pending = x; elapsed += x`. Distance mode: `x = curve(+0xa0, x, rate, 0, +0x64)` (`FUN_141ecc780`, rate `+0x78` or `+0x74`), `+0x98 = rate * pending / x` (1 if `x <= 0`), `x *= len` (`* (+0x74 / +0x78)` when `+0x78 > 0`). Then `pending = 0; acc += x; distance += x`.
+
+**Step `FUN_141ec8cb0`, one call:**
+- Flag set: current moves one cell towards q on each axis (acc untouched). Reaching q clears the flag; if q's major is already the end, `acc -= T` (or `len` in distance mode).
+- Flag clear and `thr <= acc`: `count += 1; major += sign; acc -= thr; minor_acc += slope; minor = floor(minor_acc)`.
+- Returns the cell (swap undone). Line done when `major == end major`: then `FUN_141ec8f00`: `pending = acc` (distance mode: `+0x98 * step_time * acc / thr`), at least 0; `thr = 0; len = 0`.
+
+**Point `FUN_141ec83d0`:** `p + (e - p) * clamp(elapsed / T)`, distance mode `distance / len`.
+
+**Positioned tick `FUN_141ddc950(pos, dt)`:** skipped when entity data `+0x20` is set and `+0x1e6` bit 1 clear. Push timer `+0x480 -= dt` (at least 0). `+0x454 = 0`. Then `FUN_141ddc9d0`:
+```
+if thr == 0: return
+advance(dt)
+while thr <= acc or (flag and acc > 0) [or the z-curve is off]:
+    if entity gone: return
+    done = step()
+    r = check(cell)                       // FUN_141ddcfc0
+    if r != 0:                            // blocked: stop FUN_141de5f50, delegates
+        return
+    if not apply(cell, done):             // FUN_141dddcc0, false = finished
+        if thr == 0: acc = 0; pending = 0; finish (below); return
+        if pending > 0: advance(0)
+        continue
+    // true: keep looping (next line started or not done)
+finish when +0x1e5 bit 7: FUN_141ec8f00, acc = pending = 0, smoother to the cell (FUN_141eca2d0), bytes cleared
+```
+**Apply `FUN_141dddcc0`:** grid `+0x444 = cell`; `FUN_141ed3e40` (occupancy), `FUN_141dd88f0`. Not done: returns true. Done, with `+0x1e6` bit 5 (a Positioned-owned waypoint list, not used by WASD plans): next list entry. Otherwise: **overshoot `+0x454 = elapsed - T` when positive**, done delegates (`FUN_14020ad94` on `+0x18`), returns false. So WASD plans have one line each; the delegate may start the next waypoint: read the Pathfinding handler (left to read).
+
+**Check `FUN_141ddcfc0(pos, out, cell, z, probe)`, result `out[0]`:** 0 free.
+- Outside the terrain (`width * 23`, `height * 23`): stop, result 2.
+- Skipped (0) when Positioned `+0x1e4` bit 5, `+0x49a` bit 2, or `+0x269`.
+- Walkability, `+0x49a` bit 3 clear: mode = 1 with `+0x1e6` bit 3; 2 for a Player with `+0x1e7` bit 1 (the sprint's flag); else `+0x499`. `level = +0x1f8 + 1` (0 skips). Free when `level <= FUN_141d0df50(grid, cell, mode)`. Otherwise result 2, except with `+0x1e7` bit 2: a side probe (normal * 30 cells, `FUN_141d18ce0`) and a search (`FUN_141ed0510`) can allow it when the way round is under 30 cells: sets `+0x49a` bit 3 and stores the cell at `+0x45c`.
+- Entities (only when not the sprint's flag): `FUN_141df0190` hit -> 3, with the entity in `out[1]`; `FUN_141de0f40` -> 4; height -> 5.
+- With `+0x1e4` bit 2 (set by the path request when the search's `param_8` came back set) a non-2 result is forgiven once: result 0.
+- Group boundary (Positioned `+0x4c0`): `FUN_141ddf430`.
+
+**A blocked step, in the tick:** the cell is not applied (the grid stays on the last free cell); `FUN_141de5f50`; result 5 still takes the cell; done delegates unless `+0x1e5` bit 7 (`FUN_141defd50`). `FUN_141de5f50`: `FUN_141ec8f00`, smoother to the cell, resets `+0x499`, `+0x464`, `+0x4ac`, `+0x479`, `+0x47b`, `+0x47c`, clears `+0x1e6` bit 5. `FUN_141de4de0` (the sprint's stop): when a line is running, `+0x490 = +0x2e0` if still on the line's start cell, `FUN_141de5f50`, delegates; otherwise only the smoother. No cell change either way.
+
+- True state is the line point; its step is exactly `speed * dt` (sprint 55.5 cells/s, 3.663 per 2 frames). **World position `+0x490` is not the line:** a separate smoother `+0x2e0` drives it (`FUN_141ec9fe0`, `FUN_141eca2d0`). Fits to the logged position are invalid (ruled out: 1.2333 bumpy step, `sprint_line_fit.py`'s 69 %).
 
 ## Frame order
 
@@ -100,7 +163,12 @@ Only when the action's `+0x144` has bit 1 and not bit 2.
 1. `is_sprinting` 0 or `is_immobilised` != 0: end, `vfunc +0xb0(0, 0)` (plain `SprintEnd`).
 2. No slot 0, no Move, Actor `+0x2a0` bit 7 clear, and (no push or `dodge_roll_is_replaced_by_locusts` 0): end with Bonk (`vfunc +0xb0(1, 0)`). This is what fires when a plan comes back empty.
 3. Otherwise `must_sprint` != 0: keeps going.
-4. Otherwise, with `(Player timer > 0 or Player +0x20a)`: keeps going while Actor `+0x2a2` bit 5 or an axis is set, ends when neither. Without: keeps going while `+0x2a2` bit 5 is set. End = `vfunc +0xb0(0, 0)`.
+4. Otherwise, with Player `+0x20a` set: keeps going while Actor `+0x2a2` bit 5 or an axis is set, ends when neither. Without: keeps going while `+0x2a2` bit 5 is set. End = `vfunc +0xb0(0, 0)`.
+
+Actor `+0x2a2` bit 5 is the sprint key held (setter `0x141e5c1f0(actor, held)`, clearing also zeroes `+0x915`). Player `+0x20a` is a **client setting**, not server state: written only from UI/option code (`0x14100f436`, `0x1410138c1`, `0x142763fc8`, `0x142bb543e`; which option: unread). The `0x140132800` call before it reads a local 0.0, so "timer > 0" never holds (Ghidra shows `0 < xmm0`; `0x141b76ef0`, same in `0x141b77110`). This is why the official client's end of a sprint can differ from ours with the same replies.
+
+### Which animation (`0x141e4f750`, `0x141e4f860`)
+Move animation: Actor `+0x91c` if not `0x43f`; else `is_sprinting` != 0 -> **`0x368` (sprint)**; `+0x8fa` -> `0xc3`; by orientation mode (Move action's `vfunc +0x100`, Buff `0xe4fa`, or Positioned `+0x1e3`): 2 -> `0x97`, 3 -> `0x9b`, 4 -> `0x9a`, else 4 (run). Only re-chosen at the tail of a plan (`0x141e42650`): Actor `+0x2a0` bit 7 set before and after the plan and (`+0x8fa` or the animation `+0x380` differs from the choice or the speed changed) -> `0x141e4f860(actor, -1)`, and on a speed factor change in the tick. So the sprint animation starts at the first plan after `is_sprinting` arrives, if bit 7 is set: the tap-then-hold case with no animation is either bit 7 clear or `is_sprinting` not set while the line runs sprint speed; check with a log of `+0x380`, `+0x2a0` and the stat.
 
 ### Sprint end (`0x141b773a0`)
 Ends Move (`0x141e45da0(actor, 0)`). Clears Positioned `+0x1e7` bit 0 unless slot 0 is `0xedcc`-type (`-0x12b4`). Stops the entity (`0x141de4de0`) unless Actor `+0x2a3` bit 0. Clears `+0x1ff`. With no slot-0 action, alive and `+0x2a3` bit 0 clear: `SprintEnd` animation from row `0x368` `m_ExtraAnimations`, index `bonk != 0` (or `bonk + 2` with stat `0x4862 is_floating`), via `0x141e57b80`.
@@ -109,9 +177,9 @@ Ends Move (`0x141e45da0(actor, 0)`). Clears Positioned `+0x1e7` bit 0 unless slo
 
 In this order, keeping notes here. Decompiles are large: batch a few at a time and filter scripts' output (a `ghidra` xref listing cost 40k tokens).
 
-1. `FUN_140132800` and Player `+0x20a`: what "timer > 0 or +0x20a" is. Decides the tap-then-hold case: **the sprint with no animation** (the open bug). Also the `0x141e45da0`, `0x141e57b80` paths and which animation Move picks (`0x141e4f860`, `0x141e4f750`).
+1. Which option sets Player `+0x20a`; log `+0x380`, `+0x2a0` and `is_sprinting` for the tap-then-hold case: **the sprint with no animation** (the open bug). `0x141e57b80` if needed.
 2. `0x64` handler `0x1421497c0` (`0x14214992e`): snap and the restart that gives a plan every frame; `0x141ddb6f0`.
-3. Positioned tick `FUN_141ddc950`, `FUN_141ddc9d0`, `FUN_141ec8cb0`, `FUN_141ddcfc0`, `FUN_141dddcc0`, `FUN_141ec8f00`, `FUN_141de5f50`, `FUN_141de4de0`, overshoot `+0x454`; `FUN_141ec86a0`, `FUN_141ec82e0`, `FUN_141ec83d0` from code, not the log.
+3. Pathfinding's handler of the Positioned done delegate (`FUN_14020ad94` on `+0x18`, `0x141dccac0`): next waypoint, use of overshoot `+0x454`; how the Actor ends Move then; who sets Positioned `+0x1e7` bits 1, 2 and `+0x1e4` bit 2.
 4. `atan2` arguments of `0x141de31a0` (`0x141de3962`), `0x141ddc820`.
 5. Roll: `0x141b8bda0`, `FUN_141b8d440`, `FUN_141b8cf70`, `FUN_141b8c7f0`, `FUN_141b8d000`, `FUN_141b8d1f0`, `FUN_141ecc780`.
 6. Move action end `0x141e45da0`, queued start `0x141e3ff70`, `0x141e40b50`, `FUN_141e3fcb0`.
