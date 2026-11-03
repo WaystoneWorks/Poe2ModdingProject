@@ -38,6 +38,7 @@ cargo xtask build-dll       # modules/client-hook -> version.dll (loader) + poe_
                             # output modules/client-hook/target/x86_64-pc-windows-msvc/release/
 python3 scripts/check-links.py   # relative links and #anchors in the docs, README.md, CLAUDE.md, dumps/README.md
 ```
+Port tests: `cargo test --release -p poe-game` (lib, `tests/replay.rs` 27 + 2 ignored, `tests/rules.rs` 7, `tests/clientpath.rs`), `cargo test --release -p instance-server` (86; the replay tests run the port through the actor and Codec), `cargo test --release --workspace`: all pass. Local replay check: `runtime/replay/check.sh [--free] [--show N] [--trace LO HI]`. Game file lookup: `cargo run --release -p poe-game --example gamefile -- find WORD..` or `-- cat PATH [GREP]`; stat names: example `statnames`.
 `build-dll` runs `third_party/cargo-xwin/bin/cargo-xwin xwin build -p poe-hook -p poe-hook-core --target x86_64-pc-windows-msvc --release` in `modules/client-hook/` and keeps the MSVC SDK cache in `third_party/xwin-cache`.
 
 ## Run

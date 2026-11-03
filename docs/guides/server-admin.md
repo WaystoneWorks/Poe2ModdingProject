@@ -23,6 +23,7 @@ Execution is in `exec.rs` (`InstanceServer::run_command`). Admin commands need t
 | `join <instance>` | yes | moves you into an existing instance |
 | `close <instance>` | yes | closes an instance; its players are disconnected |
 | `teleport <x> <y>` | yes | moves you to a grid cell |
+| `speed [increased] [action]` | | sets your increased movement speed % and action speed % (until gear and buffs exist); the next frame moves at the new speed and sends the stats |
 | `account <action> [name] [value]` | yes | accounts, see below |
 | `terrain` | yes | generates this instance's terrain on the server and logs the comparison |
 | `area_info <area> <seed>` | yes | research: a second AreaInfo on the connection (the client may crash) |

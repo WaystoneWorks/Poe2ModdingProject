@@ -32,7 +32,7 @@ for m in msgs:
         used.add(q.i)
         break
     unanswered += frame is None
-    out.append(dict(f=frame if frame is not None else m.frame, **k))
+    out.append(dict(f=frame if frame is not None else m.frame, sent=m.frame, **k))
     if frame is None and k["op"] == "wasd" and (k["x"], k["y"]) != (0, 0):
         out[-1]["late"] = True
 # A vector the official server did not answer was replaced by the next one before it ran.
@@ -41,6 +41,13 @@ for n, r in enumerate(out):
         nxt = next((o for o in out[n + 1:] if o["op"] == "wasd" and not o.get("late")), None)
         if nxt and nxt["f"] <= r["f"] + 3:
             r["f"] = nxt["f"]
+# A zero vector sent with the key's release arrives with it: the sprint's end answers it a frame
+# late (seg2 f689).
+released = {r["sent"]: r["f"] for r in out if r["op"] == "sprint" and not r["held"]}
+for r in out:
+    if r["op"] == "wasd" and (r["x"], r["y"]) == (0, 0) and r["sent"] in released:
+        r["f"] = released[r["sent"]]
+    del r["sent"]
 out.sort(key=lambda r: r["f"])
 json.dump(out, open(sys.argv[2], "w"))
 print(len(out), "inputs,", unanswered, "unanswered")

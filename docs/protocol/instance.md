@@ -71,6 +71,8 @@ The server sends, in this order (`InstanceServer::enter_world`):
 ### Frame ordering
 The header fields after the entity id schedule a packet within its frame: +0x14 is an entity order key (0 = before entity updates, an entity id = before that entity, `0xffffffff` = after all), +0x18 a component index (`0xff` = after all components), +0x1a a sequence number. During an entity's update the client flushes the packets scheduled at the current position (`0x142130360`: world +0x678/+0x67c/+0x67e).
 
+The official wire order is sorted by this key; the client drain looks only at the queue head, so a message with seq > 0 runs nested or at the next component. Key table for movement: [wasd-movement.md](../re/wasd-movement.md#frame-drain-and-path-events-read-while-porting).
+
 The world start (InitialState) applies every queued packet without advancing the queue cursor. If the player's AddObject is scheduled at (0, 0, 0), a flush nested inside its own apply matches it again: starting the WashedUp action from the Player reader causes such a flush, the client adds the player twice ("Replacing awake object with id 1") and crashes. The server therefore sends the player with +0x18 = `0xff`.
 
 ### S→C `0x2f7` AddObject (apply case `0x142134ec7`)

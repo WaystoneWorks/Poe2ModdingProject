@@ -492,6 +492,15 @@ if A+0x444 (ramp rate) > 0:
 ```
 Only runs while a ramp is active (`A+0x444 > 0`). A plain walk: `A+0x440 = 1`, no ramp, `PF+0x55c = 1`, speed = GetSpeed.
 
+### Stats the server sends (ported)
+- The client reads only 236, `virtual_action_speed_+%` (`0xc39`/3129) and `movement_velocity_cap` (1098): speed = base x (1 + 236/10000) x (1 + action%/100) x attack factor, capped.
+- Server value of 236 = round((100 + increased + sprint%) x (100 + final) - 10000, to 100); `increased` = `base_movement_velocity_+%`, `final` = `combined_movement_velocity_+%_final` (11001). Fits every official value (0/5000; -400/4400 final -4; -300/4600 final -3; 600/5400 increased 10 final -4); round vs round-up undecidable.
+- `base_move_speed_+%_from_sprint` (174) and `virtual_skill_ignore_namelocking_dynamically` (24200) are in the sprint lists only when nothing else changes speed ("plain"); also in the must_sprint list (2026-11-02 f11215 `[(22325,1),(22342,1),(22426,1),(23258,1)]`; 72 of 73 sprints pair with the sprint-on list). Official non-plain sprint end f11239: `[(236,-400),(22325,0),(22342,0)]` then `[(23258,0)]`; ours match.
+- A running line takes a new speed at its next plan (one frame later).
+- Open: `stun_threshold_+%_final_while_performing_action` (15916) is missing from official roll stun lists in blocks of rolls (2026-10-20: 10 rolls, 2026-11-02: 26), not tied to speed; needs the official stat calculator; ours always sends it. Other `movement_velocity_+%_when_X` stats need conditions and a stat calculator: not handled; official 236 = 8000 at `(P,10,1)` and 12000 from other buffs.
+- Roll travel distance: `DodgeRoll_SetTravelDistance` `0x141aa9250` = `(int)(sqrt(1 + stat 0xec/10000) * stat 0x57fa dodge_roll_base_travel_distance)`, stat `0xec` = 236 (ported). Roll rate listener: [movement-roll.md](movement-roll.md#start-order-end-re-aim-checked-by-replay).
+- Sprint end clip time runs at the current speed's rate (left starts at the move time, minus dt x rate each frame): a wall-ended sprint blocks walks 30 frames at walking speed (seg2 f800-828).
+
 ---------------------------------------------------------------------------------------------------
 ## Not read / open
 - Who clears Actor `+0x414` (axes-fresh) and what it gates elsewhere.

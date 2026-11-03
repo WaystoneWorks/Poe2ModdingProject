@@ -235,6 +235,7 @@ if stop and A+0x2a0 bit7: Pathfinding_EndPath(pf, 0)                   // only s
 `Pathfinding_GetSpeed` `0x141dccfa0(pf, .., reduce)`: `pf+0x554 >= 0` -> that value. Else stats component index `(i8)(pf+0x548)+0x59` (< 0: `pf+0x550 * pf+0x55c`): `f = 1 + max(stat 0xec, -10000)/10000`; stat `0xc39` != 0: `f *= 1 + max(v,-100)/100`; `base = pf+0x550`, `reduce`: `base = max(base - pf+0x558, 0)`; `v = base * f * pf+0x55c`; stat `0x44a` > 0: `v = 0x14014dca0(v, cap)` (cap). Same for Move and WASD. `pf+0x580` writer = `Pathfinding_Tick` (`= dt`).
 
 ## 5. Held click (new `0x1c8` Move while a Move runs)
+- A Move closer than 9 cells does not start (vf `+0x1f0` `0x1419850f0`); test in `crates/poe-game/tests/rules.rs`.
 - Same path as a press: new action, `Actor_StartQueuedAction` in the packet drain. If `|grid - new target| < 9.0`: dropped, old Move continues to its old target.
 - Otherwise `Actor_EndMoveAction(A, 0)`: old Move deleted, **no line stop**, `pf+0x560` bit0 stays (no new "started" event, `A+0x2a0` bit7 stays), `pf+0x540` points at the saved old goal copy until the new `FollowPath`.
 - Snap only when `0x1c8.start != grid` (lockstep exact); a snap stops the line (`0x141ddb6f0` -> `0x141de5f50`), so the new line starts at the snapped cell with `len = 0` (no continuity).

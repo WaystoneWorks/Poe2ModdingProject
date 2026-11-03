@@ -52,6 +52,12 @@ Checked with `LINE`: under a stream `el = 0` in every frame (plan after the adva
 - **Distance mode:** `L+0x60 = L+0xc9`, and `L+0xc9` is the curve's has-data flag (`L+0xa0+0x29`). `Pathfinding_StepAlongPath` passes `+0x9b = 1` (zero both curve slots) unless Player `+0x3e4` or `pf+0x53d`, and mode byte `+0x9a = 0` (`Positioned +0x1e3` decides); it restores `+0x1e3` afterwards.
 - **Dynamic obstacles change real plans:** official `goal=484,539 reached=0` on a layer-0 walkable cell (seg1 f718-726). The server's search needs its entities ([pathfinding.md](pathfinding.md#open)).
 
+- **Drain looks only at the queue head** (`0x142130360`, phase `+0x67e`): a message with seq > 0 runs nested in the tick or at the next component. Official wire order is sorted by order key (checked over 3782 frames). Keys `(entity, comp, seq)`, P = player, key 0 = `(0,0,n)`:
+  - attack ending a sprint: `0x1c8` `(0,0,0)`, `0x1ec`/`0x1d3` `(0,0,3)`, `0x1ca` `(0,0,8)`, ack `(0,0,9)`, then `0x64`, its second half `(P,9,9)`; an attack started after the `0x64`: `(9,4)`, `(9,7)`, `(9,12)`, `(9,16)`; with a weapon swap: `(0,0,0)`, ack `(0,0,1)`, `(9,10)`, `(9,14)`, `(9,17)`.
+  - sprint end with a held click Move: `(9,4)`, rest `(9,10)`. Release plus zero vector: sprint-off at `(P,9,4)` with no `0x64`, zero ack next frame. Wall sprint-off `(P,0,4)` with the unscaled `0x64` in the same frame.
+  - queued rolls `(P,5,8)`, tail `(5,17)`, stun `(5,25)` (21 of 21 in all captures); click-deferred rolls `(9,1)`/`(5,6)` (8 of 8).
+  - speed stat changes go at key 0 before the Positioned tick (official 2026-11-02 f10902: `(0,0,0)`).
+
 ## Plan cadence
 
 `FUN_141e42650(actor)` is the only plan entry: it sets `+0x3dc` to 0.05 s (entity has a `Player` component) or 0.25 s, when the action's `vfunc +0x300` is 0, then `Pathfinding_FollowPath` (`0x141dcbf30`) with the action's target (`vfunc +0xd8`, action `+0x150`).

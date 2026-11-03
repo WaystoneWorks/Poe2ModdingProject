@@ -129,6 +129,8 @@ end(part, bonk, no_anim):
       0x141e57b80(actor, {anim, rate_factor 1.0, ...})  // play
   actor[+0x2a1] &= ~4
 ```
+Ported rule: the SprintEnd clip plays only with slot 0 empty (`actor+0x238 == 0`): a roll or an attack holding slot 0 means no clip, no coast, no walk refusal. The walk after an attack that ends a sprint restarts at once under the attack slow-down (fixture `attack_ends_sprint_then_walk` passes); the attack's end is not modelled in the client model, the slow-down ramp stands for it. Values from game data: `GP_sprinting_end_base_01` move `end_time` 0.75 (`metadata/characters/timelines/base_sprint/base_sprint.atl`), SprintEnd `sprinting_end_*_01 : speed = 600` (`metadata/characters/character.act`; no class `.act` overrides it except int/forms/demonform).
+
 CORRECTION: Move is ended only when the Move slot holds a `0x2909` action; the floating index is `bonk+2`
 (0 -> 2, 1 -> 3); `no_anim` (3rd arg, always 0 from the check) skips the animation; `Life+0x1e0 > 0` is the
 alive test.
