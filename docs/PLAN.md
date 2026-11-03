@@ -2,13 +2,11 @@
 
 The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
-## Now: WASD hitch (before R4)
+## Now: WASD hitch (before R4), NOT GATED
 
-Done: the `0x64` carries the client's grid (`GridLine`, [movement.md](protocol/movement.md#client-grid-cell)). Walk snaps per non-zero walk `0x64` fell from 68 % to 25 % (user: walking slightly better). Sprint unchanged (about 60 % of stream frames snap): the user still feels hitches and teleports.
+Done in code, not proven in game: `0x64` carries the client's grid ([client grid](protocol/movement.md#client-grid-cell)), [sprint turn and stop step](protocol/movement.md#sprint-turn-and-stop-step). Evidence: `runtime/movement-trace-*.tsv`, `runtime/poe-hook-*.log`.
 
-Evidence (runs in `runtime/`: `movement-trace-grid-run1.tsv` / `poe-hook-grid-run1.log`, `-run2`, and the current `runtime/movement-trace.tsv` + `GameFiles/poe-hook.log` with `path_log` on): snaps come in chains; a snap puts the client on the cell centre and stops its move, the server keeps its sub-cell offset, so mismatches repeat until the offset dies out. Chain starters: (a) rolls with a stream: the server's roll positions drift 0.3-1.5 cells from the client's (e.g. ticks 68-73, 160-166); (b) the first frame after a direction change during a sprint; (c) teleports of 15-38 cells (ticks 207, 360, 490, 950, 1022): the client slides along an obstacle while the server sprints straight through (sprint pathing/clearance level 4 or collision differs), the client ignores those `0x64`s and then snaps; (d) a user-reported stuck sprint: the client sent SprintInput held=true at tick 67 and held=false only at 811, sprinting toward the cursor with no keys.
-
-Next: compare the client's PATHPLAN lines (current `GameFiles/poe-hook.log`, 1270 plans; `scripts/re/pathplans.py`) with the server's port for the sprint and roll frames, fix roll positions and sprint path/collision, then re-test in game with `movement_log` and `path_log` on.
+Next: user test with `movement_log` and `path_log` on; run `scripts/re/trace_ticks.py` on the trace (snaps per non-zero `0x64`, jumps above 6 cells). If snaps remain: rolls with a stream (server roll positions drift 0.3-1.5 cells), the roll's own turning, whether `attack_ends_sprint_then_walk` can return to its 2.5-cell limit (now 3.0), and the stuck sprint (SprintInput held from tick 67 to 811 in `runtime/movement-trace-grid-run3.tsv`).
 
 ## Now: R4
 
