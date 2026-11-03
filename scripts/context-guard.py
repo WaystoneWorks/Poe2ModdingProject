@@ -37,10 +37,10 @@ def main():
     if tokens < LIMIT:
         return
     state = Path(__file__).resolve().parent.parent / "runtime/context-guard" / str(hook["session_id"])
-    if state.exists():
+    if state.exists() and state.read_text().strip() == "2":  # older files hold "1", the removed 250k warning
         return
     state.parent.mkdir(parents=True, exist_ok=True)
-    state.write_text("1")
+    state.write_text("2")
     text = (
         f"Context is {tokens // 1000}k: over the 300k session limit. At the next safe point: commit, update "
         "docs/PLAN.md and, if the task is unfinished, hand off to a new thread with t3_thread_launch as CLAUDE.md "
