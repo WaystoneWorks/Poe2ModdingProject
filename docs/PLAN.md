@@ -2,9 +2,11 @@
 
 The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
-## Now: R3 with the 2026-11-02 capture (WIP, NOT GATED)
+## Now: R4
 
-Analysing `dumps/0.5.5e.hotfix1/captures/official/2026-11-02_18-31-34_336` for R3 (R4 parts stay for R4). Ported (server `470cd39`, replay 92 of 128 episodes identical, the rest in `known.json`): held-click restart = 2 frames without a Move start (the client skips a repeat beat about every 15 frames; old "15-frame timer" ruled out); area-change entry stance 3 frames after the `0x62` mode 0+1 pair (login 8); second weapon set's roll id; a skill of the other set swaps the set by itself (`0x1d5` without `0xff`); a held roll repeat outside a roll is only acked; the episode builder finds the player per area (other players' replies had been taken: 3 old "server lag"/"missing inputs" entries pass now). Answers found, not yet in docs: after a Space release the official client coasts at walking speed in every release batch (30 frames, 1.33 falling 0.045); the official server sends the scaled `0x64` in the off batch and the unscaled one at r+1 even without a stream (f5438, W held: same cell, coast, walk on at off+30). Next: parked episodes 1687 (Space re-pressed during a sprint, gap #3), 7577 f169 and old 8635 f238 (sprint end with a held click), 11714/12607 (later frames), old gap #2 entries 3286 f358, 4462 f23 (reasons to rewrite); then gaps #4, #6, #7 from `scripts/re/sprint_ends.py` output (`runtime/r3-2026-11-02-sprint-ends.txt`), decision on `sprint_release_ends_at_sprint_speed`, game tests, docs (movement.md, captures.md index, decisions.md). T0 needs gamescope. Open: P5b fails (6.11, 7.46 cells) from drift before the sprint (after a teleport). R2 open points: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
+R4 below. The R4.1 capture is recorded: `2026-11-02_18-31-34_336` (not analysed for R4 yet). R3 is done.
+
+Open: P5b game test fails 6-9 cells from drift before the sprint after a teleport (`runtime/game-test/p5-scenario-20261102-193003`, `-193626`); sprint-w, walk, cliffs, dungeon pass (2026-11-02). R2: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
 
 ## T: agents test in game by themselves
 
@@ -15,13 +17,6 @@ Every later step needs it. The official-server read-only latch stays untouched.
 Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test/cliffs-20261102-121814`), not reproduced in 4 runs.
 
 **Done when:** an agent runs the wall scenarios (`walk`, `cliffs`, `dungeon`) with no human, and no window appears on the user's desktop.
-
-## R3: movement 1:1 with the official game
-
-1. **Server copies of what the client does alone:** left, waiting for the R4.1 capture: swap and stance toggle while moving (gap #7), attack lengths (gap #6), held-click restart (gap #2).
-2. **Replay tests:** every official episode replays or is in `known.json` with a reason (attack length from game data, entry stance timing, held-click restart trigger, and the others there). W during a sprint: ours in `sprint-w`; the official answer waits for the R4.1 capture (gap #4).
-
-**Done when:** every captured sequence replays identically (opcodes, fields, frame offsets).
 
 ## R4: entities, transitions, waypoints, world map
 
@@ -62,7 +57,7 @@ Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test
 | What | When |
 |---|---|
 | Install gamescope | now (T0) |
-| Official capture (about 15 minutes), [checklist](re/captures.md#planned-capture-for-r4-world-map-waypoints-transitions-and-the-open-movement-cases). Movement parts, all in step 6/7: gap #4 (W pressed or released during a sprint, also a no-stream sprint ended with W held, step 6), gap #2 (hold the left button 5 s without rolling or attacking, step 6), gap #6 (attacks standing and in a plain walk, with attack-speed gear, step 6), gap #7 (input-mode toggle while walking, weapon swap while walking, rolling or attacking, step 7) | R4.1, unblocks R3 and R4 |
+| Official capture (about 15 minutes), [checklist](re/captures.md#planned-capture-for-r4-world-map-waypoints-transitions-and-the-open-movement-cases). Still missing for movement: swap and input-mode toggle while walking, rolling or attacking (gap #7), attacks with attack-speed gear (gap #6); R4 parts stay (steps 1-5) | R4.1, unblocks R4 |
 | G-PARTY capture (a friend answers party invite and trade request) | any time, implementation waits for items |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |
 | Decide whether old batch run directories may be deleted (disk 481 GB free; `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small) | any time |

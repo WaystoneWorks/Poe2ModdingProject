@@ -29,6 +29,8 @@ In the game (a character with at least two acts' waypoints; about 15 minutes; wa
    Then (movement gap #4) twice each: hold Space with no key (sprint towards the cursor), press W after the sprint starts, release Space with W still held, release W a second later; hold W, roll and keep Space held, release W while sprinting, then Space.
 7. Stance (movement gap #7): while walking with W held, toggle the input mode to click-to-move and back (twice); swap weapon sets once while walking and once during a roll or attack (standing is captured).
 8. Log out normally.
+
+Recorded: `2026-11-02_18-31-34_336` (movement parts of steps 6 and 7; the R4 parts 1-5 are not analysed yet). It covered: held click 5 s, W-held sprints and releases, attacks standing and walking, W pressed or released during sprints and rolls (gap #4), Space re-press, weapon swaps and input-mode toggles standing ([movement.md](../protocol/movement.md#capture-index-2026-11-02-session)). Not covered: swap or input-mode toggle while walking, rolling or attacking (gap #7); attacks with attack-speed gear (gap #6).
 After: Claude runs `cargo xtask deploy-client` (private again), turns the desktop rules back on and moves the session to `dumps/<version>/captures/official/`.
 
 ## Matched to official
