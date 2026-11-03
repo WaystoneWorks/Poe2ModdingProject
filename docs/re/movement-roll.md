@@ -326,7 +326,7 @@ At rate 1 and dt 1/30 the clip ends after 30 frames: the 30-frame action.
 - **Re-aim faces the target:** `0x14197cf50` -> vf `+0x138` `0x141971b80` (stat `0x3162` == 0, vf `+0x528` false, no entity target) -> `0x141ddc290`: facing = `ang(target - grid)`.
 - **First heading of a cursor roll (no axes):** measured, 13 of 13 rolls (incl. the private `(28,-17)` case, which replaces the old "exact cursor point" reading) and float-exact in `clientsim`: heading = `ang(round(unit(target - grid) * 3))`. The first `0x1af` then aims at the exact integer target. **The code that does this is not found:** read how `act+0x150` or the heading gets the 3-cell vector.
 - **Move during a roll:** stays queued (`A+0x248`), starts in the Actor tick after the clip's end (f3429).
-- `0x80410041` (flags `0x10`) is also a roll skill id (`0x80000040`, `0x80000041` too).
+- `0x80410041` (flags `0x10`, 5 starts in the reference capture) is not read: at f3726 it moves the player on a time-mode line towards its target, about 14 cells/s, not on a roll curve.
 
 ## Not read / open
 - f3545 of the reference capture: one plan's goal (496,610) has heading about 15 degrees where `0x1af` gives 6.5; a Move press (`0x1a5` tf 16) was pending. Unexplained.
