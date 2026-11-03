@@ -6,7 +6,7 @@ The only list of what is left to do and the only status source. Edit it in place
 
 Principle and decision: [decisions.md](decisions.md#movement-and-world). The server must run an exact port of the client's movement code for all input modes (WASD, click-to-move, controller), roll and sprint. Proof is the user's game tests only; do not ask for one before step (e) is reached.
 
-- (c) Full RE of the client's movement (Positioned, Pathfinding, Actor) for every input mode, roll and sprint, into [wasd-movement.md](re/wasd-movement.md). Reference: the official capture `2026-11-03_13-16-29_336` (WASD, click-to-move, gamepad; [captures.md](re/captures.md#planned-movement-capture-for-the-exact-port)).
+- (c) done: static RE in [re/movement-positioned.md](re/movement-positioned.md), [click](re/movement-click.md), [roll](re/movement-roll.md), [sprint](re/movement-sprint.md); open items in [wasd-movement.md](re/wasd-movement.md#what-is-left-to-read). Reference capture: `2026-11-03_13-16-29_336` ([captures.md](re/captures.md#planned-movement-capture-for-the-exact-port)).
 - (d) One new port behind the seam (`poe_game::movement` `MovementModel`/`Mover`, [instance-world.md](architecture/instance-world.md#the-movement-seam-movementrs)), replacing the `standstill` stub chosen in the instance server's `actor_init`; checked offline against the captures, the kept fixtures (`modules/server/crates/poe-game/tests/fixtures/`) and private LINE logs. Until then the player cannot move and the game tests that need movement fail ([setup.md](guides/setup.md#game-tests-cargo-xtask-game-test)).
 - (e) Then the user's game test.
 

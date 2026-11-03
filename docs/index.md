@@ -51,6 +51,11 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | [re/crypto.md](re/crypto.md) | Key exchange and Salsa20 |
 | [re/datamining.md](re/datamining.md) | Bundles2 and `.datc64` |
 | [re/captures.md](re/captures.md) | Official vs our server, client log |
+| [re/wasd-movement.md](re/wasd-movement.md) | Client movement overview, open RE items |
+| [re/movement-positioned.md](re/movement-positioned.md) | Exact port: WASD/gamepad, Positioned, line, speed |
+| [re/movement-click.md](re/movement-click.md) | Exact port: click-to-move |
+| [re/movement-roll.md](re/movement-roll.md) | Exact port: dodge roll |
+| [re/movement-sprint.md](re/movement-sprint.md) | Exact port: sprint, end, coast |
 | [re/terrain/README.md](re/terrain/README.md) | Terrain generator overview |
 | [re/terrain/tgr.md](re/terrain/tgr.md) | `.tgr` areas |
 | [re/terrain/dungeon.md](re/terrain/dungeon.md) | `.dgr` areas |
