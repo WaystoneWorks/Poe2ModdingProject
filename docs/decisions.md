@@ -17,6 +17,7 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 - Timing: the simulation steps a fixed `dt = frame_ms / 1000` (33 ms) per tick, not measured time, because the client advances each frame by the `frame_ms` recorded with its marker (RE 2026-11-02, [movement.md](protocol/movement.md#timing)). Checked 2026-11-02 against the WASD hitch: not the cause (the cell in 0x64 was). Absolute 33 ms deadlines; frames missed in a stall are sent as a burst, like official servers. What the client does alone, the server does too.
 - Sprint end (agent default, user away, 2026-11-02): the server follows what our client does with our messages. After a release batch our client plays `SprintEnd` at sprint speed (20-frame coast), so `sprint_release_ends_at_sprint_speed = true`. Kept after the 2026-11-02 capture: the official client coasts at walking speed in every release-ended sprint (30 frames), our replies match the official ones, so it is client state. Revisit when Player +0x20a (`0x141b76f01`) is traced ([movement.md](protocol/movement.md#coasting-after-a-sprint)).
 - Proof: every input sequence of the official captures replays with identical opcodes, fields and frame offsets.
+- Movement curves are required game data, no stand-in (2026-11-03): the server refuses a player without the curves or the class `offset_scale`.
 - Unlocks: per character, locked by default; admin command and web admin button.
 - The terms-of-service screen stays hidden: never set account flag byte 0 bits 2, 3, 4 or 7.
 

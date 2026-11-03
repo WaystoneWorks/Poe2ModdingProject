@@ -33,7 +33,7 @@ Submodule changes: commit inside the submodule (`modules/...`) first, then the n
 ```sh
 cargo build                 # the hub's workspace: xtask only
 cargo xtask server build    # the server (modules/server, its own workspace; --release)
-cargo xtask server test     # the server's tests (cargo test in modules/server; poe-data tests read GameFiles if present)
+cargo xtask server test     # the server's tests (cargo test in modules/server; poe-data tests read GameFiles if present; movement replay tests need the game's curves from the hub's `GameFiles/`, `POE_GAME_DIR` points elsewhere, and panic without them)
 cargo xtask build-dll       # modules/client-hook -> version.dll (loader) + poe_hook_core.dll (x86_64-pc-windows-msvc);
                             # output modules/client-hook/target/x86_64-pc-windows-msvc/release/
 python3 scripts/check-links.py   # relative links and #anchors in the docs, README.md, CLAUDE.md, dumps/README.md
