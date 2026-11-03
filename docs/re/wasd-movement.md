@@ -49,7 +49,7 @@ Goal, in both `Actor_StartWasdWalk` and the re-aim `0x141e50320`: `goal = cell +
 
 - `0x141dcb810`: arrival check; true ends the path.
 - `0x141dcc6a0`: `|goal - cell|^2 < 0x4840` (126 cells) searches to the goal, else to `cell + 126 * unit` (`0x141ed0510`, port `clientpath.rs`). Path array Pathfinding `+0xd4`, count `+0x518`, index `+0x570 = count - 1`. Bit 8 of `+0x560`: no search, two-point path (goal, cell).
-- Empty path: `0x141dccac0(pf, 0)` or path-failed delegates; Move ends, which is the sprint's Bonk ([end check](#sprint-end-check-0x141b76da0)).
+- Empty path: `0x141dccac0(pf, 0)` or path-failed delegates; Move ends, which is the sprint's Bonk ([end check](#sprint-end-check-0x141b76da0-per-frame)).
 
 ### The waypoint and the sprint turn (`0x141dcc110`, `0x141dcc460`)
 
@@ -61,7 +61,7 @@ d = normalize(((w - cell) + 0.5) * 10.869565)     // note the +0.5, 0x142193230 
 f = facing vector, (sin(+0x44c), -cos(+0x44c))    // 0x140163cf0
 c = dot(d, f)
 if c > 0.99: return w                             // within about 8.1 degrees: straight to the waypoint
-a = dodge_roll_sprint_turn_rate (0x5794) * pf[+0x580] * pi/180     // pf+0x580 starts at 1.0
+a = dodge_roll_sprint_turn_rate (0x5794) * pf[+0x580] * pi/180     // pf+0x580 measured 0.99 (`LINE`, 2 boundary cells; 1.0 misses them; maybe 30 * dt, writer 0x141dcce80 unread)
 if c > -0.99 and acos(c) < a: return w
 if d.y*f.x - d.x*f.y < 0: a = -a
 r = (f.x*cos a - f.y*sin a, f.x*sin a + f.y*cos a)
@@ -173,13 +173,19 @@ Action layout: `+0x3c` steering on, `+0x3d` curve set, `+0x3e` wait for the line
 
 Per frame `FUN_141b8c720`: `+0x3e` waits while a line runs, then `FUN_141b8d440`. Then with `+0x3d`: `left = FUN_141b8cf70`; whole cells passed since last time go to the part at `+0xa0`; with `+0x3c` and `left > 1`: `FUN_141b8c7f0`.
 
+**Curve data:** `art/models/charactersfour/animations/basedodgeroll/onerig.amd` (UTF-16 text; per animation: `"name"`, `once`/`loop`, duration ms, a line, then `count v0 v1 ...` positions at even time steps, then segments). Character.act: `DodgeRoll` = `dodge_*_01`, `DodgeRollSprint` = `_sprinting`, `DodgeRollMoveCancel` = `_moving` (when `_moving` is used: unread), `_bwd_` variants. `dodge_unarmed_01` x 46 / 500 equals every measured value of the fitted `ROLL_STEPS`. `basesprint/onerig.amd` `sprint_end_unarmed_01`: 750 ms, 46 positions, end 242.425 world units. Metadata struct: `+0x20` duration ms, `+0x2c` loop, `+0x30` positions, `+0x48` segments.
+
+**Curve run** (`+0x2a8`, floats): `FUN_141ecc540` load: `[3]` = C(0), `[4]` = C(end), fixed. `FUN_141ecc710(t)` restart (each roll step through `FUN_141dde3f0`): `[8]` = t, `[7]` = length - t, `[1]` = C(t), `[0]` = C(end) - C(t). `FUN_141ecc780(dt, rate)`: `[8] += [7] * rate * dt`, returns (C(new) - C(old)) / `[0]`. `FUN_141ecccc0` is linear between positions. The line's `+0x78` is 0 unless the optional length is set, so rate = 1/T.
+
+**Optional length** (`FUN_141b8c7f0`, roll action `+0x44` value, `+0x48` set): after the walks, `+0x280` (`L + 0x78`) = speed / |target - cell| and the target becomes cell + round(rotate((0, -300), atan2(target - cell) + pi/2)); the steps stay those of the real target. It is on from the frame `is_sprinting` arrives (`LINE`: e = s + 300 along the heading); its writer and the 300 are not read (value measured).
+
 **The curve is the animation's.** `FUN_141b8d440`: `FUN_141dde090(pos, name, 0, length)` loads the roll animation's movement curve into both Positioned curve slots (`+0x2a8` = `L + 0xa0`, `+0x330`, `FUN_141ecc540`), with `length = +0x1bc - +0x1b8` of the animation state, and `FUN_141dde3f0(pos, elapsed +0x1a4, length)` sets the time. `left = (1 - clamp((value(+0x2a8) - +0x2b4) / (+0x2b8 - +0x2b4))) * total`, where value is `FUN_141eccb30` when the curve has data (`+0x2d1`), else `+0x2c8`.
 
 `FUN_141ecc780(curve, dt, rate, out, stop_segment)`: `x = rate * length * dt` unless looping; adds to position `+0x20`; segments of 0x38 bytes at `curve_data + 0x48` (time `+0x28`, duration `+0x2c`, rate `+0x30`, `+0x34`), `FUN_141ecd190` finds the value. Returns the curve's progress delta over the segment. **So the table of steps per frame comes from data: dump it from the animation (`.ast`) or read the segments at runtime with the hook, instead of the `LINE`-fitted `ROLL_STEPS`, `ROLL_SPRINT_STEPS`** (last 5 tap, last 2 sprint values there are estimates).
 
 Step `FUN_141b8c7f0`: `(goal, flag) = FUN_141b8d1f0`; target = `FUN_141b8d000(goal)` (unread); stop when `|goal - cell| <` `FUN_140132800` (a constant, 1.6 measured). `speed = FUN_141b8d770` = `left / ((length - elapsed) / rate)`, `rate` = animation state `+0x178` (1 with `+0x1d4`) x `+0x1b0`: the distance left over the animation time left, recomputed each frame (so `sp` in the `LINE` log rises and falls with the curve); speed 0: if a line runs, `+0x3e = 1` and `FUN_141de4de0`. `FUN_141dde3f0(pos)`; flag sets Positioned `+0x1e4` bit 2. `FUN_141b8fe20`: a Bresenham walk from the cell to the target checking walkability (`FUN_141d0df50`, mode 0, level `+0x1f8 + 1`) and `FUN_141b90b10`, counting down 2 cells: blocked within 2 cells of the start means no move this frame. `FUN_141b90060`: a similar walk that shortens the target (unread). Bend `+0x48` rotates the target. Then `Positioned_MoveToWaypoint(pos, {target, speed, ...})`, so the facing and line rules above apply.
 
-`FUN_141b87580(pos)` = a line runs (`len != 0`, `+0x269` clear) and its start cell is the current cell. `FUN_141b8d000` (target): the same point as the goal below with `left` itself instead of `max(left, 10)`, heading taken as `atan2` of the vector to it.
+`FUN_141b87580(pos)` = a line runs (`len != 0`, `+0x269` clear) and the line's **current** cell (`L + 0x40`, `+0x44`) is the grid: true on any running line (ruled out: its start cell). `FUN_141b8d000` (target): the same point as the goal below with `left` itself instead of `max(left, 10)`, heading taken as `atan2` of the vector to it.
 
 `FUN_141b8d1f0`: `v = rotate((0, -max(left, 10)), heading)`; without `FUN_141b87580(pos)`: `goal = cell + round(v)`, with it: `goal = round(line point + v)`. Then the search (`FUN_141ed0510`) from the cell; the path's first waypoint, or the cell when under 2 nodes.
 
@@ -207,6 +213,10 @@ Move animation: Actor `+0x91c` if not `0x43f`; else `is_sprinting` != 0 -> **`0x
 
 ### Sprint end (`0x141b773a0`)
 Ends Move (`0x141e45da0(actor, 0)`). Clears Positioned `+0x1e7` bit 0 unless slot 0 is `0xedcc`-type (`-0x12b4`). Stops the entity (`0x141de4de0`) unless Actor `+0x2a3` bit 0. Clears `+0x1ff`. With no slot-0 action, alive and `+0x2a3` bit 0 clear: `SprintEnd` animation from row `0x368` `m_ExtraAnimations`, index `bonk != 0` (or `bonk + 2` with stat `0x4862 is_floating`), via `0x141e57b80`.
+
+## Tap, then hold during the roll (settled, official)
+
+A roll released before `t0+15` never sprints, even with the key down again at `t0+15`: a press during the roll is queued, the new roll starts at `t0+30` and sprints at its own `+15` (official `2026-11-02_18-31-34_336` f12190: release +6, press +23, `0x1c8` +30, sprint +45; same f3713, f1047). A press before `t0+15` held past it was never captured: same rule assumed. Our server sent the sprint into the released roll, which is the sprint with no animation: `Due::SprintStart` must test `released`, not `held`.
 
 ## What is left to read
 
