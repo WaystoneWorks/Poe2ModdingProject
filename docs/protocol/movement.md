@@ -1,6 +1,8 @@
 # Movement
 
-How the client moves the player and what an **official** server sends back, from seven read-only official capture sessions (`dumps/0.5.5e.hotfix1/captures/official/`, 2026-10-14..20; `2026-10-20_18-41-14_336` has the client's per-frame positions) and the client's code. The tool behind every sequence is `scripts/re/movement_sequences.py` ([Reproducing](#reproducing)). Code: `modules/server/crates/poe-game/src/locomotion.rs` (the movement component, [instance-world.md](../architecture/instance-world.md)), `world.rs`, `movement.rs`, `clientpath.rs` (port of the client's pathfinder, [docs/re/pathfinding.md](../re/pathfinding.md)); `modules/server/servers/instance-server/src/{movement,player}.rs` (packet glue, [below](#server-implementation)); messages in `modules/protocol/poe-proto/src/instance.rs` and `skill.rs`.
+**Principle (user decision 2026-11-03):** the server must run an exact port of the client's movement code, never a fit; see [decisions.md](../decisions.md#movement-and-world).
+
+How the client moves the player and what an **official** server sends back, from seven read-only official capture sessions (`dumps/0.5.5e.hotfix1/captures/official/`, 2026-10-14..20; `2026-10-20_18-41-14_336` has the client's per-frame positions) and the client's code. The tool behind every sequence is `scripts/re/movement_sequences.py` ([Reproducing](#reproducing)). Code: the movement simulation is being rebuilt ([PLAN](../PLAN.md)); messages in `modules/protocol/poe-proto/src/instance.rs` and `skill.rs`.
 
 Six sessions are **WASD input mode** only; the 2026-10-20 session adds **click-to-move mode** (f3287-4662), standing and chained rolls, sprints into walls, an input-mode toggle and client positions (`poe-hook.log`, "frame #n ... world ... grid", same frame numbers). Missing: [gap list](#gap-list); frame indexes: [2026-10-20](#capture-index-2026-10-20-session), [2026-11-02](#capture-index-2026-11-02-session).
 

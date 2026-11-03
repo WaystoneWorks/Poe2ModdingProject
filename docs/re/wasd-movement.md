@@ -1,6 +1,8 @@
 # WASD movement: the client's whole path
 
-The one spec for the port (user decision 2026-11-02: full RE first, then one module replacing the fit-based code). All addresses are Hotfix 1. Status: **port wired, tests pass, not proven in game** ([Port design](#port-design)); remaining RE: [What is left to read](#what-is-left-to-read). Wire messages stay in [movement.md](../protocol/movement.md); the search itself is in [pathfinding.md](pathfinding.md).
+**Principle (user decision 2026-11-03):** the server must run an exact port of the client's movement code, never a fit; see [decisions.md](../decisions.md#movement-and-world).
+
+The spec for the exact port (user decision 2026-11-03: restart from scratch; earlier RE covers mainly WASD, sprint and roll, the new RE must cover click-to-move and controller too). All addresses are Hotfix 1. Status: the old port is being deleted; remaining RE: [What is left to read](#what-is-left-to-read), plus [public sources](#public-sources). Wire messages stay in [movement.md](../protocol/movement.md); the search itself is in [pathfinding.md](pathfinding.md).
 
 Cell and world: `world = (cell + 0.5) * 10.869565` (`0x142193230`), `cell = floor(world * 0.092)` (`0x142193270`). Stats are keyed `Stats.dat row + 1` (`GameFiles/poe-hook-data/stats.tsv`).
 
@@ -238,7 +240,7 @@ Open: wall run f400-410, f2456-2512 (1 cell behind, no `LINE` there); frames aft
 
 Drive the model only from what the server sends, as the harness does, instead of `mover.start(..)` calls. `Locomotion::tick`: `positioned_tick` at step 1 (`mover.grid()` then goes in the frame's `0x64`); inputs and timeline unchanged; at the end apply the tick's `out` events in batch order (`MoveAck` first, then `SprintState`, then the rest), then `actor_tick`. `MoveAck` -> snap check and `set_axes`; `ActionStart` -> `start_roll` or `walk_to`; `Stats` -> `set_sprinting`, `must_sprint`, scale; `Teleport` -> place. Curve switch and `extend_roll` only when the roll was not released. A bonk detected after `positioned_tick` triggers `end_sprint_at_wall`. `Locomotion`'s message timing stays as it is.
 
-Status: wired (server commit `37a5b61`), NOT proven in game. `Locomotion` drives `ClientMotion` (`clientmotion.rs`) only from its outgoing events, as above; deleted: `Mover`, `Motion`, `ROLL_STEPS`, `ROLL_SPRINT_STEPS`, `pathfinding.rs` (A*), the `sprint_coast_*` and `pathfinder` config keys. Curves load from game data at player setup (instance-server `lib.rs`: `MotionCurves::load`, `load_offset_scale` from the class `.ao`); the curves and `offset_scale` are required: the player is refused with an error when either is missing (`MovementConfig.curves` is `Option`, `None` only in tests that neither roll nor sprint). Tests read the curves from the hub's `GameFiles/` (`POE_GAME_DIR` overrides) through `clientmotion::hub_motion()` (class `DexFour`). The tap-then-hold fix is in (`Due::SprintStart` tests `released`). All server tests pass (453, 2 ignored). Harness `line_compare` after the wiring: `port1` 1770/1770 grid and line end; wall run 2705/2732 grid (`--free`); `stuck` clean up to f1090 but for f574 (f575 only its line end). Next: the user's game test with `movement_log` on, then `line_compare` on its log ([PLAN](../PLAN.md)).
+The old port is being deleted ([PLAN](../PLAN.md)); this section stays as the event order a new port must reproduce.
 
 ## What is left to read
 
@@ -254,3 +256,11 @@ In this order, keeping notes here. Decompiles are large: batch a few at a time a
 8. Value of `dodge_roll_sprint_turn_rate`: check the stats the official server sends (the data gives 5 degrees).
 
 Then: an offline harness feeding recorded inputs (movement trace `in-*` lines) through the new module, comparing its grid per tick with `LINE cur` until the first divergence of each episode; one short official capture with `LINE` (include "tap Space, then tap and hold during the roll"); port as one module, delete the fit-based code (`turn_sprint`, `SPRINT_TURN_RATE`, fit constants), keep the tests that describe client behaviour.
+
+## Public sources
+
+No public PoE2 movement spec, emulator or movement opcodes exist (4 web agents, 2026-11-03). Useful only:
+- GGG staff thread on client-side prediction and resync: https://www.pathofexile.com/forum/view-thread/889669/filter-account-type/staff
+- Data tables: https://github.com/poe-tool-dev/dat-schema (poe2 schema).
+- GameHelper2 (Gordin), PoE2 0.5.5 client offsets: Render `CurrentWorldPosition` `0x138`, world-to-grid `10.86957`, Actor `AnimationId` `0x8B0`.
+- Community numbers, unverified: roll about 3.7 m, roll size 0 since Dec 2024, sprint grace period since 0.3.0c.

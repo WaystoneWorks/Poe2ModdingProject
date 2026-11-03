@@ -7,6 +7,7 @@ A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.h
 ## Hard rules
 - **Never touch the Steam install** (`~/.local/share/Steam/steamapps/common/Path of Exile 2`) or its Proton prefix (`compatdata/2694490`). Use only `GameFiles/`.
 - `GameFiles/` changes only through `cargo xtask deploy-client` / `revert-client` / `deploy-core`. Never hand-edit it.
+- **Movement: the server must run an exact port of the client's movement code; see [decisions.md](docs/decisions.md#movement-and-world).**
 - **Official servers are read-only.** The DLL may observe and log official sessions the user plays; it never sends, alters or injects anything there. Claude never logs in; captures are the user's.
 - The Steam install's live `Client.txt` is a read-only reference: never modify or commit it (copy excerpts into `runtime/`).
 - No hardcoding: opcodes in `modules/protocol/opcodes/<version>/*.toml`; ports, leagues, start areas in `modules/server/config/server.toml`; client builds in `modules/protocol/versions/<version>.toml`; game data from `poe-data`; subsystems behind traits.

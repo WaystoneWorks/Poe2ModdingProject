@@ -2,11 +2,17 @@
 
 The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
-## Now: WASD hitch (before R4), NOT GATED
+## Now: movement restart (exact port)
 
-State (NOT GATED): the port is wired. `Locomotion` drives `ClientMotion` only from its outgoing events ([port design](re/wasd-movement.md#port-design)); `Mover`, `pathfinding.rs`, the `sprint_coast_*` and `pathfinder` config are gone. All server tests pass (453, 2 ignored); harness `line_compare`: `port1` 1770/1770 grid and line end, wall run 2705/2732 grid (`--free`), `stuck` clean up to f1090 but for f574. Not proven in game. Curves and the class `offset_scale` are required game data at player setup (the player is refused without them). First in-game check (headless gamescope, 2026-11-03): `walk` passes; `sprint-w` (`runtime/game-test/sprint-w-20261103-121011`, `line-compare-free.txt`) fails one `max_drift = 5` check (6.72 cells, sampled during a cursor roll). `line_compare --free` reproduces the client's grid on every logged frame (sprint stream f231-254 with turns, sprint end, walk-on, stop), no snaps, except the cursor roll f216-228: the model is one cell ahead (client roll heading -34.4 deg, line end 659,1120; server -31.6 deg, 660,1122; the server has the cursor only as the integer UseSkill offset 28,-17). No `0x64` during a roll, so no snap; the sprint replan aligns by f229. Open: cursor-roll heading precision (matters only with a stream during a roll); the sprint-w drift limit. Still awaiting the user's own game test.
+Principle and decision: [decisions.md](decisions.md#movement-and-world). The server must run an exact port of the client's movement code for all input modes (WASD, click-to-move, controller), roll and sprint. Proof is the user's game tests only; do not ask for one before step (e) is reached.
 
-Next: the user's game test with `movement_log` on, moves in this order: walk and stop, turns, sprint (roll + hold Space), sprint turns, a sprint into a wall, a roll away from the cursor, tap Space then tap-and-hold during the roll, the end of a sprint. Copy `GameFiles/poe-hook.log` and `runtime/movement-trace.tsv`, compare with `line_compare`. Only if rules stay open: the agreed official capture with the `LINE` log (about 5 minutes). Still open: rolls with a stream, `attack_ends_sprint_then_walk` back to its 2.5-cell limit (now 3.0), the stuck sprint (SprintInput held from tick 67 to 811 in `runtime/movement-trace-grid-run3.tsv`).
+- (a) Delete the server simulation (poe-game `locomotion.rs`, `clientmotion.rs`, `clientpath.rs`, `tests/replay.rs`, `tests/clientpath.rs`, `examples/line_compare.rs`, instance-server `replay_tests.rs`, the movement parts of `movement.rs`/`player.rs`/`actor.rs`) behind a new trait seam the new simulation plugs into. The server still builds and logs in; the player cannot move or moves by a trivial stub. Keep packet decoding, the DLL logging tools (LINE log, movement trace), gamescope game tests and the RE notes.
+- (b) Check which DLL movement logs run read-only in official mode; write the capture checklist (WASD, click-to-move, controller) in [captures.md](re/captures.md); ask the user to capture.
+- (c) Full RE of the client's movement (Positioned, Pathfinding, Actor) for every input mode, roll and sprint, into [wasd-movement.md](re/wasd-movement.md).
+- (d) One new port, checked offline against the captures and private LINE logs.
+- (e) Then the user's game test.
+
+Open: cursor-roll heading precision (the server only gets the cursor as the integer `UseSkill` offset, e.g. 28,-17).
 
 ## Now: R4
 
