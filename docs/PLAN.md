@@ -6,10 +6,9 @@ The only list of what is left to do and the only status source. Edit it in place
 
 Principle and decision: [decisions.md](decisions.md#movement-and-world). The server must run an exact port of the client's movement code for all input modes (WASD, click-to-move, controller), roll and sprint. Proof is the user's game tests only; do not ask for one before step (e) is reached.
 
-- (a) Delete the server simulation (poe-game `locomotion.rs`, `clientmotion.rs`, `clientpath.rs`, `tests/replay.rs`, `tests/clientpath.rs`, `examples/line_compare.rs`, instance-server `replay_tests.rs`, the movement parts of `movement.rs`/`player.rs`/`actor.rs`) behind a new trait seam the new simulation plugs into. The server still builds and logs in; the player cannot move or moves by a trivial stub. Keep packet decoding, the DLL logging tools (LINE log, movement trace), gamescope game tests and the RE notes.
-- (b) Check which DLL movement logs run read-only in official mode; write the capture checklist (WASD, click-to-move, controller) in [captures.md](re/captures.md); ask the user to capture.
+- (b) The capture: checklist and the logs that run read-only in [captures.md](re/captures.md#planned-movement-capture-for-the-exact-port). Waiting for the user's recording.
 - (c) Full RE of the client's movement (Positioned, Pathfinding, Actor) for every input mode, roll and sprint, into [wasd-movement.md](re/wasd-movement.md).
-- (d) One new port, checked offline against the captures and private LINE logs.
+- (d) One new port behind the seam (`poe_game::movement` `MovementModel`/`Mover`, [instance-world.md](architecture/instance-world.md#the-movement-seam-movementrs)), replacing the `standstill` stub chosen in the instance server's `actor_init`; checked offline against the captures, the kept fixtures (`modules/server/crates/poe-game/tests/fixtures/`) and private LINE logs. Until then the player cannot move and the game tests that need movement fail ([setup.md](guides/setup.md#game-tests-cargo-xtask-game-test)).
 - (e) Then the user's game test.
 
 Open: cursor-roll heading precision (the server only gets the cursor as the integer `UseSkill` offset, e.g. 28,-17).

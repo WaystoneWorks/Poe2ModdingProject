@@ -148,7 +148,7 @@ Deriving an operand safely:
 ### 3.2 Layouts
 - Rust types: `poe-proto/src/login.rs` (934 lines), `instance.rs` (1,669), `entity.rs`, `player_blob.rs`, `remote.rs`, `skill.rs`; doc comments carry the reader addresses.
 - The client does not check that a message or blob was fully consumed: a layout error reads garbage later instead of failing loudly.
-- **Oracle:** the replay tests (`modules/server/servers/instance-server/src/replay_tests.rs`, `modules/server/crates/poe-game/tests/replay.rs`) compare against official 0.5.5e captures; a new build needs new captures (the user's).
+- **Oracle:** the movement fixtures (`modules/server/crates/poe-game/tests/fixtures/`, official 0.5.5e captures; the port's tests will compare against them); a new build needs new captures (the user's).
 - **Cheaper oracle for blobs:** the DLL's reader-span trace (`entity_trace`) measures bytes consumed per component reader. Keep the spans as a table (`docs/protocol/entities.md`); on a new build run one session and diff.
 - `InitialState` and the character-state flags reader (`0x1420edc20`) are the most delicate: they feed a lot of client state with few checks.
 - `client_body_sizes` (`instance.toml:129-143`) are sizes of messages we do not decode; same drift class as opcodes.
@@ -167,7 +167,7 @@ Deriving an operand safely:
   - network key of a stat = `Stats` row + 1 (`views.rs:175-179`; DLL `stats.tsv` from `xtask/src/main.rs:353-364`);
   - inventory slot = `Inventories` row (`views.rs:136-154`; 121 rows in 0.5.5e Hotfix 1; `opcodes/0.5.5e.hotfix1/inventories.tsv` has 123 lines; `modules/server/config/server.toml:151-158`);
   - `sprint_buff_rows = [2758, 2737, 2853]` (`modules/server/config/server.toml:48`);
-  - the `Move` skill id `0x20002909` is `0x20000000 | ActionTypes key (10505)`; also written in `poe-game/src/world.rs:258` (test config), `poe-game/src/locomotion.rs:1374`, `poe-game/tests/replay.rs:20`, `instance-server/src/replay_tests.rs:34`. Production code takes it from data (`views.rs:182-189`), the tests do not.
+  - the `Move` skill id `0x20002909` is `0x20000000 | ActionTypes key (10505)`; also written in `poe-game/src/world.rs` (test config). Production code takes it from data (`views.rs:182-189`), the tests do not.
 - `InstanceDetails` carries an area `HASH16` that must exist in `WorldAreas` ([../protocol/login.md](../protocol/login.md)); a data patch removing an area breaks any character saved there.
 - Config values copied from captures, which may change with the client: `first_entity_id = 12000`, `animation_sets` (`modules/server/config/server.toml:42,215`), the two account flag bytes `[0x23, 0x03]`.
 - Bundle paths: `Bundles2/_.index.bin`, `data/balance/<table>.datc64` (`lib.rs:29,70`). `gateway_list.txt` at the game root is written by deploy (`poe-hook-deploy/src/gateway.rs`); the client also looks at `Bundles2/gateway_list.txt`.
@@ -186,7 +186,6 @@ Deriving an operand safely:
 | `xtask/src/terrain_matrix.rs` | `VECTORS_DIR = "dumps/0.5.5e.hotfix1/terrain/vectors"` (`:30`) |
 | `modules/protocol/poe-proto/src/opcodes.rs` | module `v0_5_5e`, `include_str!` paths (`:11-19`, tests `:236-260`); DLL `packets.rs:164,168` uses `v0_5_5e` |
 | `modules/server/servers/login-server/src/auth.rs` | test path `opcodes/0.5.5e.hotfix1` (`:134`) |
-| `modules/server/servers/instance-server/src/replay_tests.rs` | same (`:41,602`) |
 | `modules/launcher/versions/0.5.5e.toml`, `src-tauri/src/version.rs:7` | `EMBEDDED` list; `settings.rs:157`, `paths.rs:160-178` use `0.5.5e` in test paths |
 | `modules/launcher/src-tauri/src/mods.rs` | mod `versions = ["0.5.5e.hotfix1"]` compatibility check (`compat`, `:930-1019`) |
 | Web API | `GET /public` shows `game.version` (`poe-web-api/src/public.rs:74`) |

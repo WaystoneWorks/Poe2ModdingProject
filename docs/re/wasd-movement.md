@@ -2,7 +2,7 @@
 
 **Principle (user decision 2026-11-03):** the server must run an exact port of the client's movement code, never a fit; see [decisions.md](../decisions.md#movement-and-world).
 
-The spec for the exact port (user decision 2026-11-03: restart from scratch; earlier RE covers mainly WASD, sprint and roll, the new RE must cover click-to-move and controller too). All addresses are Hotfix 1. Status: the old port is being deleted; remaining RE: [What is left to read](#what-is-left-to-read), plus [public sources](#public-sources). Wire messages stay in [movement.md](../protocol/movement.md); the search itself is in [pathfinding.md](pathfinding.md).
+The spec for the exact port (user decision 2026-11-03: restart from scratch; earlier RE covers mainly WASD, sprint and roll, the new RE must cover click-to-move and controller too). All addresses are Hotfix 1. Status: the server runs a stand-still stub ([instance-world.md](../architecture/instance-world.md#the-movement-seam-movementrs)), the port is to be rewritten (PLAN step c/d); remaining RE: [What is left to read](#what-is-left-to-read), plus [public sources](#public-sources). Wire messages stay in [movement.md](../protocol/movement.md); the search itself is in [pathfinding.md](pathfinding.md).
 
 Cell and world: `world = (cell + 0.5) * 10.869565` (`0x142193230`), `cell = floor(world * 0.092)` (`0x142193270`). Stats are keyed `Stats.dat row + 1` (`GameFiles/poe-hook-data/stats.tsv`).
 
@@ -50,7 +50,7 @@ Goal, in both `Actor_StartWasdWalk` and the re-aim `0x141e50320`: `goal = cell +
 ## Follow path (`0x141dcbf30` -> `0x141dcc6a0` -> `0x141dcc110`)
 
 - `0x141dcb810`: arrival check; true ends the path.
-- `0x141dcc6a0`: `|goal - cell|^2 < 0x4840` (126 cells) searches to the goal, else to `cell + 126 * unit` (`0x141ed0510`, port `clientpath.rs`). Path array Pathfinding `+0xd4`, count `+0x518`, index `+0x570 = count - 1`. Bit 8 of `+0x560`: no search, two-point path (goal, cell).
+- `0x141dcc6a0`: `|goal - cell|^2 < 0x4840` (126 cells) searches to the goal, else to `cell + 126 * unit` (`0x141ed0510`). Path array Pathfinding `+0xd4`, count `+0x518`, index `+0x570 = count - 1`. Bit 8 of `+0x560`: no search, two-point path (goal, cell).
 - Empty path: `0x141dccac0(pf, 0)` or path-failed delegates; Move ends, which is the sprint's Bonk ([end check](#sprint-end-check-0x141b76da0-per-frame)).
 
 ### The waypoint and the sprint turn (`0x141dcc110`, `0x141dcc460`)
@@ -222,7 +222,7 @@ A roll released before `t0+15` never sprints, even with the key down again at `t
 
 ## Rules measured with the harness
 
-From `examples/line_compare.rs`. Unless an address is given, the reason in the client is unread.
+Measured with the deleted `line_compare` harness (client `LINE` log against a model). Unless an address is given, the reason in the client is unread.
 
 - **Sprint end:** the check runs in the Actor tick after the re-aim, and `SprintEnd` refuses walks until `0.75 / rate` has passed. After a sprint with no `0x64` stream `SprintEnd` coasts ~19 cells, then refuses walks until 0.75/rate with the speed after the stats (T 1.007 s, 30 frames), then the held key walks on. `rate` = speed x 10.869565 / (600 x `offset_scale`). A frame with a non-zero `0x64` plan uses the speed at the frame's start (T 0.671), a frame without one the speed after its stats (T 1.007).
 - **Coast:** starts in the next frame's Animated tick. Target = grid + round(facing x curve end x `offset_scale` / 10.869565), speed = |target - grid| / time. The animation's end stops it.
@@ -232,15 +232,21 @@ From `examples/line_compare.rs`. Unless an address is given, the reason in the c
 - **Backward roll** (`+0x3f`, `0x141b8c494` mode 2, `0x141de3afa`: facing `atan2 + pi/2 - pi`): `_bwd_` curves. Weak rule: at least 90 degrees between the heading and the direction to the target, and not while `SprintEnd` plays (one roll each way). `+0x8fa` should gate it (`0x141b8bf27`), its value there is unread.
 - **First step of a roll:** none when a line runs and made no step this frame, and the roll is one step shorter (weak: f85, f386 in `stuck`; the curve then drifts 0.006 cells, which causes f574).
 - **`0x64 (0, 0)`:** the line runs through the next Positioned tick, then stops, and the next line does not continue it (`+0x61`).
-- **Cursor roll precision (measured 2026-11-03, `sprint-w-20261103-121011`, `--free`):** the client aims a roll at its exact cursor point, the server only has the integer UseSkill offset (28,-17): heading -31.6 deg against the client's -34.4 deg, line end 660,1122 against 659,1120, so the model is one cell ahead during the roll (f216-228). No `0x64` is sent during a roll, so no snap; the sprint replan aligns both by f229. The 1.66-cell drift while Idle after the stop is the client's smoothed world point past the cell centre (grids agree: 693,1158). In non-free mode `line_compare` "snap" notes come from reloading the client's state per frame, not real snaps; they print the model cell before the snap.
+- **Cursor roll precision (measured 2026-11-03, `sprint-w-20261103-121011`, `--free`):** the client aims a roll at its exact cursor point, the server only has the integer UseSkill offset (28,-17): heading -31.6 deg against the client's -34.4 deg, line end 660,1122 against 659,1120, so the model is one cell ahead during the roll (f216-228). No `0x64` is sent during a roll, so no snap; the sprint replan aligns both by f229. The 1.66-cell drift while Idle after the stop is the client's smoothed world point past the cell centre (grids agree: 693,1158). 
 
 Open: wall run f400-410, f2456-2512 (1 cell behind, no `LINE` there); frames after f1090 in `stuck` are old server bugs (rolls the client refused), not a test.
 
 ## Port design
 
-Drive the model only from what the server sends, as the harness does, instead of `mover.start(..)` calls. `Locomotion::tick`: `positioned_tick` at step 1 (`mover.grid()` then goes in the frame's `0x64`); inputs and timeline unchanged; at the end apply the tick's `out` events in batch order (`MoveAck` first, then `SprintState`, then the rest), then `actor_tick`. `MoveAck` -> snap check and `set_axes`; `ActionStart` -> `start_roll` or `walk_to`; `Stats` -> `set_sprinting`, `must_sprint`, scale; `Teleport` -> place. Curve switch and `extend_roll` only when the roll was not released. A bonk detected after `positioned_tick` triggers `end_sprint_at_wall`. `Locomotion`'s message timing stays as it is.
+The port (to be rewritten, PLAN step c/d) is driven only by what the server sends, as the harness was: it applies the tick's outgoing events in batch order (`MoveAck` first, then `SprintState`, then the rest) and then runs the Actor tick. `MoveAck` -> snap check and axes; `ActionStart` -> start the roll or walk to the target; `Stats` -> sprinting flag, `must_sprint`, scale; `Teleport` -> place. The Positioned tick runs at step 1 of the frame and its grid cell goes in the frame's `0x64`. Curve switch and roll extension only when the roll was not released; a bonk detected after the Positioned tick ends the sprint at the wall.
 
-The old port is being deleted ([PLAN](../PLAN.md)); this section stays as the event order a new port must reproduce.
+## Curves and offset scale
+
+Game data the port needs (the server loads it in `poe_game::motion_data` and refuses a player without it):
+- `art/models/charactersfour/animations/basedodgeroll/onerig.amd`: `dodge_unarmed_01`, `dodge_unarmed_bwd_01`, `dodge_unarmed_01_sprinting`, `dodge_unarmed_bwd_01_sprinting` (roll, backward roll, and their sprinting variants). `dodge_unarmed_01` x 46 / 500 equals every measured roll step.
+- `art/models/charactersfour/animations/basesprint/onerig.amd`: `sprint_end_unarmed_01` (750 ms, 46 positions, end 242.425 world units).
+- Curve value at `t`: `FUN_141ecccc0`, linear between positions (see [Roll](#roll-fun_141b8c720---fun_141b8c7f0-per-frame), curve run).
+- `offset_scale`: from the class `.ao` (`Melee { offset_scale = 0.9 }`, keys tab-indented, following `extends`); it scales the coast target and the sprint-end rate ([rules](#rules-measured-with-the-harness)).
 
 ## What is left to read
 
@@ -255,7 +261,7 @@ In this order, keeping notes here. Decompiles are large: batch a few at a time a
 7. Bonk `0x36b`, the coast `0x141f5f650` ([coast](../protocol/movement.md#coasting-after-a-sprint) already holds the rate), and who sets `pf+0x580` (`0x141dcce80`).
 8. Value of `dodge_roll_sprint_turn_rate`: check the stats the official server sends (the data gives 5 degrees).
 
-Then: an offline harness feeding recorded inputs (movement trace `in-*` lines) through the new module, comparing its grid per tick with `LINE cur` until the first divergence of each episode; one short official capture with `LINE` (include "tap Space, then tap and hold during the roll"); port as one module, delete the fit-based code (`turn_sprint`, `SPRINT_TURN_RATE`, fit constants), keep the tests that describe client behaviour.
+Then: an offline harness feeding recorded inputs (movement trace `in-*` lines) through the new module, comparing its grid per tick with `LINE cur` until the first divergence of each episode; one short official capture with `LINE` (include "tap Space, then tap and hold during the roll"); port as one module, no fit constants.
 
 ## Public sources
 

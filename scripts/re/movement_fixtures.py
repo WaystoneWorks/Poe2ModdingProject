@@ -394,7 +394,7 @@ def window(session, lo, hi, name="", desc="", drop_aim=False, opts=None):
 # ---- episodes: every input sequence of every official session ---------------------------------
 
 EPISODES_DIR = os.path.join(OUT_DEFAULT, "episodes")
-# Stats and buff rows the movement simulation sends (`poe_game::locomotion::MoveStat`, the three
+# Stats and buff rows the movement simulation sends (`poe_game::movement::MoveStat`, the three
 # sprint buffs); the captures' other stats and buffs (hits, energy shield, skills) are not part of
 # a movement episode.
 MOVE_STATS = {

@@ -33,6 +33,27 @@ In the game (a character with at least two acts' waypoints; about 15 minutes; wa
 Recorded: `2026-11-02_18-31-34_336` (movement parts of steps 6 and 7; the R4 parts 1-5 are not analysed yet). It covered: held click 5 s, W-held sprints and releases, attacks standing and walking, W pressed or released during sprints and rolls (gap #4), Space re-press, weapon swaps and input-mode toggles standing ([movement.md](../protocol/movement.md#capture-index-2026-11-02-session)). Not covered: swap or input-mode toggle while walking, rolling or attacking (gap #7); attacks with attack-speed gear (gap #6).
 After: Claude runs `cargo xtask deploy-client` (private again), turns the desktop rules back on and moves the session to `dumps/<version>/captures/official/`.
 
+## Planned: movement capture for the exact port
+For steps (c) and (d) of the movement restart in [PLAN.md](../PLAN.md): the reference the new port is checked against offline. The user records it (read-only official session); Claude only prepares and reverts the client.
+
+What the DLL logs in official mode (checked in `modules/client-hook`, 2026-11-03): the read-only latch only stops what sends or changes something. These are observers gated only by the signature table, so they start on the verified Hotfix 1 build (`poe-hook.log`: `feature path_log: on`; an unverified build starts only `packets`, `crash_log`, `exit_trace`):
+- `[packets] capture`: every login and instance message (`packets.jsonl`).
+- `movement_log` (`POE_HOOK_MOVEMENT_LOG=1`, needs `dump_object_types`): per-frame `frame #n` position lines, the `LINE` log of the path line state, WASD direction, facing, SetOrientation stacks, action starts and ends.
+- `path_log` (`POE_HOOK_PATH_LOG=1`): one `PATHPLAN` line per plan ([pathfinding.md](pathfinding.md)).
+- `state_export` (`POE_HOOK_STATE=250`): `GameFiles/poe-hook-state.json`.
+
+Off in official mode: position sync, side channel and debug link, crypto bypass, fake focus, auto keys, layout export, mods.
+
+Before: no client or batch running. Claude runs `cargo xtask deploy-client --official`. The user starts Steam, then `POE_HOOK_MOVEMENT_LOG=1 POE_HOOK_PATH_LOG=1 POE_HOOK_STATE=250 cargo xtask run-client` from the hub root, logs in with Steam and enters a field area with open ground and walls (about 10 minutes; wait about 2 s between steps so they separate in the logs).
+1. WASD (input mode WASD): walk W 2 s and stop; W, then W+D, then D (turns); a full circle through all 8 directions; walk into a wall and along it.
+2. Sprint: hold W, tap Space and keep it held until the sprint starts, sprint 3 s, release (three times); sprint turns (switch keys while sprinting, and a slow circle); sprint into a wall.
+3. Rolls standing: tap Space towards the cursor, then away from it (cursor behind the character); tap-and-hold Space both ways (the sprint after the roll). Then the same while walking with W.
+4. Click-to-move (switch the input mode to click-to-move): short clicks (5 cells), long clicks (40+ cells), a click behind a wall (the path goes round), hold the left button 5 s while moving the cursor; rolls and a sprint (hold Space) in this mode.
+5. Controller (gamepad): walk with the stick in several directions and stop; slow and full tilt; rolls (tap) and sprint (hold the roll button) with the stick held; a sprint turn.
+6. Log out normally.
+
+After: Claude runs `cargo xtask deploy-client` (private again) and moves the session folder to `dumps/<version>/captures/official/`.
+
 ## Matched to official
 | What | Official (ours now matches) |
 |---|---|

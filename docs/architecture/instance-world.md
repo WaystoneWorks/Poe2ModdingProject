@@ -18,15 +18,14 @@ One `World` per instance. It knows nothing about sockets, packets or opcodes: se
 | Module | Contents |
 |---|---|
 | `world.rs` | `World`, `WorldConfig`, `Entity`, `EntityId`, `Event`, `WorldEvent` |
-| `locomotion.rs` | the movement component: `Locomotion`, `MoveInput`, `MoveEvent`, `MoveState`, `MovementConfig` |
+| `movement.rs` | the movement seam: `MoveInput`, `MoveEvent`, `MovementConfig`, `StepCtx`, `MovementModel`, `Mover`, `Walkable` ([below](#the-movement-seam-movementrs)) |
+| `standstill.rs` | `StandStillModel`, the stub model |
+| `motion_data.rs` | `MotionCurves`, `load_offset_scale` |
 | `grid.rs` | `GridSource` (terrain for the simulation), `Grid` (the client's dump), `VecGrid` |
-| `movement.rs` | `Walkable` and the roll vector helpers |
-| `clientmotion.rs` | the client's movement model (`ClientMotion`, `MotionCurves`), driven by `Locomotion` from its outgoing events ([../re/wasd-movement.md](../re/wasd-movement.md#port-design)) |
-| `clientpath.rs` | port of the client's pathfinder (jump point search, level-dependent wall clearance, [../re/pathfinding.md](../re/pathfinding.md)) |
 
 ### World
 ```rust
-let mut world = World::new(WorldConfig::new(movement_config), Arc::new(grid)); // Arc<dyn GridSource>
+let mut world = World::new(WorldConfig::new(movement_config), model, Arc::new(grid)); // Arc<dyn MovementModel>, Arc<dyn GridSource>
 let me = world.spawn_player((x, y));            // EntityId, ids unique per world (first_entity_id)
 world.input(me, MoveInput::Direction { x: 180, y: 0 });   // queued; answered by the next tick
 let events: Vec<WorldEvent> = world.tick();     // one frame; the caller owns the timing
@@ -54,32 +53,19 @@ Order in `lib.rs`: the generated terrain first, else the client's files.
 
 `poe-world` depends neither on `poe-game` nor on `poe-config`, and `poe-game` does not depend on `poe-world`. `PWG1` is the contract between them and the instance server is the adapter: one serialise/parse per instance, but the generator stays a pure library (game data in, bytes out) usable without the simulation.
 
-### Movement component (`Locomotion`)
-Server-authoritative movement for the client's lockstep mode ([../protocol/movement.md](../protocol/movement.md)). Inputs mirror the client packets; output events are semantic and in the order the official server sends the messages.
+### The movement seam (`movement.rs`)
+The server must run an exact port of the client's movement code ([decisions.md](../decisions.md#movement-and-world)). `poe_game::movement` holds no simulation, only the seam between the instance server and a model; spec: [../protocol/movement.md](../protocol/movement.md).
 
-| `MoveInput` | Client packet |
-|---|---|
-| `Direction { x, y }` | `0x63` MoveDirection (WASD vector) |
-| `UseSkill(UseSkill)` | `0x1a5` (skill, flags, target flags, optional entity, x, y) |
-
-| `MoveEvent` | Server message |
-|---|---|
-| `MoveAck { dir, cell }` | `0x64` (dir already scaled while sprinting) |
-| `ActionStart { kind, skill, action, cell, target, entity, unk }` | `0x1c8` (flags `0x410` for Roll/Other, 0 for Move) |
-| `TargetAck { skill, x, y }` | `0x1af` |
-| `SprintState { held }` | `0x2e7` |
-| `Teleport { cell }` | a `0x64` with a non-zero direction and the new cell (the client snaps at 46+ cells), or a StartAction |
-
-Other inputs: `UpdateSkillTarget` `0x1a8`, `SkillInputEnd` `0x1ac`, `SkillReleased { skill, flag }` `0x1ad`, `SprintInput { held }` `0x2e6`, `Aim`/`AimEntity`/`AimMode` `0x62` (mode 2 / 3 / 0 and 1). Other events: `ActionEvent` `0x1ca`; `Stats` `0x1d3` set 0 (`MoveStat::id()` is the game stat id, the session resolves the network key from `poe-data`); `SkillAck` `0x1ae` (the session ORs the "confirmed" target flag `0x04`); `TargetAck` `0x1af`; `InputEndAck`/`ReleasedAck` `0x1b1`/`0x1b2`; `SprintState` `0x2e7`; `BuffAdded`/`BuffRemoved` `0x1eb` (flag `0x02` when `fade`) / `0x1ec`; `AimEcho` `0x1dc` kind 0; `StanceChanged` `0x2f9` (Player component, stance byte).
-
-State machine (`MoveState`): `Idle`, `Walking(Direction(v) | Target { goal })`, `Rolling(Rolling { start_frame, held, offset, action, sprint, sprinted })`, `Sprinting(SprintRun)`. A sprint starts at `t0 + 15` inside the roll (`Rolling.sprint`) and becomes `Sprinting` when the roll action ends at `t0 + 30`.
-
-Frame order inside `Locomotion::tick`: (1) the entity moves one frame, (2) queued inputs are handled in arrival order and answer directly, (3) due timeline events run (roll stats at +16, sprint start +15, roll end +30, `must_sprint` off +35, stance), (4) the frame's `MoveAck` (unscaled after a direction change, scaled per frame while the sprint stream runs), then events that follow it, (5) a sprint end by key release. A movement started by a reply in frame `F` first moves in `F + 1`, as on the client. `Mover` does the walking (path, wall sliding, roll speed profile, sprint scale).
-
-`MovementConfig` holds what the logic would otherwise hard-code: skill ids (`SkillIds { move_skill, roll_skill }`), the three sprint buff rows (`SprintConfig.buff_rows`), roll distance, frame offsets (15, 16, 30, 35), sprint scale and the wire length of a sprinting direction (550), sprint stat values, walking speed. `MovementConfig::new(skills, buff_rows)` fills the official values; skill ids and buff rows come from game data when the session builds it. Other speeds use `spawn_player_with_speed`.
+- **Inputs** `MoveInput` (decoded client packets): `Direction { x, y }` and `CursorDirection { x, y }` `0x63` MoveDirection (WASD vector; cursor direction when the packet's third trailer byte is `1`, click-to-move mode); `UseSkill(UseSkill)` `0x1a5` (skill, flags, target flags, optional entity, x, y); `UpdateSkillTarget` `0x1a8`; `SkillInputEnd` `0x1ac`; `SkillReleased { skill, flag }` `0x1ad`; `SprintInput { held }` `0x2e6`; `Aim { x, y }` / `AimEntity` / `AimMode { mode }` `0x62` (mode 2 / 3 / 0 and 1); `StanceRequest { value }` `0x200`; `WeaponSwap { set }` `0xfe`.
+- **Outputs** `MoveEvent` (the server's messages in send order): `MoveAck { dir, cell }` `0x64` (dir scaled while sprinting); `ActionStart { kind, skill, flags, action, cell, target, entity, unk }` `0x1c8`; `ActionEvent` `0x1ca`; `Stats` `0x1d3` set 0 (`MoveStat::id()` is the game stat id, the session resolves the network key from `poe-data`); `SkillAck` `0x1ae` (the session ORs the "confirmed" target flag `0x04`); `TargetAck` `0x1af`; `InputEndAck` `0x1b1`; `ReleasedAck` `0x1b2`; `SprintState { held }` `0x2e7`; `BuffAdded` `0x1eb` (flag `0x02` when `fade`) / `BuffRemoved` `0x1ec`; `AimEcho` `0x1dc` kind 0; `StanceChanged` `0x2f9` (Player component); `OrientationLerp` `0x2a6`; `WeaponSet { set, requested }` `0x1d5`; `Teleport { cell }` (a `0x64` with a non-zero direction and the new cell, the client snaps at 46+ cells).
+- **Per-character facts** `MovementConfig` (from game data at player setup; `MovementConfig::new(skills, buff_rows)`): `skills` (`SkillIds`: Move, roll, roll of the other weapon set), `walk_speed`, `roll_travel_distance`, `sprint_bonus_percent`, `sprint_clearance_level`, `sprint_buff_rows`, `curves` (`MotionCurves`), `offset_scale`. Per frame `StepCtx { frame, dt, terrain, config, next_action, next_buff }`; action ids come from one world-wide counter, buff indexes per entity.
+- **Traits.** `MovementModel` (`name`, `spawn(cell, &config) -> Box<dyn Mover>`) makes one `Mover` per entity; `Mover` has `input`, `teleport`, `tick(&mut StepCtx) -> Vec<MoveEvent>`, `tick_paused`, `cell`, `position`, `grid` (the client grid cell, movement trace `pos` lines), `in_combat_stance` and `debug_fields` (DLL debug link). An input is answered by the next `tick`. The world owns the movers and the frame clock.
+- **The stub in use:** `poe_game::standstill::StandStillModel`. The player stands where it spawned or was teleported; all movement input is dropped (the lockstep client starts no movement without an answer). Login, area transfer and teleport work. The exact port replaces it ([PLAN.md](../PLAN.md)).
+- **Where the model is chosen:** `actor_init` in `servers/instance-server/src/lib.rs` sets `ActorInit.model` (`Arc<dyn MovementModel>`), which `actor.rs` hands to `World::new`.
+- **Curves:** `poe_game::motion_data` loads `MotionCurves::load` (the roll, backward roll and sprint curves and the sprint end from `basedodgeroll` / `basesprint` `onerig.amd`) and `load_offset_scale` (the class `.ao`, [wasd-movement.md](../re/wasd-movement.md#curves-and-offset-scale)); the server refuses a player without them.
 
 ### Tests
-Unit tests per state transition (`locomotion.rs`, `world.rs`, `grid.rs`, `movement.rs`); **replay tests** (`modules/server/crates/poe-game/tests/replay.rs`) feed input sequences from official captures into a `World` and compare events per frame (kind, order, fields, frame offsets; cells with a tolerance, wide during rolls: [roll path](../protocol/movement.md#roll-path-and-speed-profile)); two are `#[ignore]`d with the gap that explains them. Fixtures (`modules/server/crates/poe-game/tests/fixtures/*.json`) hold only the local player's movement and skill messages, regenerated with `python3 scripts/re/movement_fixtures.py build` (needs `dumps/0.5.5e.hotfix1/captures/official/` and `cargo xtask dll-data`). `instance-server/src/replay_tests.rs` runs the same fixtures through an actor as encoded packets; `actor_tests.rs` drives one `Actor` with fake sessions (entry batches, relay with identical bytes, leave sequence, supersede, kick, close, idle end, pause for one player). Behaviour the captures do not show is marked `// UNVERIFIED (gap #n)` in the code, matched to the movement spec's [gap list](../protocol/movement.md#gap-list).
+Unit tests (`world.rs`, `grid.rs`, `standstill.rs`, `motion_data.rs`); `actor_tests.rs` drives one `Actor` with fake sessions (entry batches, relay with identical bytes, leave sequence, supersede, kick, close, idle end, pause for one player). Fixtures from official captures stay in `modules/server/crates/poe-game/tests/fixtures/*.json` (the local player's movement and skill messages, `clientpath_plans.json`, `clientpath_moving_plans.json`) as reference data for the port; no test reads them now. Regenerate with `python3 scripts/re/movement_fixtures.py build` (needs `dumps/0.5.5e.hotfix1/captures/official/` and `cargo xtask dll-data`). Behaviour the captures do not show is marked `// UNVERIFIED (gap #n)` in code, matched to the movement spec's [gap list](../protocol/movement.md#gap-list).
 
 ## Wiring the movement into the instance server
 
@@ -88,7 +74,7 @@ Two pure mappings that know neither sessions nor the actor, in `modules/server/s
 | File | Role |
 |---|---|
 | `movement.rs` | `client_input(name, reader)`: client packet (by name in the opcode table) to `MoveInput`. `Codec::encode(entity, &MoveEvent)`: event to the official messages (`Out { name, bytes, trace }`). Opcodes come from `instance.toml` through `poe-proto`; stat keys through a `StatKeys` closure over the game's `Stats` table; no entity or session state. |
-| `player.rs` | the session's side: `OwnedSkill`, `sim_config` (builds the `MovementConfig` from game data: Move skill = `0x20000000 | ActionTypes.Move`, the roll skill = the owned skill whose action type is DodgeRoll with its `dodge_roll_base_travel_distance`, walking speed `Pathfinding.base_speed`, the class's `sprint_movement_speed_+%`, `[movement] sprint_buff_rows` and the sprint coasting keys) and `Player`, the handle to the session's entity in the actor. |
+| `player.rs` | the session's side: `OwnedSkill`, `sim_config` (builds the `MovementConfig` from game data: Move skill = `0x20000000 | ActionTypes.Move`, the roll skill = the owned skill whose action type is DodgeRoll with its `dodge_roll_base_travel_distance`, walking speed `Pathfinding.base_speed`, the class's `sprint_movement_speed_+%` and `[movement] sprint_buff_rows`) and `Player`, the handle to the session's entity in the actor. |
 | `sync.rs` | the side-channel sessions (HMAC-authenticated UDP datagrams keyed by session: position reports, debug link, [side-channel.md](../protocol/side-channel.md)) and `DriftCheck` ([movement.md](../protocol/movement.md#drift-checker)). Reports never feed the simulation; the opt-in drift checker (`[dev] drift_check`) only reads them. |
 | `terrain_store.rs` | the terrain cache in `[spawn] layout_dir`: authenticated TCP upload of the client's layout and grid (validation, per tile hash), and the wait `spawn.rs` uses. |
 | `actor.rs`, `appearance.rs`, `lib.rs` | the instance actor, the blobs that describe a character, the session loop ([below](#the-instance-actor)). |
