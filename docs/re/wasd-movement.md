@@ -90,7 +90,7 @@ Measured with the deleted `line_compare` harness (client `LINE` log against a mo
 - **Backward roll** (`+0x3f`, `0x141b8c494` mode 2, `0x141de3afa`: facing `atan2 + pi/2 - pi`): `_bwd_` curves. Weak rule: at least 90 degrees between the heading and the direction to the target, and not while `SprintEnd` plays (one roll each way). `+0x8fa` should gate it (`0x141b8bf27`), its value there is unread.
 - **First step of a roll:** none when a line runs and made no step this frame, and the roll is one step shorter (weak: f85, f386 in `stuck`; the curve then drifts 0.006 cells, which causes f574).
 - **`0x64 (0, 0)`:** the line runs through the next Positioned tick, then stops, and the next line does not continue it (`+0x61`).
-- **Cursor roll precision (measured 2026-11-03, `sprint-w-20261103-121011`, `--free`):** the client aims a roll at its exact cursor point, the server only has the integer UseSkill offset (28,-17): heading -31.6 deg against the client's -34.4 deg, line end 660,1122 against 659,1120, so the model is one cell ahead during the roll (f216-228). No `0x64` is sent during a roll, so no snap; the sprint replan aligns both by f229. The 1.66-cell drift while Idle after the stop is the client's smoothed world point past the cell centre (grids agree: 693,1158). 
+- **Cursor roll:** the first heading is a three-cell rounding of the integer target, then each `0x1af` aims it: [movement-roll.md](movement-roll.md#facing-event-first-heading-checked-by-replay). The 1.66-cell drift while Idle after a stop is the client's smoothed world point past the cell centre.
 
 Open: wall run f400-410, f2456-2512 (1 cell behind, no `LINE` there); frames after f1090 in `stuck` are old server bugs (rolls the client refused), not a test.
 

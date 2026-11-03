@@ -158,6 +158,8 @@ a hook at 0x141f5fbe1 during a wall Bonk.
 
 ## 4. SprintEnd coast: MoveEvent
 
+Checked by replay: the coast line is a **curve line**: `MoveEvent_Start` calls `Positioned_SetMoveCurve(pos, clip, start, e)` with `e` from `0x141f62210` (`end` unclipped; clipped: `|end_cell - cell| * 10.869565 / (|off| / (end - start)) + elapsed`, the clipped branch is not ported yet). `0x141f63640` after the clip: fewer than 2 cells beyond the start = no move at all (f1455). The move event's end (clip end, tick 31) stops the line where it is, short of its end cell (f1755). **A blocked sprint step** ends the sprint in the Positioned tick with no coast and no plan on the next `0x64` (official `0x1d3` keyed to component 0, f3064, f3300); this overrides the Bonk inference above. Which layer: the export's layer 2 is all 5 at that wall, layer 0 fits; who sets `P+0x1e7` bit 1 is unread.
+
 Timeline `GP_sprinting_end_base_01`: MoveEventType "move", time 0.0, end_time 0.75,
 data `1 1 0 Everything 0 0 NoOverride 1.000000`. Event setup `0x141f60b20` (this = MoveEvent + 0x10):
 ```

@@ -320,8 +320,16 @@ At rate 1 and dt 1/30 the clip ends after 30 frames: the 30-frame action.
 - `0x14197cf50(act, target)`: with `+0x244 > 0`, `+0x260 +0x74 > 0`, `+0x268 > 0` or `+0x26c > 0` it only stores `+0x250`, `+0x258 = 1`; else `vf130(target)`, then `vf138` -> `0x141971b80`.
 - **Stat listener** `0x141b8d4f0` (slot `+0xc0` of `0x143454070`, `this = part+0x18`): with `part+0x5f`: rate `0x141d46c80` = `(1+stat(0xec)/1e4) / (1+part+0x38/1e4) * ((int)((0x14020af80(1+part+0x38/1e4) - 1)*100)/100 + 1)`; with `part+0x3e` set: a new line from the running line's end at `DodgeRollMove_Speed`. Not ported yet.
 
+## Facing, event, first heading (checked by replay)
+- **Facing at start:** `0x141e4ea40`: when the queued action's vf `+0x340` is true and its target != grid, facing = `ang(target - grid)` before the running Move ends and before `InitHeading`. So a key-held roll with the cursor at least 90 degrees from the keys is a backward roll (`_bwd_` clip); this was the old "float drift" (rolls f1133.. of the reference capture). `+0x8fa` is set for the player in that capture (backward rolls exist).
+- **Event `0xb91f` at 0.5 s** (fits the client's floats, the `.ast` was not read): `AnimPlayer_Advance` sets `ac+0x1a4` = event time before firing, so the curve restarts at 0.5, not at the frame's elapsed. The switch to `_sprinting` runs if the key is held. A backward roll that sprints flips here: `pos+0x1e3 = 1`, facing += pi.
+- **Re-aim faces the target:** `0x14197cf50` -> vf `+0x138` `0x141971b80` (stat `0x3162` == 0, vf `+0x528` false, no entity target) -> `0x141ddc290`: facing = `ang(target - grid)`.
+- **First heading of a cursor roll (no axes):** measured, 13 of 13 rolls (incl. the private `(28,-17)` case, which replaces the old "exact cursor point" reading) and float-exact in `clientsim`: heading = `ang(round(unit(target - grid) * 3))`. The first `0x1af` then aims at the exact integer target. **The code that does this is not found:** read how `act+0x150` or the heading gets the 3-cell vector.
+- **Move during a roll:** stays queued (`A+0x248`), starts in the Actor tick after the clip's end (f3429).
+- `0x80410041` (flags `0x10`) is also a roll skill id (`0x80000040`, `0x80000041` too).
+
 ## Not read / open
-- **Float drift in `clientsim`:** rolls f883..f1081 of the reference capture match the client's `p`, `len`, `acc` to 0.002; from f1133 the first advance is 0.7% short in the client (3.7065 against 3.7329 cells), as if `ac+0x1a4` or the rate differed. Something between f1097 and f1133 persists; it flips rounding (f1192, f1282, f1375 snap).
+- f3545 of the reference capture: one plan's goal (496,610) has heading about 15 degrees where `0x1af` gives 6.5; a Move press (`0x1a5` tf 16) was pending. Unexplained.
 - `0x141ed0510` path storage order (is element `count-1` the first step?).
 - Value and meaning of Actor `+0x8fa` for a normal player; object `0xe4fa`; `0x141f832b0`.
 - `0x141b912d0` dynamic blockers; who sets `part+0xa0` (cells-travelled listener).
