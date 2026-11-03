@@ -4,7 +4,11 @@ The only list of what is left to do and the only status source. Edit it in place
 
 ## Now: WASD hitch (before R4)
 
-User report 2026-11-02: WASD start and direction changes hitch, like invisible walls, worse while sprinting; it has been there since movement was first built. Server trace of that session (`runtime/play-trace-summary.txt`, `scripts/re/movement_trace.py`): 101 hitches in 19,649 frames; the server position jumps by whole cells between cell centres (e.g. 1096.5 -> 1094.5 -> 1095.44), so the cells in the `0x64` replies jump and the client snaps to them ([movement.md](protocol/movement.md#coasting-after-a-sprint), `0x64` snap rule). Next: find what moves the server entity to cell centres (dev position sync from the client side channel, teleport, `Mover::place`), make the server's per-frame position follow the client's own simulation, prove it in game with `movement_log` on.
+Done: the `0x64` carries the client's grid (`GridLine`, [movement.md](protocol/movement.md#client-grid-cell)). Walk snaps per non-zero walk `0x64` fell from 68 % to 25 % (user: walking slightly better). Sprint unchanged (about 60 % of stream frames snap): the user still feels hitches and teleports.
+
+Evidence (runs in `runtime/`: `movement-trace-grid-run1.tsv` / `poe-hook-grid-run1.log`, `-run2`, and the current `runtime/movement-trace.tsv` + `GameFiles/poe-hook.log` with `path_log` on): snaps come in chains; a snap puts the client on the cell centre and stops its move, the server keeps its sub-cell offset, so mismatches repeat until the offset dies out. Chain starters: (a) rolls with a stream: the server's roll positions drift 0.3-1.5 cells from the client's (e.g. ticks 68-73, 160-166); (b) the first frame after a direction change during a sprint; (c) teleports of 15-38 cells (ticks 207, 360, 490, 950, 1022): the client slides along an obstacle while the server sprints straight through (sprint pathing/clearance level 4 or collision differs), the client ignores those `0x64`s and then snaps; (d) a user-reported stuck sprint: the client sent SprintInput held=true at tick 67 and held=false only at 811, sprinting toward the cursor with no keys.
+
+Next: compare the client's PATHPLAN lines (current `GameFiles/poe-hook.log`, 1270 plans; `scripts/re/pathplans.py`) with the server's port for the sprint and roll frames, fix roll positions and sprint path/collision, then re-test in game with `movement_log` and `path_log` on.
 
 ## Now: R4
 
