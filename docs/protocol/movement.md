@@ -204,6 +204,7 @@ Client steps per frame from `poe-hook.log` (cells per 33 ms frame, 30 rolls, `dt
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | step | 0.99 | 0.97 | 0.94 | 0.94 | 0.94 | 0.94 | 0.95 | 0.93 | 0.85 | 0.74 | 0.68 | 0.49 | 0.31 | 0.16 | 0.04 | 0 |
 
+- 2026-11-02 official log (37 rolls, mostly walking starts): frames `t0+1..t0+15` step 3.81, 3.59, 3.37, 3.16, 2.95, 2.73, 2.49, 2.27, 2.02, 1.79, 1.55, 1.32, 1.20, 1.12, 1.06 (`ROLL_STEPS`).
 - It falls about **0.215 per frame from 3.9 to 1.2 (t0+13), levels out at 0.94 until `t0+23` and tapers to zero by `t0+31`**. Sum 45.9: the roll covers `dodge_roll_travel_distance` (46 cells) in 30 frames (36 cells in the first 16, 34 in 14); straight-line displacement 42.6-46.2 (the cursor steering bends the path).
 - Walking resumes at `t0+30` (tap) with the walking speed 1.23 (WASD) or stands (no key): the standing roll ends **without any `0x64`**; the next message is the next input's reply. A held-key roll's `0x64`s are only the replies to `0x63`.
 - **Positions agree**: the `0x1c8` start cell is within 0.2-2.9 cells of the client's position before the first roll step, and 600 `0x64` cells (also after rolls) within 0-2.8 (median 0): the official server simulates the same roll path. A roll along the keys that our server simulated towards the cursor made the client jump 36 cells at the next roll's `0x1c8` (the roll start places the client on its start cell), and the drift never recovered.

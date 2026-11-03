@@ -6,7 +6,13 @@ The only list of what is left to do and the only status source. Edit it in place
 
 Done in code, not proven in game: `0x64` carries the client's grid ([client grid](protocol/movement.md#client-grid-cell)), [sprint turn and stop step](protocol/movement.md#sprint-turn-and-stop-step). Evidence: `runtime/movement-trace-*.tsv`, `runtime/poe-hook-*.log`.
 
-Next: user test with `movement_log` and `path_log` on; run `scripts/re/trace_ticks.py` on the trace (snaps per non-zero `0x64`, jumps above 6 cells). If snaps remain: rolls with a stream (server roll positions drift 0.3-1.5 cells), the roll's own turning, whether `attack_ends_sprint_then_walk` can return to its 2.5-cell limit (now 3.0), and the stuck sprint (SprintInput held from tick 67 to 811 in `runtime/movement-trace-grid-run3.tsv`).
+User test 2026-11-02 (`runtime/movement-trace-turn-run2.tsv`, `runtime/poe-hook-turn-run2.log`, table `runtime/turn2-ticks.txt`): walking and walking collision are good after login; 96 snaps in 660 non-zero `0x64` (stream 71/409, walk 25/251).
+
+Next:
+1. **Wall hit during a sprint** (user: the bonk animation partly plays, hitching worsens after it). Ticks 1433-1474: both stand at (829.5, 766.5) with the stream still running, then `sprint:false` at 1435; afterwards the server does not move on `dir -127,127` (ticks 1444-1450) while the client walks 7 cells, then the next `0x64` snaps it back. Find why the server stays put (clearance level 4 kept after the sprint? plan from a wall-adjacent cell?). The client ends a blocked sprint itself (`0x141b76da0`: standing still -> `SprintEndBonk` `0x36b`, `Actor_StartWasdWalk` refuses during it); the server must do the same.
+2. **Walking hitches after a sprint:** the server's phase after a sprint end and coast (`Motion::Coast`, `start` line); a stand restarts the phase, so check `moved` and the coast's last line.
+3. **Micro hitches at sprint turns:** stream snaps 17 %. Check the first frames of a turn: which plan the first rotation uses, line end length (50), and `SPRINT_TURN_RATE`; `scripts/re/trace_ticks.py`, official `poe-hook.log` of 2026-11-02 for reference.
+4. Then: rolls with a stream, `attack_ends_sprint_then_walk` back to its 2.5-cell limit (now 3.0), the stuck sprint (SprintInput held from tick 67 to 811 in `runtime/movement-trace-grid-run3.tsv`), `check-links.py` (movement.md 12217 words, limit 12000; 1 broken link).
 
 ## Now: R4
 
