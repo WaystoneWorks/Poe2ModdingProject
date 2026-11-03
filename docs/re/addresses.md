@@ -132,10 +132,6 @@ Imports: `VERSION.dll` (`GetFileVersionInfoW`, `GetFileVersionInfoSizeW`, `VerQu
 | `0x14214a46a` | Actor `0x1cc` (u16 action id, u8) -> Actor vfunc +0x130 (end action?) |
 | `0x14214a580` | Actor `0x1fc` (f32, u16) -> Actor vfunc +0x100 |
 
-## Movement functions renamed in Ghidra
-
-Addresses and pseudocode are in the owner files: [Positioned, line, `0x63`](movement-positioned.md), [Move action, pathfinding](movement-click.md), [roll](movement-roll.md), [sprint](movement-sprint.md).
-
 ## Character creation
 | Address | What |
 |---|---|
