@@ -17,4 +17,4 @@ To play:
 1. Start the server from the repo: `cargo xtask server run --release` (Ctrl+C stops it).
 2. Launch the shortcut from Steam. The login screen shows "Local Server". With the default `login_mode = "standalone"` sign in with an account name and password (make one offline, [above](../guides/setup.md#accounts-and-characters-offline); Remember Me works). There is no password-less login.
 
-- Admin commands (`!help`, the overlay's Commands and Instances pages) need an account with the admin role: `cargo xtask server run -- account create <name> --password-stdin` then `account role <name> admin` (no account is an admin by default); [server-admin.md](../guides/server-admin.md).
+- Admin commands (`!help`, the overlay's Debug tabs) need an account with the admin role: `cargo xtask server run -- account create <name> --password-stdin` then `account role <name> admin` (no account is an admin by default); [server-admin.md](../guides/server-admin.md).

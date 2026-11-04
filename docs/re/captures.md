@@ -1,7 +1,7 @@
 # Captures: official servers vs ours, and the live client log
 
 ## Official servers vs ours
-Tools: the DLL's Packets/Protocol/Coverage tabs, `modules/protocol/poe-proto/examples/check_capture.rs` (decodes every captured message with our layouts; `--dump <channel> <in|out> <0xop>` prints them) and `scripts/re/packets_diff.py`.
+Tools: the DLL's Packets (Messages, Opcodes) and Protocol pages, `modules/protocol/poe-proto/examples/check_capture.rs` (decodes every captured message with our layouts; `--dump <channel> <in|out> <0xop>` prints them) and `scripts/re/packets_diff.py`.
 Run `check_capture` inside the Poe2Protocol submodule (not a member of the hub's workspace): `cd modules/protocol && cargo run -p poe-proto --example check_capture -- opcodes/0.5.5e.hotfix1 <packets.jsonl> [--show N]`, with captures from `dumps/0.5.5e.hotfix1/captures/`.
 Compare with a capture of our server: `third_party/pyenv/bin/python scripts/re/packets_diff.py <official>/packets.jsonl <ours>/packets.jsonl [--channel instance] [--seq 40]`. Making a capture: [../guides/setup.md](../guides/setup.md#official-servers-read-only-observation), [../architecture/client-dll.md](../architecture/client-dll.md#packet-capture-packets-packetsrs).
 

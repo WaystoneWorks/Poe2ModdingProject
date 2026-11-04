@@ -203,7 +203,7 @@ Other identifiers: the 0.5.5e sizes were `Bundles2/_.index.bin` 115,154,591; `st
 - `scripts/re/clientlog_terrain.py:13-16`: four regexes including `Build Revision`.
 - `scripts/re/clientlog_entries.py:13-19`: a line regex (`^\S+ \S+ (\d+) \S+ \[(\w+) Client \d+\] (.*)$`) and the `Generating level` regex.
 - `scripts/re/sweep_drive.py`, `scripts/test-run.sh`, `scripts/test-mp.sh` read the **server** log (`authenticated`, `listening`), not `Client.txt`.
-- DLL `gamelog.rs` and the Game log page read `logs/Client.txt` lines of this launch.
+- DLL `gamelog.rs` and the Log page read `logs/Client.txt` lines of this launch.
 - Risk is low (stable format, tools print counts). Add the build revision to every output header; at count 0 say "no lines matched; the log format may have changed".
 
 ## 8. Other items checked

@@ -150,9 +150,12 @@ Forced layouts: an instance with a topology or orientation sends them in AreaInf
 
 C→S `0x0016` ChatSend (`u8`, wstring text, `u8`) carries the line as typed. Lines starting with the command prefix run as commands (replies as `<Server>` chat lines); others are routed by prefix: `#` global and `$` trade to everyone on the same channel number (from the client's join requests, `/global N`), none = local (same instance), `@name text` whispers. Party (`%`) and guild (`&`) answer "not supported yet". Muted players get "You are muted."
 
-## Overlay pages (our server only, SERVER group)
+## Overlay pages (our server only, DEBUG group)
 
-Hidden while the read-only latch is on (official servers), like the Sync state and Desync pages.
+Hidden while the read-only latch is on (official servers), like the Sync page. Debug tabs other than Help and Console are admin-only and hidden for other accounts. Every Debug tab ends with a Results strip (the last 20 command results).
 
-- **Commands**: every registry command as a form, grouped; results below.
-- **Instances**: the server's instances (id, area, seed, layout, players, time until an empty one closes) with Join and Close, and a new-instance form: area picker (search, kind and act filters, recent picks; every area from `poe-hook-data/areas.tsv`, written by `cargo xtask dll-data` or `deploy-client`), seed (random or server-picked), topology and orientation (natural or forced), with "Transfer there" and "Create without transferring".
+- **Help**: every command the account may run, grouped and searchable; the right pane shows the usage and the form (arguments as widgets, layout form for areas) with Run.
+- **Console**: a raw command line with history (Up/Down), Tab completion of the command name and suggestions; results come back as ack lines.
+- **World**: the server's instances (id, area, seed, layout, players, time until an empty one closes) with Join and Close, a new-instance form (area picker with search, kind and act filters, recent picks, every area from `poe-hook-data/areas.tsv`, written by `cargo xtask dll-data` or `deploy-client`; seed, topology and orientation) with "Transfer there" and "Create without transferring", and teleport.
+- **Character, Stats, Items, Monsters, Life, Players**: shells that say which step brings them ([../PLAN.md](../PLAN.md)).
+- **Sync** (own entry): the server's state table and the client position against the server's prediction (desync plots and the worst frames, Copy TSV).

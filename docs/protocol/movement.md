@@ -323,7 +323,7 @@ The DLL's per-frame position report (a sealed side-channel `Kind::Report` frame,
 
 `drift server=x,y client=x,y cells=<now> max_cells=<largest since the last line> samples=<n> state=<server movement state>`
 
-`cells` is the distance between the server's exact position and the client's latest report (older than 250 ms: none). The client trails by about two frames: expect up to ~2.5 cells walking, ~4 sprinting, ~0 standing. Real drift grows over time or stays high while standing. A warning is logged once if the checker is on and no reports arrive within 5 s. The overlay's Sync state page shows the same distance (`drift_cells`). Server-side only.
+`cells` is the distance between the server's exact position and the client's latest report (older than 250 ms: none). The client trails by about two frames: expect up to ~2.5 cells walking, ~4 sprinting, ~0 standing. Real drift grows over time or stays high while standing. A warning is logged once if the checker is on and no reports arrive within 5 s. The overlay's Sync page shows the same distance (`drift_cells`). Server-side only.
 
 ## Lag
 - **No lag compensation to turn on.** The world is always lockstep and the client plays frames as they arrive; `0x1d` PingReply only feeds the latency display. Lag comes from the server: late frames freeze movement. Run `--release` for play; the server warns when a frame takes longer than the tick.

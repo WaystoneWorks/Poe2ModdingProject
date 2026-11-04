@@ -1,0 +1,38 @@
+# Overlay layout (PLAN P6): the overlay tour (POE_HOOK_OVERLAY_TOUR) shows every sidebar page in
+# turn and takes a snapshot screenshot of each; `after` copies them to
+# runtime/game-test/overlay-pages/<Page>.png. The test account is an admin, so the Debug tabs
+# are included. Format: docs/guides/setup.md, "Game tests".
+description = "overlay shows every page; one screenshot per page in runtime/game-test/overlay-pages/"
+
+after = [
+  "python3 scripts/game-test/overlay_pages.py {dir} {session}",
+]
+
+[client_env]
+POE_HOOK_OVERLAY_TOUR = "1"
+
+[[step]]
+name = "position reports"
+expect_log = "client position reports started"
+since = "start"
+timeout_s = 30
+
+[[step]]
+name = "registry from the server (Debug tabs need the role)"
+wait_ms = 4000
+
+[[step]]
+name = "show the overlay (Insert)"
+keys = "0x2d wait:1500"
+
+[[step]]
+name = "tour done"
+expect_log = "overlay tour: done"
+log = "hook"
+since = "start"
+timeout_s = 150
+
+[[step]]
+name = "no panic in the overlay"
+reject_log = "PANIC"
+log = "hook"

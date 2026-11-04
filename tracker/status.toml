@@ -31,7 +31,7 @@
 "proj:chat" = { status = "partial", note = "channels and commands; whisper, party and trade chat missing", link = "docs/architecture/instance-world.md" }
 "proj:check_build" = { status = "fully_functional", link = "docs/guides/new-game-version.md" }
 "proj:client_mods" = { status = "implemented", link = "docs/guides/modding.md" }
-"proj:debug_commands" = { status = "implemented", link = "docs/architecture/client-dll.md" }
+"proj:debug_commands" = { status = "partial", note = "Help, Console and World work; Character, Stats, Items, Monsters, Life, Players are shells until their steps", link = "docs/architecture/client-dll.md" }
 "proj:flasks" = { status = "not_implemented", note = "P14", link = "docs/plans/life-flasks.md" }
 "proj:game_test" = { status = "fully_functional", link = "docs/guides/setup.md" }
 "proj:instances" = { status = "fully_functional", link = "docs/protocol/instance.md" }
@@ -54,7 +54,7 @@
 "proj:movement" = { status = "fully_functional", note = "exact port, gated by user test 6", link = "docs/protocol/movement.md" }
 "proj:npcs" = { status = "not_implemented", note = "P19", link = "docs/plans/npcs-vendors.md" }
 "proj:official_mode" = { status = "fully_functional", note = "observe and log only", link = "docs/guides/official-mode.md" }
-"proj:overlay" = { status = "implemented", note = "layout overhaul planned (P6)", link = "docs/architecture/client-dll.md" }
+"proj:overlay" = { status = "implemented", note = "every page redesigned (P6); screenshot per page by the overlay-pages game test", link = "docs/architecture/client-dll.md" }
 "proj:parties" = { status = "not_implemented", note = "P18", link = "docs/plans/loot-parties.md" }
 "proj:passive_tree" = { status = "not_implemented", note = "P15", link = "docs/plans/passives.md" }
 "proj:players" = { status = "partial", note = "positions and chat only; no equipment on remote players", link = "docs/architecture/instance-world.md" }

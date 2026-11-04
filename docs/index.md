@@ -69,7 +69,7 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | Document | Contents |
 |---|---|
 | [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
-| [plans/overlay.md](plans/overlay.md) | Plan P1, P6: overlay look, Settings, page redesigns with mockups |
+| [plans/overlay.md](plans/overlay.md) | Debug tab mockups still to build (P7 and the feature steps) |
 | [plans/commands.md](plans/commands.md) | Plan P7: command overhaul and catalogue |
 | [plans/items-stats.md](plans/items-stats.md) | Plan P8-P10: PoB2 stat port, items, currency |
 | [plans/item-creator.md](plans/item-creator.md) | Plan P11: item creator |
