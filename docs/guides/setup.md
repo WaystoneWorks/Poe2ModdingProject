@@ -38,7 +38,7 @@ cargo xtask build-dll       # modules/client-hook -> version.dll (loader) + poe_
                             # output modules/client-hook/target/x86_64-pc-windows-msvc/release/
 python3 scripts/check-links.py   # relative links and #anchors in the docs, README.md, CLAUDE.md, dumps/README.md
 ```
-Port tests: `cargo test --release -p poe-game` (lib, `tests/replay.rs` 27 + 2 ignored, `tests/rules.rs` 7, `tests/clientpath.rs`), `cargo test --release -p instance-server` (86; the replay tests run the port through the actor and Codec), `cargo test --release --workspace`: all pass. Local replay check: `runtime/replay/check.sh [--free] [--show N] [--trace LO HI]`. Game file lookup: `cargo run --release -p poe-game --example gamefile -- find WORD..` or `-- cat PATH [GREP]`; stat names: example `statnames`.
+Port tests: `cargo test --release -p poe-game` (lib, `tests/replay.rs` 27 + 2 ignored, `tests/rules.rs` 7, `tests/clientpath.rs`), `cargo test --release -p instance-server` (86; the replay tests run the port through the actor and Codec), `cargo test --release --workspace`: all pass. Local replay check: `runtime/replay/check.sh [--free] [--show N] [--trace LO HI]`. Game file lookup: `cargo run --release -p poe-game --example gamefile -- find WORD..` or `-- cat PATH [GREP]`; stat names: example `statnames`. Session replay of a private test: `scripts/re/movement_session_replay.py TRACE PORT POE_HOOK_LOG OUT_DIR` ([movement.md](../protocol/movement.md#movement-trace)).
 `build-dll` runs `third_party/cargo-xwin/bin/cargo-xwin xwin build -p poe-hook -p poe-hook-core --target x86_64-pc-windows-msvc --release` in `modules/client-hook/` and keeps the MSVC SDK cache in `third_party/xwin-cache`.
 
 ## Run
@@ -196,24 +196,7 @@ Other keys:
 | `[player] animation_sets` | the three animation set names of a remote player's blob (official, weapon dependent; the example config omits it) |
 
 ## Playing from Steam (non-Steam game shortcut)
-One-time setup, after `cargo xtask deploy-client`:
-1. In Steam: **Games → Add a Non-Steam Game to My Library… → Browse…**, select `<repo>/GameFiles/PathOfExileSteam.exe`, **Add Selected Programs**.
-2. In the library, right-click the entry → **Properties…**:
-   - **Shortcut**: optionally rename it (e.g. "PoE2 Private Server"). Set **Start in** to `"<repo>/GameFiles/"`.
-   - **Launch options**:
-     ```
-     SteamAppId=2694490 SteamGameId=2694490 WINEDLLOVERRIDES="version=n,b" %command%
-     ```
-     `version=n,b` loads our `version.dll` (the hook) instead of Wine's. The app id makes the Steam API start as Path of Exile 2, which you own.
-   - **Compatibility**: tick **Force the use of a specific Steam Play compatibility tool** and pick **Proton Experimental**.
-
-   Steam creates a separate Proton prefix for the shortcut (`steamapps/compatdata/<shortcut id>`); the official install's `compatdata/2694490` is never used.
-
-To play:
-1. Start the server from the repo: `cargo xtask server run --release` (Ctrl+C stops it).
-2. Launch the shortcut from Steam. The login screen shows "Local Server". With the default `login_mode = "standalone"` sign in with an account name and password (make one offline, [above](#accounts-and-characters-offline); Remember Me works). There is no password-less login.
-
-- Admin commands (`!help`, the overlay's Commands and Instances pages) need an account with the admin role: `cargo xtask server run -- account create <name> --password-stdin` then `account role <name> admin` (no account is an admin by default); [server-admin.md](server-admin.md).
+Steps: [steam-shortcut.md](../re/steam-shortcut.md).
 
 ## Official servers (read-only observation)
 **Read this first**; the full guide is [official-mode.md](official-mode.md). This mode lets you observe and log your own official sessions. The DLL sends, alters and injects nothing, but it still **patches game code in memory** to observe (inline detours, a Vulkan hook, the `version.dll` proxy), and the anti-cheat may detect any injected DLL as a violation. Do not use it on an account you care about. The launcher never does this (apart from its explicit Official (read-only) entry).

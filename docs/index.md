@@ -6,6 +6,7 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | Document | Contents |
 |---|---|
 | [guides/setup.md](guides/setup.md) | Commands, logs, unattended tests, config keys, crash dumps |
+| [re/steam-shortcut.md](re/steam-shortcut.md) | Playing the private server from Steam (shortcut) |
 | [guides/server-admin.md](guides/server-admin.md) | Server commands, admins, instances, web admin |
 | [hosting.md](../modules/server/docs/hosting.md) | Hosting a server: ports, config, systemd, TLS, backups |
 | [releasing.md](../modules/server/docs/releasing.md) | Releasing the server (`server-v*`) |
@@ -55,6 +56,7 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | [re/movement-positioned.md](re/movement-positioned.md) | Exact port: WASD/gamepad, Positioned, line, speed |
 | [re/movement-click.md](re/movement-click.md) | Exact port: click-to-move |
 | [re/movement-roll.md](re/movement-roll.md) | Exact port: dodge roll |
+| [re/movement-capture-index.md](re/movement-capture-index.md) | Movement capture indexes (2026-10-20, 2026-11-02 sessions) |
 | [re/movement-sprint.md](re/movement-sprint.md) | Exact port: sprint, end, coast |
 | [re/terrain/README.md](re/terrain/README.md) | Terrain generator overview |
 | [re/terrain/tgr.md](re/terrain/tgr.md) | `.tgr` areas |

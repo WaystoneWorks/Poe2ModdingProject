@@ -210,6 +210,8 @@ Orientation mode: from `ev+0x48 +0x10` (1..4 -> 0..3), else `pos[+0x158][+0x2e]`
 So with no action speed: `rate = speed_units / (600 * offset_scale * pos+0x474)`; matches the docs'
 formula (Positioned `+0x474` = 1 assumed).
 
+**MoveEvent speed uses the clip's rate as played.** A clip played in an earlier frame keeps the rate it had then: user test 2 f1450/1451: a wall Bonk from the Actor tick's end check of f1450 at sprint speed; the sprint-off `0x1d3` came at f1451 keyed (0,4) before the event, yet the coast line's T was 0.13687 s for len 4.1231 = exactly 1.5x shorter than at walking rate, i.e. the sprint's rate. A clip played in this frame's Positioned tick (blocked step) takes the rate after the frame's component-0 messages (the sprint-off stats): agent game test sprint-turn f425 (6.08-cell coast at walking rate, T 0.30033). Ported: `ClientSim` `SprintEndAnim.this_frame` (NOT GATED). Open: which client code updates the clip state's rate (`st+0x30`) on a speed change, and when, is unread. Open: clipped coasts drift ~0.01 in the line accumulator (user test 2 f1452-1454, sprint-turn f426-433; the clipped e_time branch `0x141f62210`), no cell changes.
+
 ## 5. `0x64` handler `0x1421497c0` (case 100)
 
 No sprint branch. In full:

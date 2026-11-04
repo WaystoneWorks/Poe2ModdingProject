@@ -4,7 +4,7 @@
 
 How the client moves the player and what an **official** server sends back, from seven read-only official capture sessions (`dumps/0.5.5e.hotfix1/captures/official/`, 2026-10-14..20; `2026-10-20_18-41-14_336` has the client's per-frame positions) and the client's code. The tool behind every sequence is `scripts/re/movement_sequences.py` ([Reproducing](#reproducing)). Code: the server runs a stand-still stub while the exact port is rewritten ([PLAN](../PLAN.md), [seam](../architecture/instance-world.md#the-movement-seam-movementrs)); messages in `modules/protocol/poe-proto/src/instance.rs` and `skill.rs`.
 
-Six sessions are **WASD input mode** only; the 2026-10-20 session adds **click-to-move mode** (f3287-4662), standing and chained rolls, sprints into walls, an input-mode toggle and client positions (`poe-hook.log`, "frame #n ... world ... grid", same frame numbers). Missing: [gap list](#gap-list); frame indexes: [2026-10-20](#capture-index-2026-10-20-session), [2026-11-02](#capture-index-2026-11-02-session).
+Six sessions are **WASD input mode** only; the 2026-10-20 session adds **click-to-move mode** (f3287-4662), standing and chained rolls, sprints into walls, an input-mode toggle and client positions (`poe-hook.log`, "frame #n ... world ... grid", same frame numbers). Missing: [gap list](#gap-list); frame indexes: [2026-10-20](../re/movement-capture-index.md#capture-index-2026-10-20-session), [2026-11-02](../re/movement-capture-index.md#capture-index-2026-11-02-session).
 
 Conventions:
 - Frame numbers count the server's `0x02f4` ticks received by the client. A **batch** is the run of simulation messages before a tick marker. `f` = frame the client sent an input in; a reply "at `f+1`" arrives after one more tick. Round trip on the official servers: median 50 ms, p90 62 ms, so **the reply is at `f+1` for ~93 %** of inputs (`f+0` ~6 %, `f+2` <1 %). The server controls only that all replies of one input share the first batch after it arrived (`r+0`); `r+k` is k batches later.
@@ -288,34 +288,8 @@ Aim (`0x62` mode 2/3, `0x1dc`) and stun (`0x1d3`, `0x1eb`) messages: [movement-p
 ### Attack lengths
 Chained attack starts measured from acked-only presses (`runtime/r3-attack-lengths.txt`, 2026-11-02): `0x80400040` 25 frames (19 of 26 bounded pairs, 26 three times), `0x85000040` 28, punch `0x80410041` 19-22. A press during an attack is acked and the latest one starts when the attack ends. The server has no attack length (weapon, skill and attack-speed data), so those episodes stay in `known.json`.
 
-## Capture index: 2026-10-20 session
-`dumps/0.5.5e.hotfix1/captures/official/2026-10-20_18-41-14_336/` (13 299 instance messages, 4 765 frames, 33 min; `check_capture`: every movement message decodes with 0 errors and 0 leftover bytes; only `AddInventory` items mismatch). Frame = capture frame, `T` = tap, `H` = hold, the number is the frames Space was down:
-
-| Item | What is there |
-|---|---|
-| 1 standing roll, 5 taps + hold | f516 T7, f560 T8, f606 T5, f652 T3, f696 T3, f744 T4; hold f1132 H125 (sprint, cursor-follow stream, wall f1243, Space up f1257) |
-| 2 taps 0.1/0.3/0.45/0.5 s | mostly **standing** (the keys were up): T3 (f652, f696), T4-8 (f516-f745, f1477), walking: T7 (f2458), T8 (f2065), T12 (f1934); T14 (f1572, f4178). No 9-frame (0.3 s) tap, 15-18 not hit |
-| 3 chained re-press | f1476/1514 (38 apart), f1570 (press+release in one frame), f1581 (+9), f1600 (+28), f1633 (+31); f3607 H20, f3645 T3 (+38), f3679 T3 (+34), f3711 T5 (+31), f3742 H155 (+29); no re-press while sprinting |
-| 4 stop all WASD during sprint / roll | f1793-1796: keys released with Space down (cursor vector, then Space up, `(0,0)`); no `(0,0)` during a roll or sprint |
-| 5 attack while rolling; Esc during a sprint | attacks in the roll at f1946, 1991, 2075-2088, 4033; Esc (`SetPause`) f1543-1570, 1844-1852, 3224-3238, 4612-4628, never during a roll or sprint |
-| 7 sprint into wall / monsters | wall: f1243, f1918, f2873; monsters: sprints ended by attacks f2393, 4056, 4142, 4262 |
-| 8 roll with monster hovered; get hit | no `0x1aa`/`0x1b0`; one light stun f4072 |
-| 9 click-to-move | hold f3325 (41 frames), singles f3375-3509, hold f3527-4002 with rolls, f4069/4100/4160/4462 holds with attacks and rolls |
-| 10 held click + Space | inside holds: f3607 H20 (sprint cut short, ends f3643), f3742 H155 (sprint 3759-3897), f4105 H52, f4178 T14, f4216 H64, f4484 H100 |
-
-## Capture index: 2026-11-02 session
-`dumps/0.5.5e.hotfix1/captures/official/2026-11-02_18-31-34_336/`: 27 episodes. Frame = capture frame.
-
-| Item | What is there |
-|---|---|
-| Sprint ends | 18; causes in `runtime/r3-2026-11-02-sprint-ends.txt`: release 12, attack 3, `t0+35` 1, other 2 |
-| Held click during a sprint | f7746, f7910 (Space released); 2026-10-20_21-51-49 f8873, f8952, f9154 |
-| Deferred rolls | f8037, f8075 |
-| Space re-press | f2178 |
-| Weapon swaps | f5464 (auto), f6088 (requested), f11798 (auto, ending a sprint) |
-| Input-mode toggles | f7577, f8287 |
-| Held roll repeats | f11801, f12757 |
-| Key changes during rolls and sprints | `runtime/r3-2026-11-02-gap4.txt`: 61 during sprints, 54 during rolls, 3 presses during a roll (one in a standing tap roll), 3 releases during tap rolls; all replay identically |
+## Capture indexes
+Frame indexes of the 2026-10-20 and 2026-11-02 official captures: [movement-capture-index.md](../re/movement-capture-index.md).
 
 ## Reproducing
 ```
@@ -367,7 +341,7 @@ Replay episodes: `cursor: true` = a `0x63` with third trailer byte 1 (`MoveInput
 
 Drift test method: [agent-workflow.md](../guides/agent-workflow.md#movement-checks).
 
-**W during a sprint (private game test `sprint-w`, [setup.md](../guides/setup.md#game-tests-cargo-xtask-game-test); the official sequences are in the [2026-11-02 index](#capture-index-2026-11-02-session))**: three cases from G1_1 (621, 1146), cursor right of the player; all pass `scripts/re/sprint_check.py` (slack 1 frame) and end 0.4-2.5 cells from the client (worst inside a 1 s window 4.7):
+**W during a sprint (private game test `sprint-w`, [setup.md](../guides/setup.md#game-tests-cargo-xtask-game-test); the official sequences are in the [2026-11-02 index](../re/movement-capture-index.md#capture-index-2026-11-02-session))**: three cases from G1_1 (621, 1146), cursor right of the player; all pass `scripts/re/sprint_check.py` (slack 1 frame) and end 0.4-2.5 cells from the client (worst inside a 1 s window 4.7):
 - **W pressed at `t0+21` of a cursor sprint, Space released with W held, W released 0.6 s later**: the stream starts at the first cursor `0x63` (`t0+16`), the W `0x63` turns it, Space up ends the sprint (`t0+40`), the unscaled `(127, 127)` follows at off+1. The client coasts (1.73 falling about 0.105 per frame, 20 frames) and walks by itself 21 frames after the sprint-off: the `SprintEnd` gate ([coasting](#coasting-after-a-sprint)); "no `0x63` after the roll" is ruled out.
 - **W held before the roll, released at `t0+24` with Space down**: no stream until the release; the cursor `0x63` then starts it; Space up at `t0+42`, unscaled cursor vector at off+1, the client's `(0, 0)` answered at off+2, both coast to a stop (23 frames).
 
@@ -378,6 +352,8 @@ Ruled out (sprint towards a diagonal wall, drift 11 cells): not the sprint end b
 
 The client's grid per frame: `POE_HOOK_MOVEMENT_LOG=1` writes `frame #n ... grid (x, y)` lines to `poe-hook.log` (same frame counter as the reports; only frames where the position changed). `scripts/re/movement_gridcmp.py TRACE POE_HOOK_LOG [PORT] [--show N] [--window LO HI]` compares each non-zero `0x64` cell and the modelled grid (`pos` line) with it. Report frame N is the client frame that handled server batch N. The report x, y is the Positioned world position, not the grid cell; it trails click-to-move by one frame and is smoothed in rolls, so use the grid, not positions. `runtime/replay/snaps.py` stays a runtime tool.
 
+Session replay: `third_party/pyenv/bin/python scripts/re/movement_session_replay.py TRACE PORT POE_HOOK_LOG OUT_DIR` turns one private session (our trace plus the client's `poe-hook.log` with `POE_HOOK_MOVEMENT_LOG=1`, last `frame #1` block) into `own_replay` inputs (`inputs.json`, `seg.tsv` with our server's `0x64`/`0x1c8` as the "official" rows). Then `modules/server/target/release/examples/own_replay OUT/inputs.json OUT/seg.tsv GRIDS 0 --roll-skill 1 [--drift] [--free]`. Inputs go to the tick that handled them (first tick line logged strictly later; a direction answered by a same-sign `0x64` within 2 ticks goes to that tick; an admin teleport (`0x64 (1,0),(0,0)`) becomes a `teleport` op). `line_drift` counts frames where the model's line float state (p, len, acc) differs from the client's LINE by > 0.002: this finds divergences before they change a cell (the client logs its grid after a snap, so equal cells do not prove no snap). The client's LINE `p` is the current point only on a line set up that frame (`el=0.00000`); on a running curve line (coast) `p` is the line start. Results: user test 2 (port 34510, G1_8 seed 1, `dumps/0.5.5e.hotfix1/terrain/grids/terrain_grid_1819364532.bin`): all `0x64` and cells equal except 4 frames in the snapped stretch f2855-2889; sprint-turn (port 43008): all 411 cells equal.
+
 ## Gap list
 What the seven official captures **still do not cover**. A new capture is one read-only official session by the user (DLL in `Official` mode); keep the recording intact (`packets.jsonl`, `poe-hook.log` with `movement_log` on). The markers `UNVERIFIED (gap #n)` in the server code use these numbers.
 
@@ -386,7 +362,7 @@ What the seven official captures **still do not cover**. A new capture is one re
 | 1 (med) | **Release between `t0+15` and `t0+18`** (only up to `t0+14` and from `t0+19` seen); a release at `t0+31..34` | exact threshold of the 16/30-frame split and of the sprint end at `t0+35` |
 | 2 (med) | **Click-to-move details**: a walk that reaches its target (no arrival message seen), a click on a wall or unreachable cell, WASD pressed during a click walk | arrival state, A* goal rules, takeover rules |
 | 3 (med) | **Rolls and sprints re-pressed**: a tap-roll followed by a press at 15-27 frames, a queued roll whose key is already up when the lock ends (single slot vs "key must be held"), a press exactly 30 frames after the previous start, Space pressed again while sprinting at or after `t0+35` (before it: found) | the roll queue rule |
-| 4 (med) | Message sequences of key changes during rolls and sprints are covered ([index](#capture-index-2026-11-02-session)); open: the cell positions and headings they leave (cells are not compared), a no-stream sprint ended with W held | the roll heading rule when the keys change |
+| 4 (med) | Message sequences of key changes during rolls and sprints are covered ([index](../re/movement-capture-index.md#capture-index-2026-11-02-session)); open: the cell positions and headings they leave (cells are not compared), a no-stream sprint ended with W held | the roll heading rule when the keys change |
 | 5 (med) | **Esc menu during a roll or a sprint**; a click-to-move press during a roll | pause/cancel rules |
 | 6 (med) | Attack lengths come from game data (weapon, skill, attack speed; measured in [Attack lengths](#attack-lengths)); open: the action speed factor's timing in a plain WASD walk, a roll that cuts an attack while walking, an attack during a roll in the last frames (`t0+25..29`) | the action speed factor's timing; the `t0+24` window edges |
 | 7 (med) | **Weapon swap and input-mode toggle while walking, rolling or attacking** (captured standing only: `0xfe` -> `0x1d5` + `0xff`, `0x200` + `0x62`) | whether the server delays or refuses a swap during an action; `0x200` timing relative to movement |
