@@ -1,0 +1,23 @@
+# Plan: monsters, AI from game data, XP from kills
+
+Step P17 of [../PLAN.md](../PLAN.md). Needs the R4 object stage (spawn points and room data, [r4-world.md](r4-world.md)), the damage pipeline ([life-flasks.md](life-flasks.md)) and skills ([skills.md](skills.md)). The current plan's "monsters and spawns (`killzone`, `.arm` points of interest)" item is this step.
+
+## User decisions (2026-11-04)
+- First monsters: the **Act 1 opening zones**, The Riverbank (`G1_1`) and Clearfell (`G1_2`): their normal, magic and rare packs and the two areas' bosses (names from the data).
+- The goal is AI that matches the official game. The official AI runs on GGG's servers, so the AI is built **from game data only**: no AI calibration capture, no fitting to recordings. Whatever the data does not define is written down as an estimate in `docs/re/monsters.md`.
+- XP from kills is in this plan.
+- Monster tools for admins: spawn, kill all, freeze AI, no aggro, inspector.
+
+## Steps
+1. **Inventory of the AI data (Opus, first session).** Look through the bundles (`poe_data_tools`, `LibGGPK3`) for everything that defines monster behaviour, and write the result to `docs/re/monsters.md`:
+   - `MonsterVarieties.dat` (object path, life and damage multipliers, skills, the AI-script column if there is one, object size, speed, aggro radius-like fields), `MonsterTypes`, `MonsterPacks` and `MonsterPackEntries`, `MonsterMapDifficulty`-style level tables, `MonsterResistances`, `GrantedEffects` of monster skills.
+   - The monster object files `metadata/monsters/**` `.ot`/`.otc`/`.ots` and any AI files (`.ais` or similar): which sections ship (server sections such as `Monster`, `StateMachine`, `AI` or `ServerAnimationController` may or may not be in the client bundles). If server sections ship, they define the state machines and the AI port is direct. If not, list what is missing.
+   - `.ao`/`.aoc` animation data (action durations, events) for monster actions.
+2. **Protocol (Opus)**: the monster's AddObject blob (components a monster needs: Positioned, Life, Animated, Actor, Monster, Stats, Buffs, ...), how its movement reaches the client (server-driven path or destination updates; the client does not predict monsters), the monster action start (skill use toward a target), hits on the player, hits on the monster (damage numbers), death and the corpse, despawn. From C2's fight segments ([../re/captures.md](../re/captures.md)); these are protocol only, not AI calibration. Results go to `docs/protocol/entities.md` (monster section).
+3. **Spawning** (`poe-game::monsters`): pack placement from the area's spawn data (`.arm` room points, `killzone` and the R4 object stage), pack composition from `MonsterPacks`, rarity rolls (magic and rare chances by area level: game data or documented community rates), monster level = area level, life and damage from the level tables and the variety's multipliers, rare and magic mods (`Mods.dat` monster domain).
+4. **AI** (`poe-game::ai`), driven by the step-1 data: idle, aggro (data radius; also on damage), pathing with the server's pathfinder on the generated grid, skill choice and cooldowns from the monster's skills and their data, melee and ranged ranges, leash and return, pack wake-up. Monster movement uses the client's own movement rules for actors (the movement port's speed and pathing code) so the client shows it correctly.
+5. **Combat**: player skills hit monsters (hit detection with hulls and the skill's area or projectile, the calculator's damage, monster resistances and mitigation through the same pipeline as the player), monster skills hit the player (P13 pipeline), death, kill credit.
+6. **XP from kills**: monster XP from the data's experience values and level, the official level-difference penalty (from PoB2 and documented community formulas, cited), split by rules for parties later ([loot-parties.md](loot-parties.md)). Flask charges on kill ([life-flasks.md](life-flasks.md#p14-flasks-charms-belt)).
+7. **Bosses**: the two bosses with their skills from data and their arena behaviour as far as the data defines it (phases that need scripted events not in the data are estimates, documented).
+8. **Commands**: `spawn`, `killall`, `ai freeze`, `aggro`, `monster inspect`; overlay Debug > Monsters with the inspector (state, target, life, skills, cooldowns), sent over the debug link as `state` lines.
+- Done when: in an agent game test the Riverbank and Clearfell spawn their packs, monsters aggro, chase and attack, the player kills them with the P16 skills, gets XP, monsters kill the player (death flow), both bosses can be fought; no monster is visibly snapped by the client (monster positions sent as the client expects, checked in the DLL entity page against the server's).

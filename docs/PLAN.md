@@ -1,72 +1,48 @@
 # Plan
 
-The only list of what is left to do and the only status source. Edit it in place and delete what is finished: history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
+The only ordered list of what is left to do and the only status source. Each step has a detailed spec in [plans/](plans/backlog.md) (one file per feature), which is deleted or folded into the topic docs when the step is done. Edit both in place; history belongs in git and [status/history.md](status/history.md). Limit: 1,500 words. User decisions behind this plan: [decisions.md](decisions.md). How to work: [guides/agent-workflow.md](guides/agent-workflow.md).
 
-## Now: movement restart (exact port)
+Movement (the exact port) is done and gated by user test 6 (2026-11-04, [history](status/history.md)); its follow-ups are in the [backlog](plans/backlog.md#movement-follow-ups-not-blocking-movement-is-gated-by-user-test-6).
 
-Principle and decision: [decisions.md](decisions.md#movement-and-world). The server must run an exact port of the client's movement code for all input modes (WASD, click-to-move, controller), roll and sprint. Proof is the user's game tests only; do not ask for one before step (e) is reached.
+## Order
+Steps run in this order, one per session (or several sessions for big ones). Model: **S** = Sonnet, **O** = Opus (RE or design), **O+S** = Opus designs or does the RE, then hands the routine parts to Sonnet agents. Sign-off is by agent tests (unit, offline checks, agent game tests in headless gamescope); movement keeps the user's game tests.
 
-- (c) done: static RE in [re/movement-positioned.md](re/movement-positioned.md), [click](re/movement-click.md), [roll](re/movement-roll.md), [sprint](re/movement-sprint.md); open items in [wasd-movement.md](re/wasd-movement.md#what-is-left-to-read). Reference capture: `2026-11-03_13-16-29_336` ([captures.md](re/captures.md#planned-movement-capture-for-the-exact-port)).
-- (d) One new port behind the seam (`poe_game::movement` `MovementModel`/`Mover`, [instance-world.md](architecture/instance-world.md#the-movement-seam-movementrs)), replacing the `standstill` stub chosen in the instance server's `actor_init`; checked offline against the captures, the kept fixtures (`modules/server/crates/poe-game/tests/fixtures/`) and private LINE logs. 
-  - State (NOT GATED): the port (`poe_game::locomotion`) is behind the seam, chosen in `actor_init`, checked offline (`runtime/replay/check.sh`, local): own replay seg2 equal to the official client in all 1173 frames and 784 `0x64`; seg1 differs only near skills and two open items; server and client models agree in every frame (`--free`). All tests pass ([setup.md](guides/setup.md#build-and-test)). Speed stats are done for the stats that exist (class template, admin command `speed`); the gear/buff pipeline does not exist yet.
-  - Open items: seg1 f3576 clipped coast one cell; f3669-3724 punch `0x80410041` root motion (skills out of scope); f3786-3915 one cell from a cursor roll during a held click (first heading source unread, [movement-roll.md](re/movement-roll.md#facing-event-first-heading-checked-by-replay)); stat 15916 omission and conditional speed stats need a stat calculator ([movement-positioned.md](re/movement-positioned.md#stats-the-server-sends-ported)); `own_replay`/`sim_replay` take travel 46.0 and level 4 by hand (tools only; the server reads game data).
-- Agent game tests pass with the port (2026-11-03: `smoke`, `state`, `walk`, `sprint-w`, `cliffs`, `dungeon`; runs in `runtime/game-test/`).
-- (e) Done, gated by user test 6 (2026-11-04: "all smooth" with roll interrupts, key mashing, rolls into walls and normal play; linediv 0 runs over 3004 frames, `runtime/movement-trace-usertest6.tsv` port 54912, `runtime/usertest6-poe-hook-session.log`). Fixes: coast rate by sprint-off key ([movement-sprint.md](re/movement-sprint.md#keys-of-the-sprint-off)), actor tick split, no turn-around of backward rolls at the sprint switch, no Bonk when a blocked re-aim finds no path, and the roll-start facing from the `0x1dc` aim echo with key walks keeping it ([movement-roll.md](re/movement-roll.md)). Live before the test: crazy-keys and sprint-turn 0 divergence runs; workspace tests 399 passed. Follow-ups (not blocking): rule tests for blocked step stops steering, clip keeps rate, early unlimited roll turn, sprint-off key without a 0x64, no turn-around at the sprint switch, no Bonk when the blocked re-aim finds no path; read why the early unlimited roll turn is 0.15 s (clientsim `roll_turn_to_target`: act `+0x244`, 0x1419746f5..0x141974808, 0x141d380a0) and which path listener turns off waypoint facing for key walks (`0x141dcc110` `FUN_140ec6320`); a second crazy-keys seed with held clicks; `runtime/replay/ckruns.py`/`ckscore.sh` compare one frame off and linediv mixes areas (the hook frame counter restarts per area: split the hook log first).
+| Step | What | Model | Spec | Needs |
+|---|---|---|---|---|
+| P1 | Overlay: stock ImGui dark look, Features page renamed Settings, "Show slow hook popups" checkbox, `overlay.toml` | S | [overlay.md](plans/overlay.md#p1-look-settings-rename-slow-hook-popups-small-sonnet) | |
+| P2 | Configurable release source in the launcher and server (GitHub owner or static mirror), `xtask release-mirror`, `set-owner.sh` | S | [launcher.md](guides/launcher.md) | |
+| P3 | Leagues in the database, web admin Leagues page, "needs a league" popup, variants, LeagueFlag banners, mechanics list, dates, lifecycle | O+S | [leagues.md](plans/leagues.md) | |
+| P4 | Terrain mismatch: compare tile and doodad hash at entry, kick to the previous instance or town, DLL alert with export | S | [terrain-mismatch.md](plans/terrain-mismatch.md) | |
+| P5 | Progress tracker site (static, statuses in `tracker/status.toml`, rows from game data) | S | [tracker.md](plans/tracker.md) | |
+| P6 | Overlay layout overhaul of every page, merges, Debug shell | S | [overlay.md](plans/overlay.md#p6-layout-overhaul) | P1 |
+| P7 | Command framework v2: subcommands, aliases, flags, levels, searchable help, Console, rework of existing commands, world tools | O+S | [commands.md](plans/commands.md) | P6 |
+| P8 | `poe-stats`: PoB2 calculation port, stat map, stat-description formatter, PoB2 cross-check | O+S | [items-stats.md](plans/items-stats.md#p8-poe-stats-crate-the-pob2-port-opus-design-sonnet-for-the-mapping-tables-and-tests) | |
+| P9 | Items, inventory, equipment, weapon sets, stats pipeline, levels and XP, not-implemented chat lines, web admin inventory | O+S | [items-stats.md](plans/items-stats.md#p9-items-inventory-equipment-weapon-sets-levels-opus-for-the-re-sonnet-for-storage-and-web-admin) | P7, P8, C2 |
+| P10 | Currency: mod rolling engine, basic orbs, quality currency, gold | O+S | [items-stats.md](plans/items-stats.md#p10-currency-opus-for-the-rules-sonnet-for-tests) | P9 |
+| P11 | Item creator and spawner (overlay with art, commands, paste, templates, random, edit in place) | O+S | [item-creator.md](plans/item-creator.md) | P10 |
+| P12 | R4: object stage, transitions, waypoints, checkpoints, wells, world map; T | O | [r4-world.md](plans/r4-world.md) | |
+| P13 | Life, mana, ES, regeneration, damage taken, death and resurrect | O+S | [life-flasks.md](plans/life-flasks.md#p13-pools-regeneration-damage-death) | P9, P12, C2 |
+| P14 | Flasks, charms, belt charm slots | O+S | [life-flasks.md](plans/life-flasks.md#p14-flasks-charms-belt) | P13 |
+| P15 | Passive tree, ascendancies, weapon-set points, class changer, web admin tree | O+S | [passives.md](plans/passives.md) | P9 |
+| P16 | Gems, skill bar (mouse and keyboard, controller), punch, default attacks, class starter skills | O | [skills.md](plans/skills.md) | P13, C2 |
+| P17 | Monsters of the Riverbank and Clearfell, AI from game data, combat, XP from kills, monster tools | O | [monsters.md](plans/monsters.md) | P12, P16 |
+| P18 | Loot drops, ground items, gold, parties, allocation by the party leader | O+S | [loot-parties.md](plans/loot-parties.md) | P17, G-PARTY |
+| P19 | NPCs and vendors | O+S | [npcs-vendors.md](plans/npcs-vendors.md) | P12, P10 |
 
-## Now: R4
+P1 to P7 are independent of the game work and mostly Sonnet; P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
 
-R4 below. The R4.1 capture is recorded: `2026-11-02_18-31-34_336` (not analysed for R4 yet). R3 is done.
-
-Open: P5b game test fails 6-9 cells from drift before the sprint after a teleport (`runtime/game-test/p5-scenario-20261102-193003`, `-193626`); sprint-w, walk, cliffs, dungeon pass (2026-11-02). R2: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
-
-## T: agents test in game by themselves
-
-Every later step needs it. The official-server read-only latch stays untouched.
-
-Open: one clean client `ExitProcess(0)` mid-walk in `cliffs` (`runtime/game-test/cliffs-20261102-121814`), not reproduced in 4 runs.
-
-**Done when:** an agent runs the wall scenarios (`walk`, `cliffs`, `dungeon`) with no human, and no window appears on the user's desktop.
-
-## R4: entities, transitions, waypoints, world map
-
-1. **Official capture (the user's, about 15 minutes):** checklist in [captures.md](re/captures.md#planned-capture-for-r4-world-map-waypoints-transitions-and-the-open-movement-cases). Tell the user when ready and stop every client job first.
-2. **Object stage in `poe-world`:** objects of placed tiles (`.tmd`), rooms (`.arm`) and node tags, with cell and orientation, checked against the client's `entities.tsv` at scale. Sources: [entities.md](protocol/entities.md#where-world-objects-come-from).
-3. **`AddObject` (`0x2f7`)** for transitions (including fog doors), waypoints and checkpoints, with the components the capture shows, spawned per instance. Static `server_only` objects with a hull (healing wells, benches, `StoneHengeAct*`) change the client's grid when sent: once the server sends them, stamp the hulls of the objects it actually spawned into its grid ([doodads.md](re/terrain/doodads.md#live-grid-and-server-side-objects)).
-4. **Interaction:** clicking a transition sends the player to the connected area (`WorldAreas` connections or the object's target) at the matching transition; waypoint travel between unlocked waypoints. Add a game-test step that clicks a transition (needs a world-to-screen mapping; T3 has walk, roll and wall steps only).
-4. **World map (M)** for acts 1 to 4 and the interludes, not the endgame: per-character unlock state (locked by default), what the client needs to show unlocks (from the capture), admin command `unlock <character> [acts|waypoints|all]` and lock, a web admin button.
-
-**Done when:** an admin-unlocked character opens M in every act but the endgame, travels by waypoint and walks between areas without commands.
-
-## After R4 (ask before starting)
-
-**Game features, not started:** NPCs (StateMachine, quest states), monsters and spawns (`killzone`, `.arm` points of interest), chests, skills (replies `0x1ae`/`0x1af`/`0x1b1` are decoded, not sent), buffs, items, equipment, stash, passive tree, combat sync. Web admin inventory and passive panels wait for them. These unlock the deferred items: remote equipment visuals, dynamic obstacles in the pathfinder, party and trade accept/decline, parties.
-
-**Small server and tooling items:**
-- Data mods: `config_defaults` layering and server `opcodes` overlays ([mod-host.md](architecture/mod-host.md)).
-- Web admin Players page shows class names.
-- Ban commands in chat and the server CLI (only the web admin today).
-- Rate limit on `GET /api/v1/mods/{id}/{version}.zip`.
-- Launcher's nested client-hook pin (harmless; bump with the next launcher change).
-- Client loose-file overrides and packet hooks for mods; launcher mod sync against a real server with mods.
-- Audit leftovers: S-09 widen instance tickets to `u64`; C-01 pin CI actions by commit; S-13 re-review the launcher's token handling.
-- Repo-wide `cargo fmt` in Poe2Server, then a CI check.
-- Server release after R2 (ask first).
-
-**Generator inputs the batches hold fixed** (needed for "any seed" in real play):
-- Area level: G3_10's level 75+ path, the trial's rooms (UltimatumPlugin `0x141f101e0`).
-- League and session state: roll outcomes, Incursion and extra-feature rooms, `unique<N>` lettered tags.
-- Paths no tested job uses: listed in [terrain.md](status/terrain.md#not-ported-yet).
-- The 39 combinations where the client errors on every seed; Sanctum_1-4, IncursionTemple(Present) and HideoutPietyArena have no comparable client result.
-- Whether official servers make the world-map seed non-zero (needs a traced official town load).
-
-**Unconfirmed in game:** Create/delete refusal texts, stale-login 0x0f and rate-limit messages; CharacterList unknown fields (+0x4f, +0x68, +0x74, +0x76; need a capture of a shapeshifted or supporter character); remote play from a second physical machine; a live client-hash update flow with renumbered opcodes (not derived automatically).
+## Now
+- **P1** is next.
 
 ## Needs the user
 
 | What | When |
 |---|---|
-| Official capture (about 15 minutes), [checklist](re/captures.md#planned-capture-for-r4-world-map-waypoints-transitions-and-the-open-movement-cases). Still missing for movement: swap and input-mode toggle while walking, rolling or attacking (gap #7), attacks with attack-speed gear (gap #6); R4 parts stay (steps 1-5) | R4.1, unblocks R4 |
-| G-PARTY capture (a friend answers party invite and trade request) | any time, implementation waits for items |
+| Capture **C2** (gameplay, 30-40 minutes, [checklist](re/captures.md#planned-capture-c2-for-gameplay-items-stats-life-flasks-passives-skills-monsters-loot-npcs)); it also covers the movement gaps #6 and #7 | any time before P9 |
+| G-PARTY capture (a friend answers party invite and trade request) | before P18 |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |
 | Decide whether old batch run directories may be deleted (disk 481 GB free; `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small) | any time |
 | Optional cleanup: unused `/PathOfExileSteam.exe` in Ghidra, `GameFiles-0.5.5e/` | any time |
+
+## Backlog
+Not ordered: [plans/backlog.md](plans/backlog.md) (movement follow-ups, small server and tooling items, generator inputs, unconfirmed in game, later game features).

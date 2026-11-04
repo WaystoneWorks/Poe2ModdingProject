@@ -1,11 +1,11 @@
 # User decisions
 
-Lasting choices the user made, so nobody asks again. Keep one line per decision and replace a line when a decision changes. Limit: 1,000 words.
+Lasting choices the user made, so nobody asks again. Keep one line per decision and replace a line when a decision changes. Limit: 1,800 words.
 
 ## Scope and order
 - Client 0.5.5e Hotfix 1 (`0.5.5e.hotfix1`) is the only supported build; older addresses and files are gone (2026-10-29).
-- Order: R2 collision finished fully, then R3 movement, then R4 entities and world map (2026-10-31). Items and entities stay deferred until then, with everything depending on them.
-- One central plan ([PLAN.md](PLAN.md)); no handoff files, no tracker (2026-10-31). Agents at 300k hand off to a new T3 thread themselves; Opus delegates routine work to Sonnet (2026-10-31).
+- Order (2026-11-04): the step table in [PLAN.md](PLAN.md); R4 goes where it fits best (before life and monsters). Items, stats and the rest no longer wait for R4.
+- PLAN.md is the ordered index; each step's detailed spec is a file in [plans/](plans/backlog.md), deleted when done (2026-11-04). No handoff files (2026-10-31). Agents at 300k hand off to a new T3 thread themselves; Opus delegates routine work to Sonnet (2026-10-31).
 
 ## Terrain
 - Goal: 1:1 tile hash, doodad hash and collision grid for every area, topology and orientation in the default league mode (4,508 combinations). The 84 league-mode topologies and the client's server-only spawn scatter in the doodad pass are out of scope.
@@ -27,7 +27,7 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 - MIT licence only. All repos public. Private vulnerability reporting on. Official mode stays public and documented ([official-mode.md](guides/official-mode.md)), with a launcher entry "Official (read-only)".
 - Keep the commit email, `CLAUDE.md`, co-author trailers. Keep the HNC `key_xor` table as a documented constant behind a narrow gitleaks allowlist. Keep `terrain-matrix.tsv`.
 - Machine-hash Steam login removed. Test passwords are never real. Launcher app id `org.poe2modding.launcher`. The `ConnectEx` guard exists.
-- Findings: no credential, capture, GGG asset or game table in history. Real `AddObject` test blobs hold only anonymised names. Official-capture fixtures are movement-only.
+- Findings: no credential, capture, GGG asset or game table in history. Exception (2026-11-04): the tracker's names-only `tracker/rows.json` (id, section, display name). Real `AddObject` test blobs hold only anonymised names. Official-capture fixtures are movement-only.
 
 ## Mods
 - Native Rust libraries (versioned C ABI) plus data-only mods; no WebAssembly or Lua tier for now.
@@ -43,7 +43,24 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 - Several hosted servers at once, each with its own folder and shared packages; free ports chosen automatically. Delete really deletes after typing the name. Servers tabs: My servers / Browse public / Host. Server update: notify and one click, with backup.
 - Square window frame (rounded corners blanked the window in nested KWin). "Minimize while the game runs" means minimize on start, restore on exit (meaning unconfirmed).
 - Web admin: Stop/Restart with countdown, live charts, Players with bans, config editor on for admins, scheduled restarts, MOTD. First admin is created on a loopback-only first-run page; `/register` is the public page; the game's Create account button opens it (`register_url`).
-- UI style: direction "Ash & Blood" with the rune seal logo. For redesigned screens, the user sees a mockup before building.
+- UI style: direction "Ash & Blood" with the rune seal logo (launcher, web admin, tracker site; not the DLL overlay). For redesigned screens, the user sees a mockup before building; for the overlay, the ASCII mockups in its plan are enough (2026-11-04).
+
+## New features (2026-11-04)
+Specs in [plans/](plans/backlog.md); each spec repeats its decisions in detail.
+- Sign-off for new features: agent tests are enough (unit, offline checks, agent game tests). Movement keeps the user's game tests.
+- Overlay: ImGui `StyleColorsDark` with the stock font; the sidebar stays; Features becomes Settings with one "Show slow hook popups" checkbox; settings in `logs/poe-hook/overlay.toml`; every page redesigned; one Debug entry with sub-tabs and a Console replaces the Commands page; non-admins do not see admin-only controls; no hotkeys.
+- Leagues: in the database, managed in the web admin; new servers have none; without a league login works and no league list is sent; the `[[leagues]]` config is dropped without migration; HC/SSF checkboxes create the official variants; banners are `LeagueFlag` rows; mechanics listed from game data and stored only; states active/hidden/ended with migration; start and end dates; a default league.
+- Terrain mismatch: tile and doodad hash at entry; everyone is always kicked to the previous instance, else the town, else character select; the DLL shows an alert with hashes and a copy button and exports its layout.
+- Stats: PoB2's calculation rules ported to Rust (latest PoB2 = 0.5.5e), checked against PoB2 headless; the server computes and sends every stat.
+- Items: inventory and equipment, no stash; basic orbs and quality currency first; a chat line per not-implemented stat on every equip (and per not-implemented passive line on allocation); new characters start empty.
+- Life: pools, regeneration, damage taken and death (official-like with the XP penalty) first; flasks, charms and belt charm slots; no mana costs or spirit yet.
+- Passives: ascendancy points only by command until trials exist; free refunds; weapon-set points with swap; the web admin edits inventory and tree for admins.
+- Commands: two levels, every cheat is admin-only; verb-first subcommands with aliases; every command has an overlay counterpart; stat edits are a debug modifier layer; class change keeps level and items and resets the tree, rejoining the instance.
+- Item creator: anything allowed with "illegal" tags, game-style tooltip with art, paste, templates, bulk and random spawn, edit in place; overlay and commands only.
+- Skills: the official gem panel; punch, weapon default attacks and one starter skill per class; exact port of action timing.
+- Monsters: the Riverbank and Clearfell first; AI from game data only, no AI calibration capture; XP from kills.
+- Loot: game data plus configurable tables with cited community research; official-like ownership with the party leader's allocation setting; basic parties. NPCs and vendors, checkpoints and wells are in the plan.
+- Tracker: static site, statuses in a hub file edited by commit, sections from game data plus project sections, no hour estimates, built locally until GitHub Pages is available.
 
 ## Repositories
 - The hub holds docs, xtask and scripts; everything else is a submodule under `modules/`; nested submodules stay so each repo builds alone. Versions live in Poe2Protocol. Repo map: [overview.md](overview.md).

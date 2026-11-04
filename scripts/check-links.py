@@ -35,7 +35,7 @@ WORD_LIMITS = {
     "README.md": 400,
     "CLAUDE.md": 700,
     "docs/PLAN.md": 1500,
-    "docs/decisions.md": 1000,
+    "docs/decisions.md": 1800,
     "docs/index.md": 1500,
     "docs/guides/agent-workflow.md": 2000,
 }

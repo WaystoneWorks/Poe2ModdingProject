@@ -33,6 +33,22 @@ In the game (a character with at least two acts' waypoints; about 15 minutes; wa
 Recorded: `2026-11-02_18-31-34_336` (movement parts of steps 6 and 7; the R4 parts 1-5 are not analysed yet). It covered: held click 5 s, W-held sprints and releases, attacks standing and walking, W pressed or released during sprints and rolls (gap #4), Space re-press, weapon swaps and input-mode toggles standing ([movement.md](movement-capture-index.md#capture-index-2026-11-02-session)). Not covered: swap or input-mode toggle while walking, rolling or attacking (gap #7); attacks with attack-speed gear (gap #6).
 After: Claude runs `cargo xtask deploy-client` (private again), turns the desktop rules back on and moves the session to `dumps/<version>/captures/official/`.
 
+## Planned: capture C2 for gameplay (items, stats, life, flasks, passives, skills, monsters, loot, NPCs)
+For P9-P19 of [PLAN.md](../PLAN.md) ([plans/](../plans/items-stats.md)). Protocol only: monster AI is built from game data, not fitted to this capture. The user records it (read-only official session, about 30-40 minutes, can be split in two sessions); Claude only prepares and reverts the client, as above.
+In the game (a character around level 10-20 in Act 1 with some gear, a few currency orbs, an uncut gem, flasks and a charm; wait about 2 s between steps and note the clock time of each step):
+1. Login, then stand still 10 s in town (stat sets and pools at login).
+2. Inventory: open it, pick an item up to the cursor and put it down elsewhere; split a stack; equip a ring, unequip it; equip a weapon in weapon set 2; swap weapon sets twice (standing), then once while walking and once during a roll (movement gap #7).
+3. Currency: use a Transmutation, an Augmentation, a Regal on one item; a Whetstone or Armourer's Scrap; a Gemcutter's Prism on a gem.
+4. Passives: allocate two nodes, refund one, allocate a weapon-set node if any, open the ascendancy panel.
+5. Gems: cut an uncut gem into a skill, socket a support into it, remove it again; put the skill on the bar with mouse and keyboard; switch to controller and bind it there; switch back.
+6. NPC and vendor: talk to a town NPC, open the vendor, buy one cheap item, sell one item.
+7. Field area: fight a normal pack with the default attack, the punch (no weapon) and the new skill; let a monster hit you; use both flasks (keys 1 and 2) and once with the controller; get a charm to trigger if possible; attacks with attack-speed gear or a speed buff (movement gap #6).
+8. Loot: pick up an item, gold and a currency drop; change the loot allocation setting once (if solo, open the option).
+9. Touch a checkpoint; use a well.
+10. Death: die once (in a low-risk spot) and resurrect at the checkpoint.
+11. Log out normally.
+Also wanted when a friend can join: G-PARTY (party invite, accept, leave; a trade request), with the allocation setting changed by the leader.
+
 ## Planned: movement capture for the exact port
 For steps (c) and (d) of the movement restart in [PLAN.md](../PLAN.md): the reference the new port is checked against offline. The user records it (read-only official session); Claude only prepares and reverts the client.
 

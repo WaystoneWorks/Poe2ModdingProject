@@ -68,6 +68,21 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | Document | Contents |
 |---|---|
 | [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
+| [plans/overlay.md](plans/overlay.md) | Plan P1, P6: overlay look, Settings, page redesigns with mockups |
+| [plans/leagues.md](plans/leagues.md) | Plan P3: leagues in the web admin |
+| [plans/terrain-mismatch.md](plans/terrain-mismatch.md) | Plan P4: terrain mismatch kick and alert |
+| [plans/tracker.md](plans/tracker.md) | Plan P5: progress tracker site |
+| [plans/commands.md](plans/commands.md) | Plan P7: command overhaul and catalogue |
+| [plans/items-stats.md](plans/items-stats.md) | Plan P8-P10: PoB2 stat port, items, currency |
+| [plans/item-creator.md](plans/item-creator.md) | Plan P11: item creator |
+| [plans/r4-world.md](plans/r4-world.md) | Plan P12: R4 world objects, world map; T |
+| [plans/life-flasks.md](plans/life-flasks.md) | Plan P13, P14: life, damage, death, flasks, charms |
+| [plans/passives.md](plans/passives.md) | Plan P15: passive tree, ascendancies, class changer |
+| [plans/skills.md](plans/skills.md) | Plan P16: gems, skill bar, basic skills |
+| [plans/monsters.md](plans/monsters.md) | Plan P17: monsters, AI, XP |
+| [plans/loot-parties.md](plans/loot-parties.md) | Plan P18: loot, parties |
+| [plans/npcs-vendors.md](plans/npcs-vendors.md) | Plan P19: NPCs, vendors |
+| [plans/backlog.md](plans/backlog.md) | Unordered backlog |
 | [decisions.md](decisions.md) | Settled user decisions |
 | [status/terrain.md](status/terrain.md) | Terrain status |
 | [status/terrain-matrix.tsv](status/terrain-matrix.tsv) | Generated terrain match table (`cargo xtask terrain-matrix`) |

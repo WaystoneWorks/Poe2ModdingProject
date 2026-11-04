@@ -2,7 +2,7 @@
 
 A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.hotfix1`, the only supported build), for personal and educational modding. This repo is the hub (docs, RE notes, scripts, `xtask`); the code is in submodules under `modules/` ([docs/overview.md](docs/overview.md)).
 
-**Start here:** [docs/PLAN.md](docs/PLAN.md) is the only plan and status. Read only what your task needs: [docs/index.md](docs/index.md) maps the rest, [agent-workflow.md](docs/guides/agent-workflow.md) has working rules, [decisions.md](docs/decisions.md) has settled choices.
+**Start here:** [docs/PLAN.md](docs/PLAN.md) is the ordered plan and status; each step's spec is in `docs/plans/`. Read only what your task needs: [docs/index.md](docs/index.md) maps the rest, [agent-workflow.md](docs/guides/agent-workflow.md) has working rules, [decisions.md](docs/decisions.md) has settled choices.
 
 ## Hard rules
 - **Never touch the Steam install** (`~/.local/share/Steam/steamapps/common/Path of Exile 2`) or its Proton prefix (`compatdata/2694490`). Use only `GameFiles/`.
@@ -10,7 +10,7 @@ A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.h
 - **Movement: the server must run an exact port of the client's movement code; see [decisions.md](docs/decisions.md#movement-and-world).**
 - **Official servers are read-only.** The DLL may observe and log official sessions the user plays; it never sends, alters or injects anything there. Claude never logs in; captures are the user's.
 - The Steam install's live `Client.txt` is a read-only reference: never modify or commit it (copy excerpts into `runtime/`).
-- No hardcoding: opcodes in `modules/protocol/opcodes/<version>/*.toml`; ports, leagues, start areas in `modules/server/config/server.toml`; client builds in `modules/protocol/versions/<version>.toml`; game data from `poe-data`; subsystems behind traits.
+- No hardcoding: opcodes in `modules/protocol/opcodes/<version>/*.toml`; ports and start areas in `modules/server/config/server.toml`; client builds in `modules/protocol/versions/<version>.toml`; game data from `poe-data`; subsystems behind traits.
 - External tools in `third_party/`; generated data in git-ignored `dumps/<version>/`; local files in `runtime/`.
 - Commit and push after each working step (`origin main`), submodules first, then the hub pointer.
 - Ghidra: `/0.5.5e.hotfix1/PathOfExileSteam.exe`. Every RE address in docs and comments is a Hotfix 1 address.
@@ -24,7 +24,7 @@ A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.h
 ## Doc rules (`python3 scripts/check-links.py` enforces links and word limits)
 - One owner per topic; link, never copy. Docs state what is true now, not what happened. Keep every address, offset, opcode and format.
 - A failed theory stays only as a short "ruled out" line, when it would otherwise be retried.
-- New work goes in PLAN.md and is deleted when done. No new plan, handoff or status files. RE findings go in `docs/re/`. Docs change in the same commit as the code.
+- New work goes in PLAN.md (order) and `docs/plans/<feature>.md` (spec), deleted when done. No handoff or status files. Update `tracker/status.toml` with the work. RE findings go in `docs/re/`. Docs change in the same commit as the code.
 
 ## Memory rules
 - Memory holds only durable user preferences and pointers to things outside the repo: never progress, status, plans, commit hashes or anything the docs or git record.
