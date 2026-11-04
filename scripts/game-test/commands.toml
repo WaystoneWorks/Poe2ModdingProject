@@ -1,0 +1,207 @@
+# Command framework v2 (PLAN P7): help in chat and over the debug link, new names and old names,
+# the new world tools, and time scale (the server simulates with the frame length it sends, so
+# drift stays low and the client visibly walks slower). Format: docs/guides/setup.md.
+description = "help, aliases, old names, world tools and time scale over chat and the debug link"
+input_mode = "wasd"
+
+[server]
+"dev.drift_check" = true
+
+[[step]]
+name = "position reports"
+expect_log = "client position reports started"
+since = "start"
+timeout_s = 30
+
+[[step]]
+name = "wait for the world to settle"
+wait_ms = 5000
+
+[[step]]
+name = "help lists categories over the debug link"
+cmd = "help"
+[[step]]
+name = "help reply"
+expect_log = 'command=help ok=true result=Commands .*World: '
+since = "action"
+[[step]]
+name = "help of a path"
+cmd = "help instance join"
+[[step]]
+name = "usage, aliases, overlay"
+expect_log = 'command="?help instance join"? ok=true result=.*!instance join <id>.*Aliases: !join.*Overlay: Debug>World'
+since = "action"
+[[step]]
+name = "help search"
+cmd = "help instance"
+[[step]]
+name = "search hits"
+expect_log = 'command="?help instance"? ok=true result=.*!instance reset'
+since = "action"
+[[step]]
+name = "chat: open, type !where, send"
+keys = "0x0d wait:600 text:!where wait:400 0x0d wait:600"
+[[step]]
+name = "chat !where ran"
+expect_log = 'command=where ok=true result=instance .* players\) area .* league .* seed .* cell '
+since = "action"
+[[step]]
+name = "chat: !help"
+keys = "0x0d wait:600 text:!help wait:400 0x0d wait:600"
+[[step]]
+name = "chat !help ran"
+expect_log = 'command=help ok=true result=Commands '
+since = "action"
+[[step]]
+name = "name completion from the game data"
+cmd = "complete stat base_maximum_l"
+[[step]]
+name = "the DLL got names"
+log = "hook"
+expect_log = 'completion stat "base_maximum_l": [1-9]\d* names'
+
+[[step]]
+name = "uptime"
+cmd = "uptime"
+[[step]]
+name = "uptime reply"
+expect_log = 'command=uptime ok=true result=up .*client 0\.5\.5e'
+since = "action"
+[[step]]
+name = "seed"
+cmd = "seed"
+[[step]]
+name = "seed reply"
+expect_log = 'command=seed ok=true result=seed \d+ topology'
+since = "action"
+[[step]]
+name = "who"
+cmd = "who"
+[[step]]
+name = "who has level and league"
+expect_log = 'command=who ok=true result=1 online: .* level \d+ '
+since = "action"
+[[step]]
+name = "area list"
+cmd = "area list clearfell"
+[[step]]
+name = "areas found"
+expect_log = 'command="?area list clearfell"? ok=true result=.*G1_town'
+since = "action"
+[[step]]
+name = "instance list and its old name"
+cmd = "instances"
+[[step]]
+name = "instances reply"
+expect_log = 'command=instances ok=true result=\d+ instances: '
+since = "action"
+[[step]]
+name = "mute with a duration, old name"
+cmd = "mute Nobody 30m"
+[[step]]
+name = "muted"
+expect_log = 'ok=true result="?muted Nobody for 30m'
+since = "action"
+[[step]]
+name = "unmute"
+cmd = "player unmute Nobody"
+[[step]]
+name = "unmuted"
+expect_log = 'ok=true result="?unmuted Nobody'
+since = "action"
+[[step]]
+name = "go, the alias of instance transfer, by display name"
+cmd = 'go "Clearfell Encampment" 1'
+[[step]]
+name = "in the town"
+expect_state = { area = "G1_town" }
+timeout_s = 60
+
+[[step]]
+name = "let the new world settle"
+wait_ms = 8000
+
+[[step]]
+name = "tp"
+cmd = "tp 378 345"
+[[step]]
+name = "at the cell"
+expect_state = { near = [378, 345, 3] }
+
+[[step]]
+name = "teleport, the old name"
+cmd = "teleport 390 345"
+[[step]]
+name = "there too"
+expect_state = { near = [390, 345, 3] }
+
+[[step]]
+name = "stuck"
+cmd = "stuck"
+[[step]]
+name = "stuck moved within reach"
+expect_log = 'stuck: moving'
+since = "action"
+[[step]]
+name = "back to open ground"
+cmd = "tp 378 345"
+[[step]]
+name = "at open ground"
+expect_state = { near = [378, 345, 3] }
+
+[[step]]
+name = "normal speed: walk W 1 s"
+keys = "indown:0x57 wait:1000 inup:0x57 wait:500"
+[[step]]
+name = "walked at normal speed"
+expect_state = { moved = 20 }
+[[step]]
+name = "no drift at normal speed"
+max_drift = 3.0
+
+[[step]]
+name = "back to open ground again"
+cmd = "tp 378 345"
+[[step]]
+name = "at open ground again"
+expect_state = { near = [378, 345, 3] }
+
+[[step]]
+name = "time scale 0.5"
+cmd = "time scale 0.5"
+[[step]]
+name = "scale set"
+expect_log = 'result="?time scale 0\.5\d? for this instance'
+since = "action"
+[[step]]
+name = "half speed: walk W 1 s"
+keys = "indown:0x57 wait:1000 inup:0x57 wait:800"
+[[step]]
+name = "walked about half as far"
+expect_state = { moved = 8, moved_max = 26 }
+[[step]]
+name = "no drift at half speed"
+max_drift = 3.0
+
+[[step]]
+name = "time scale back to 1"
+cmd = "time scale 1"
+[[step]]
+name = "scale restored"
+expect_log = 'result="?time scale 1\.00 for this instance'
+since = "action"
+[[step]]
+name = "instance reset"
+cmd = "instance reset"
+[[step]]
+name = "reset moved us"
+expect_log = 'result="?moving to fresh instance #\d+'
+since = "action"
+[[step]]
+name = "still in the town"
+expect_state = { area = "G1_town" }
+timeout_s = 60
+
+[[step]]
+name = "no panic"
+reject_log = "panicked"

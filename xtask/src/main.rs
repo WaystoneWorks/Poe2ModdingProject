@@ -178,6 +178,12 @@ enum Cmd {
         #[arg(long)]
         check: bool,
     },
+    /// Regenerate the command table in docs/guides/server-admin.md from the server's registry.
+    CommandsDoc {
+        /// Only check; exit 1 if the table is out of date.
+        #[arg(long)]
+        check: bool,
+    },
     /// The server (modules/server) from the hub: build, run with the hub as working directory
     /// (rebuilding the web admin when its sources are newer than dist/build.json), test.
     Server {
@@ -234,6 +240,9 @@ fn main() -> Result<()> {
     if let Cmd::TerrainMatrix { dumps, out } = cli.cmd {
         return terrain_matrix::run(&root, dumps, out);
     }
+    if let Cmd::CommandsDoc { check } = cli.cmd {
+        return commands_doc(&root, check);
+    }
     if let Cmd::Tracker { cmd } = cli.cmd {
         return tracker::run(&root, &config_path, cmd);
     }
@@ -283,6 +292,7 @@ fn main() -> Result<()> {
         Cmd::RevertClient => revert_client(&config),
         Cmd::DllData => export_dll_data(&config),
         Cmd::Openapi { .. }
+        | Cmd::CommandsDoc { .. }
         | Cmd::Server { .. }
         | Cmd::LoginToken { .. }
         | Cmd::TerrainMatrix { .. }
@@ -312,6 +322,37 @@ fn openapi(root: &Path, check: bool) -> Result<()> {
         cmd.arg("--check");
     }
     run(&mut cmd)
+}
+
+/// Splices the server registry's table (`poe-server commands-doc`) between the markers of
+/// docs/guides/server-admin.md.
+fn commands_doc(root: &Path, check: bool) -> Result<()> {
+    const BEGIN: &str = "<!-- commands-doc:begin -->\n";
+    const END: &str = "<!-- commands-doc:end -->";
+    let out = Command::new("cargo")
+        .args(["run", "-q", "--offline", "-p", "poe-server", "--", "commands-doc"])
+        .current_dir(root.join(server::SERVER_DIR))
+        .output()
+        .context("running poe-server commands-doc")?;
+    if !out.status.success() {
+        bail!("poe-server commands-doc failed: {}", String::from_utf8_lossy(&out.stderr));
+    }
+    let table = String::from_utf8(out.stdout)?;
+    let path = root.join("docs/guides/server-admin.md");
+    let doc = std::fs::read_to_string(&path)?;
+    let (Some(start), Some(end)) = (doc.find(BEGIN), doc.find(END)) else {
+        bail!("{} has no commands-doc markers", path.display());
+    };
+    let new = format!("{}{table}{}", &doc[..start + BEGIN.len()], &doc[end..]);
+    if new == doc {
+        println!("command table is up to date");
+    } else if check {
+        bail!("the command table is out of date: run cargo xtask commands-doc");
+    } else {
+        std::fs::write(&path, new)?;
+        println!("wrote the command table to {}", path.display());
+    }
+    Ok(())
 }
 
 fn repo_root() -> PathBuf {

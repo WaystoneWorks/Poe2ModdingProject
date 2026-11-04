@@ -632,7 +632,7 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         if let Some(c) = &s.cmd {
             // The DLL logs `server command "<c>" sent: false` while its debug link is not up
             // yet (just after loading): retry for up to 20 s.
-            let sent = Regex::new(&format!(r#"server command "{}" sent: (\w+)"#, regex::escape(c)))?;
+            let sent = Regex::new(&format!(r#"server command {} sent: (\w+)"#, regex::escape(&format!("{c:?}"))))?;
             for _ in 0..20 {
                 let from = self.log_len("hook");
                 self.send_keys(&format!("cmd:{c}"))?;
@@ -667,7 +667,12 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         }
         let log = s.log.as_deref().unwrap_or("server");
         if let Some(re) = &s.expect_log {
-            let from = if s.since.as_deref() == Some("start") { 0 } else { self.log_len(log) };
+            let from = match s.since.as_deref() {
+                Some("start") => 0,
+                // A command's reply can land before the next step begins (server log only).
+                Some("action") if log == "server" => self.action_log_at,
+                _ => self.log_len(log),
+            };
             let t = Duration::from_secs(s.timeout_s.unwrap_or(30));
             return self.wait_log(log, re, from, t).map(|l| short(&l));
         }
