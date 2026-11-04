@@ -143,7 +143,7 @@ pub fn binary(server: &Path, release: bool) -> PathBuf {
         .join(exe)
 }
 
-fn build(server: &Path, release: bool) -> Result<PathBuf> {
+pub fn build(server: &Path, release: bool) -> Result<PathBuf> {
     let mut c = Command::new("cargo");
     c.args(["build", "-p", "poe-server"]).current_dir(server);
     if release {

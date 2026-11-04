@@ -18,6 +18,7 @@ mod check_build;
 mod fingerprint;
 mod game_state;
 mod game_test;
+mod release_mirror;
 mod server;
 mod terrain_matrix;
 mod versions;
@@ -192,6 +193,10 @@ enum Cmd {
     /// steps, clean shutdown, pass/fail summary; logs in runtime/game-test/ (docs/guides/setup.md,
     /// "Game tests"). Takes runtime/client.lock.
     GameTest(game_test::Args),
+    /// Build the server and client hook release files locally and write a static release
+    /// source (`<dir>/<repo>/releases.json` + files) that the launcher reads with
+    /// `kind = "static"` (docs/guides/launcher.md).
+    ReleaseMirror(release_mirror::MirrorArgs),
     /// Launch the client through Proton with a dedicated prefix (Steam must be running).
     RunClient {
         /// Proton installation to use (folder name under steamapps/common).
@@ -215,6 +220,9 @@ fn main() -> Result<()> {
         .unwrap_or_else(|| PathBuf::from(DEFAULT_CONFIG));
     if let Cmd::Server { cmd } = cli.cmd {
         return server::run(&root, &config_path, cmd);
+    }
+    if let Cmd::ReleaseMirror(args) = cli.cmd {
+        return release_mirror::run_mirror(&root, args);
     }
     if let Cmd::TerrainMatrix { dumps, out } = cli.cmd {
         return terrain_matrix::run(&root, dumps, out);
@@ -269,6 +277,7 @@ fn main() -> Result<()> {
         | Cmd::LoginToken { .. }
         | Cmd::TerrainMatrix { .. }
         | Cmd::Versions { .. }
+        | Cmd::ReleaseMirror(_)
         | Cmd::CheckBuild { .. } => {
             unreachable!("handled before the config is loaded")
         }

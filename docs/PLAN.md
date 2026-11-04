@@ -9,7 +9,6 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
-| P2 | Configurable release source in the launcher and server (GitHub owner or static mirror), `xtask release-mirror`, `set-owner.sh` | S | [launcher.md](guides/launcher.md) | |
 | P3 | Leagues in the database, web admin Leagues page, "needs a league" popup, variants, LeagueFlag banners, mechanics list, dates, lifecycle | O+S | [leagues.md](plans/leagues.md) | |
 | P4 | Terrain mismatch: compare tile and doodad hash at entry, kick to the previous instance or town, DLL alert with export | S | [terrain-mismatch.md](plans/terrain-mismatch.md) | |
 | P5 | Progress tracker site (static, statuses in `tracker/status.toml`, rows from game data) | S | [tracker.md](plans/tracker.md) | |
@@ -28,10 +27,10 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 | P18 | Loot drops, ground items, gold, parties, allocation by the party leader | O+S | [loot-parties.md](plans/loot-parties.md) | P17, G-PARTY |
 | P19 | NPCs and vendors | O+S | [npcs-vendors.md](plans/npcs-vendors.md) | P12, P10 |
 
-P2 to P7 are independent of the game work and mostly Sonnet; P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
+P3 to P7 are independent of the game work and mostly Sonnet; P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
 
 ## Now
-- **P1** (overlay look, Settings, `overlay.toml`) is done, agent-tested 2026-11-04 (`scripts/game-test/overlay-settings.toml`); **P2** is next.
+- **P1** (overlay look, Settings, `overlay.toml`) and **P2** (release source, `release-mirror`, `set-owner.sh`; agent-tested 2026-11-04) are done; **P3** (leagues) is next.
 
 ## Needs the user
 

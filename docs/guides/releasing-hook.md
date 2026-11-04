@@ -16,3 +16,7 @@ How a release of the client DLLs (`poe_hook.dll`, `poe_hook_core.dll`, Poe2Clien
 ## A new game version
 
 A client update needs a new signature table in the hook ([../re/update-compatibility.md](../re/update-compatibility.md)) and a version file ([new-game-version.md](new-game-version.md)). Release the hook with both tables: its name and `release.json` then list both game versions. The launcher needs its own release only to know the new game version itself (its dropdown comes from the embedded `modules/protocol/versions/*.toml`).
+
+## Without GitHub
+
+`cargo xtask release-mirror <dir>` builds the DLLs, runs `package-hook.py` and writes `<dir>/Poe2ClientHook/releases.json`: a static release source for the launcher ([launcher.md](launcher.md#release-source)).

@@ -52,6 +52,8 @@ cargo xtask deploy-core     # rebuilds and installs only the debug core; a runni
 cargo xtask dll-data        # rewrites only GameFiles/poe-hook-data/ (stats, action types, areas)
 cargo xtask run-client      # launches the client through Proton (Steam must be running)
 cargo xtask revert-client   # restores GameFiles/ to the original state
+cargo xtask release-mirror <dir>  # server and hook release files as a static release source folder for the launcher; flags: launcher.md#release-source
+scripts/set-owner.sh OWNER [--apply]  # rewrites the GitHub owner in all links and defaults (dry run without --apply)
 cargo xtask openapi         # writes modules/server/docs/openapi.json from the web API code (runs `cargo xtask openapi` of Poe2Server; --check: fail if stale)
 cargo xtask terrain-matrix  # writes docs/status/terrain-matrix.tsv (area x topology x orientation) from the game data and dumps/<version>/terrain/vectors/ (--dumps, --out)
 cargo xtask check-build <exe> # what a game build breaks: signatures, offsets, opcode drift, strings, game data, identity (report dumps/<version>/check-build.md; --bundles, --version, --report; exit 0/1/2): new-game-version.md
