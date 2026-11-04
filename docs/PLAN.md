@@ -9,7 +9,6 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
-| P4 | Terrain mismatch: compare tile and doodad hash at entry, kick to the previous instance or town, DLL alert with export | S | [terrain-mismatch.md](plans/terrain-mismatch.md) | |
 | P5 | Progress tracker site (static, statuses in `tracker/status.toml`, rows from game data) | S | [tracker.md](plans/tracker.md) | |
 | P6 | Overlay layout overhaul of every page, merges, Debug shell | S | [overlay.md](plans/overlay.md#p6-layout-overhaul) | P1 |
 | P7 | Command framework v2: subcommands, aliases, flags, levels, searchable help, Console, rework of existing commands, world tools | O+S | [commands.md](plans/commands.md) | P6 |
@@ -26,10 +25,10 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 | P18 | Loot drops, ground items, gold, parties, allocation by the party leader | O+S | [loot-parties.md](plans/loot-parties.md) | P17, G-PARTY |
 | P19 | NPCs and vendors | O+S | [npcs-vendors.md](plans/npcs-vendors.md) | P12, P10 |
 
-P3 to P7 are independent of the game work and mostly Sonnet; P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
+P5 to P7 are independent of the game work and mostly Sonnet; P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
 
 ## Now
-- **P1**, **P2** and **P3** (leagues: store, login list, CLI, web API and admin page, launcher; game tests `leagues`, creating Dawn through `POST /api/v1/admin/leagues`, and `leagues-none` pass, 2026-11-04) are done. **P4** (terrain mismatch) is next.
+- **P1** to **P4** are done (P4: terrain check at area entry, kick to the previous instance, the act's town or character select, DLL popup with layout export; game test `terrain-mismatch` passes and `walk`, `cliffs`, `dungeon` never trigger it, 2026-11-04). **P5** (progress tracker site) is next.
 
 ## Needs the user
 

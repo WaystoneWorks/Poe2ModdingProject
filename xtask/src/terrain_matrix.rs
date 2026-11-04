@@ -12,6 +12,7 @@
 //! | `area-vectors-results.txt` | `area_vectors` example (stdout) | a matching seed for the topology:orientation that reproduced a client tile hash (a vector that does not match gives no combination, so it is no fail) |
 //! | `forced-results.tsv` | `forced_verify` example (forced-layout sweeps and the client's batch, docs/plans/terrain-all-areas.md) | `match` or `fail` for one seed at one forced topology:orientation |
 //! | `probe-results.tsv` | `area_probe` example | whether the generator runs at all (no hash check), per topology, orientation and seed |
+//! | `runtime/terrain_mismatches.tsv` (repo root; `[terrain] mismatch_log` of the server) | a live server kicking a player whose client hashes differ | `fail` for the seed at that topology and orientation ([`parse_mismatch_log`]) |
 //!
 //! A combination keeps the seeds it was tested with: `seeds` is `matched/tested` (a seed counts
 //! once, a match from any source beats a fail), the status is `match` when every tested seed
@@ -251,6 +252,33 @@ pub fn parse_forced_results(text: &str) -> Vec<ForcedResult> {
     out
 }
 
+/// Where the server appends terrain mismatches (`[terrain] mismatch_log`), relative to the repo
+/// root.
+pub const MISMATCH_LOG: &str = "runtime/terrain_mismatches.tsv";
+
+/// Parses the server's mismatch log (`terrain_check::TSV_HEADER` in Poe2Server) into fails of a
+/// seed at its topology and orientation. Rows without a layout, and rows the dev switch
+/// `fake_terrain_hash` made, are skipped; a client that sent no hashes is a fail too.
+pub fn parse_mismatch_log(text: &str) -> Vec<ForcedResult> {
+    let mut lines = text.lines();
+    let Some(header) = lines.next() else { return Vec::new() };
+    let cols: Vec<&str> = header.split('\t').collect();
+    let at = |name: &str| cols.iter().position(|c| *c == name);
+    let (Some(area), Some(seed), Some(topo), Some(orient), Some(reason)) = (at("area"), at("seed"), at("topology"), at("orientation"), at("reason")) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for line in lines {
+        let f: Vec<&str> = line.split('\t').collect();
+        let (Some(reason), Some(area), Ok(seed), Ok(topology), Ok(orientation)) = (f.get(reason), f.get(area), f.get(seed).unwrap_or(&"").parse(), f.get(topo).unwrap_or(&"").parse(), f.get(orient).unwrap_or(&"").parse()) else { continue };
+        if reason.contains("fake_terrain_hash") {
+            continue;
+        }
+        out.push(ForcedResult { area: area.to_string(), seed, topology, orientation, matched: false, detail: format!("live: {reason}") });
+    }
+    out
+}
+
 /// One `area_probe` attempt.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProbeResult {
@@ -299,6 +327,11 @@ pub struct Results {
 impl Results {
     /// Reads the three files under `dir`; a missing one is empty.
     pub fn load(dir: &Path) -> Result<Self> {
+        Self::load_with(dir, None)
+    }
+
+    /// [`Results::load`] plus the server's mismatch log (a path; missing is empty).
+    pub fn load_with(dir: &Path, mismatches: Option<&Path>) -> Result<Self> {
         let read = |name: &str| -> Result<String> {
             let p = dir.join(name);
             match std::fs::read_to_string(&p) {
@@ -307,9 +340,13 @@ impl Results {
                 Err(e) => Err(e).with_context(|| format!("reading {}", p.display())),
             }
         };
+        let mut forced = parse_forced_results(&read(FORCED_RESULTS)?);
+        if let Some(p) = mismatches {
+            forced.extend(parse_mismatch_log(&std::fs::read_to_string(p).unwrap_or_default()));
+        }
         Ok(Self {
             vectors: parse_vector_results(&read(VECTOR_RESULTS)?),
-            forced: parse_forced_results(&read(FORCED_RESULTS)?),
+            forced,
             probe: parse_probe(&read(PROBE_RESULTS)?),
             current_build: None,
         })
@@ -704,16 +741,17 @@ pub fn run(root: &Path, dumps: Option<PathBuf>, out: Option<PathBuf>) -> Result<
         Some(d) => root.join(d),
         None => vectors_dir(root)?,
     };
-    let mut results = Results::load(&dir)?;
+    let mut results = Results::load_with(&dir, Some(&root.join(MISMATCH_LOG)))?;
     results.current_build = poe_config::VersionFile::latest(root).ok().map(|v| v.build_revision);
     let rows = build(&scope, &results);
     let path = out.map(|o| root.join(o)).unwrap_or_else(|| root.join(MATRIX_PATH));
     std::fs::write(&path, to_tsv(&rows)).with_context(|| format!("writing {}", path.display()))?;
     println!(
-        "{}: {}\nsources in {}: {} vector results, {} forced results, {} probe attempts",
+        "{}: {}\nsources in {} (and {}): {} vector results, {} forced results (live mismatches included), {} probe attempts",
         path.display(),
         headline(&rows),
         dir.display(),
+        MISMATCH_LOG,
         results.vectors.len(),
         results.forced.len(),
         results.probe.len()
@@ -778,6 +816,18 @@ mod tests {
         assert!(v[2].matched && v[2].combo.is_none());
         assert!(!v[3].matched && !v[4].matched && !v[5].matched);
         assert_eq!(v[3].build.as_deref(), Some("323943"));
+    }
+
+    #[test]
+    fn mismatch_log_rows_become_fails_unless_faked() {
+        let text = "time\taccount\tcharacter\tinstance\tarea\tarea_name\tseed\ttopology\torientation\tclient_tile\tserver_tile\tclient_doodad\tserver_doodad\treason\tdest\tserver_build\tclient_build\n\
+1\ta\tc\t5\tG1_2\tClearfell\t77\t3\t1\t1\t2\t3\t3\ttile hash differs\tx\ty\tz\n\
+1\ta\tc\t5\tG1_2\tClearfell\t78\t3\t1\t1\t2\t3\t3\ttile hash differs (dev fake_terrain_hash)\tx\ty\tz\n\
+1\ta\tc\t5\tG1_2\tClearfell\t79\t?\t?\tnone\tnone\tnone\tnone\tclient terrain generation failed\tx\ty\tz\n";
+        let r = parse_mismatch_log(text);
+        assert_eq!(r.len(), 1);
+        assert_eq!((r[0].area.as_str(), r[0].seed, r[0].topology, r[0].orientation, r[0].matched), ("G1_2", 77, 3, 1, false));
+        assert!(parse_mismatch_log("").is_empty());
     }
 
     #[test]

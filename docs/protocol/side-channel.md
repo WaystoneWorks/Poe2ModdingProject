@@ -37,7 +37,7 @@ The key is the client-to-server key for kinds 1, 2, 4, 5 and 6 and the server-to
 |---|---|---|---|---|
 | 1 | Report | C to S | UDP | 26 bytes: `u16 flags` (actor `+0x2a2`), `u32 frame`, `f32 x`, `f32 y` (grid cells), `u16 action`, `u16 action2`, `i16 cursor x`, `i16 cursor y`, `u16 window width`, `u16 window height` |
 | 2 | Command | C to S | UDP | text: a server command line (the overlay's, [../guides/server-admin.md](../guides/server-admin.md)); `registry` asks for the command registry |
-| 3 | Debug | S to C | UDP | text lines `key<TAB>value` (simulation state), `cmds`/`instances` lists, `ack<TAB>command<TAB>result`; at most about 3000 bytes |
+| 3 | Debug | S to C | UDP | text lines `key<TAB>value` (simulation state), `cmds`/`instances` lists, `ack<TAB>command<TAB>result`, [`alert` blocks](#alerts); at most about 3000 bytes |
 | 4 | Upload | C to S | TCP | see [terrain upload](#terrain-upload) |
 | 5 | UploadOffer | C to S | TCP | `u32 tile hash` |
 | 6 | ModReport | C to S | TCP | the loaded client mods, see [Mod report](#mod-report) |
@@ -52,6 +52,22 @@ Streams: the client's UDP stream (kinds 1 and 2, shared counter), the client's u
 - A datagram is dropped silently if it is malformed, has another version, names an unknown session, fails the tag, travels the wrong way, has an unexpected kind, or replays a counter. The first rejection and every thousandth are logged (`side-channel datagram rejected`, with the reason).
 - Debug frames go to the source address of the session's latest **authentic** datagram (NAT rebinding follows; spoofed packets cannot redirect it).
 - Reports never move the player; only the drift checker reads them ([movement.md](movement.md#drift-checker)).
+
+## Alerts
+A Debug datagram that starts with `alert<TAB><kind>` is a popup for the player. One kind exists, `terrain_mismatch` (sent by the [terrain check](instance.md#terrain-check)); the block is `key<TAB>value` lines up to `end`:
+```
+alert	terrain_mismatch
+area	G1_2 (Clearfell)
+seed	123456789
+layout	topology 3, orientation 1
+tile	client 0x1a2b3c4d  server 0x5e6f7081
+doodad	client 0x11111111  server 0x11111111
+reason	tile hash differs
+dest	previous instance 7 (G1_1 Riverbank)
+report	terrain-mismatch build=0.5.5e.hotfix1 server=<git describe> area=G1_2 seed=123456789 topo=3 orient=1 tile=1a2b3c4d/5e6f7081 doodad=11111111/11111111 reason=tile_hash_differs
+end
+```
+`none` stands for hashes the client never sent. The DLL (`poe_hook_shared::alert::parse_terrain_mismatch`, `devlink.rs`) exports the client's layout, answers with a Command `ack export <folder>` (or `ack export failed <why>`) and shows the popup ([client-dll.md](../architecture/client-dll.md#alert-popups)). The server waits 3 s for the ack. Alerts are sent once; a lost datagram means no popup (the kick still happens).
 
 ## Terrain upload
 Off by default (`[spawn.upload] enabled = false`; the server generates the terrain, [instance-world.md](../architecture/instance-world.md#terrain-grid-sources)). Over the instance TCP port. The server tells an upload from a game connection by peeking the first four bytes: `PSUP` is not a game opcode (a `Hello` starts with its u16 opcode).

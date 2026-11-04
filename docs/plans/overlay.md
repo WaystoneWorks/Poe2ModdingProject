@@ -191,7 +191,7 @@ General
 ```
 
 ### Popups and notices
-`ui::notice` stays the small corner notice. A new `ui::alert(Alert)` is a centred modal for things that need reading: the terrain mismatch ([terrain-mismatch.md](terrain-mismatch.md)) is the first user. An alert has a title, `key: value` rows, buttons (`Copy report`, `OK`) and is queued like notices.
+`ui::notice` stays the small corner notice. A new `ui::alert(Alert)` is a centred modal for things that need reading: the terrain mismatch ([../protocol/instance.md](../protocol/instance.md#terrain-check)) is the first user and `ui/alert.rs` is built ([../architecture/client-dll.md](../architecture/client-dll.md#alert-popups)). An alert has a title, `key: value` rows, buttons (`Copy report`, `OK`) and is queued like notices.
 
 ## Steps and gates
 - P6: Sonnet (UI work), one session per two or three pages: Status, Player, Entities, Minimap; Log, Sync, Settings; Packets, Protocol, Timing, RE tools; the Debug shell (Help and Console wired to the existing commands; other tabs show "comes with <step>" until their step). Gate: `cargo xtask` overlay build, the sidebar tests, and an agent game test that opens every page (screenshot per page into `runtime/game-test/`).

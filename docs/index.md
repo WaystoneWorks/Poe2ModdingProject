@@ -69,7 +69,6 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 |---|---|
 | [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
 | [plans/overlay.md](plans/overlay.md) | Plan P1, P6: overlay look, Settings, page redesigns with mockups |
-| [plans/terrain-mismatch.md](plans/terrain-mismatch.md) | Plan P4: terrain mismatch kick and alert |
 | [plans/tracker.md](plans/tracker.md) | Plan P5: progress tracker site |
 | [plans/commands.md](plans/commands.md) | Plan P7: command overhaul and catalogue |
 | [plans/items-stats.md](plans/items-stats.md) | Plan P8-P10: PoB2 stat port, items, currency |
