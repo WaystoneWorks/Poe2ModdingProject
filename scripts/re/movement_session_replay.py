@@ -5,7 +5,7 @@ offline like an official capture (docs/protocol/movement.md, Movement trace).
 
 Usage: movement_session_replay.py TRACE PORT POE_HOOK_LOG OUT_DIR
 Writes OUT_DIR/inputs.json (the client's inputs, each at the tick that handled it: the first `tick`
-line logged strictly later, or for a direction the tick of the server's 0x64 that answered it) and OUT_DIR/seg.tsv (the client's logged grid, LINE and PATHPLAN per frame,
+line logged later (the same 0.1 ms counts), or for a direction the tick of the server's 0x64 that answered it) and OUT_DIR/seg.tsv (the client's logged grid, LINE and PATHPLAN per frame,
 and what our server sent as the "official" M and A rows; log frame = server tick, offset 0). Use the log's last `frame #1` block (one session).
 Then: own_replay OUT_DIR/inputs.json OUT_DIR/seg.tsv GRIDS 0 --roll-skill 1
 """
@@ -26,7 +26,7 @@ def inputs(trace, port):
         k, body, at, ms = f[2], f[3], None, float(f[0])
         if k == "tick":
             for v in pending:
-                if v["f"] < ms:
+                if v["f"] <= ms:
                     v["f"] = int(body)
             pending = [v for v in pending if isinstance(v["f"], float)]
             continue
@@ -93,7 +93,7 @@ def server_rows(trace, port):
         elif f[2] == "out-dir":
             rows.append((tick, 9, 0, "M", *f[3:7]))
         elif f[2] == "out-start":
-            rows.append((tick, -1, 0, "A", "roll" if f[7] == "0x1" else "other", *f[3:7]))
+            rows.append((tick, -1, 0, "A", {"0x1": "roll", "0x20002909": "move"}.get(f[7], "other"), *f[3:7]))
     return rows
 
 
