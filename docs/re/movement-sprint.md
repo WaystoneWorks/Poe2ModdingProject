@@ -137,6 +137,8 @@ alive test.
 
 The SprintEnd clip keeps the rate it was played at (`0x141e56ae0` sets it once; game test crazy-keys f439: walk refused 20 frames at the sprint's rate; seg2 f800: 30 at walking rate). 
 
+A sprinting WASD step blocked at a wall runs the "blocked" delegates (Positioned phase at 0x141ddcbee, then 0x141de4bf0, re-aim 0x141e50488). When the re-aim's search keeps the Move, the Bonk (`SprintPart_End` via 0x141415c60 at phase 3, RA 0x14163de16) runs in the Positioned tick (22 of 25 in crazy-keys). When the search finds no path (crazy-keys f1068, f1625, f4716: PATHPLAN count=0) the Move ends and the Actor tick's end check ends the sprint (SEND 9,x bonk 0, `PH 0` rows ddcbee, e588f8, e4d340, e50488, e4e148). The server keys the sprint-off `(0,4)` in both cases. Ported in clientsim `run_line`.
+
 ### Keys of the sprint-off
 A message runs when world `+0x67e` (phase) reaches its seq (`0x142130360`). Phase steps `0x1421303e0` (world vf `+0xa0`) in the Actor tick: `0x141e42b87`, `0x141e43f05`, `0x141e440c5`, then in the end check `0x141415cc5` right before `SprintPart_End`, then `0x141e451de` at the tail; also `0x141e502a5` (`Actor_StartWasdWalk`), `0x141e50488` (re-aim), `0x141de36be`, `0x141de4bf0`; Positioned `0x141ddcbe8` (blocked), `0x141ddddda` (ApplyStep). Measured with `POE_HOOK_PHASE_LOG` (`runtime/replay/phasetab.py`, `phseq.py`): the end runs at phase 4 with no `0x64` and no re-aim, 7 with a `0x64` (official keys `(9,4)`, `(9,7)`). A seq above the phase at the end runs after it and the clip takes the sprint's rate (this was the coast at 1.5x). Ported: `(9,4)` when no `0x64` goes out. A re-aim of the same frame runs before the stats: `ClientSim::actor_tick_axes` then seqs from 4, then `actor_tick_actions`.
 
