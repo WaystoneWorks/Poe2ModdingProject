@@ -22,7 +22,7 @@ Step P11 of [../PLAN.md](../PLAN.md), after items (P9) and the mod rolling engin
 9. Debug link: `itemspec` request and reply (the spec as JSON with issues), `complete itembase|unique|mod <prefix>` with filters (item class, mod generation type, tags, tier), and `mods_for <base>` (eligible mods by group with tiers, weights and ranges).
 
 ## Item art for the overlay
-- The server converts game images to PNG: `GET /api/v1/art/{path}` (DDS decode from the server's own game files, cached on disk under the server's data dir, nothing committed; first user is the league banner picker in [leagues.md](leagues.md)). The art path comes from the base's `ItemVisualIdentity` (the 2D inventory art `Art/2DItems/...`).
+- The server converts game images to PNG: `GET /api/v1/art/{path}` (DDS decode from the server's own game files, cached on disk under the server's data dir, nothing committed; first user is the league banner picker in [leagues.md](../architecture/web-api.md)). The art path comes from the base's `ItemVisualIdentity` (the 2D inventory art `Art/2DItems/...`).
 - The DLL fetches it over HTTP from the server's web API (address known from the connection and the deploy config), decodes the PNG on the overlay thread and registers it as an ImGui texture through the `dear-imgui-ash` backend (the overlay thread owns all overlay Vulkan objects). A small LRU cache (64 textures).
 - Without the web API (or an error), the tooltip shows without art.
 

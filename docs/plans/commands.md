@@ -73,7 +73,7 @@ Each row is delivered by its step; the overlay column is the Debug tab.
 | `instance reset` | admin | World | P7 | a fresh instance of the current area, you inside |
 | `summon <player>` | admin | Players | P7 | brings a player to you |
 | `time scale <factor>` | admin | World | P7 (research) | see "Time scale" below |
-| `league list`, `league end <id> <target>` | admin | World | P3 | [leagues.md](leagues.md) |
+| `league list`, `league end <id> <target>` | admin | World | P3 (done) | [server-admin.md](../guides/server-admin.md#leagues) |
 | `unlock <character> [acts\|waypoints\|all]`, `lock ...` | admin | World | R4 | world map and waypoints |
 | `waypoint unlock all` | admin | World | R4 | alias of `unlock <me> waypoints` |
 | `level set <n> [--no-points]` | admin | Character | P9 | sets the level and grants its points unless `--no-points` |

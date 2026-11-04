@@ -194,22 +194,35 @@ Official lists of characters that have played also carry a blob (`blob_30`, 91 t
 | +0x6c (u32) | **`ShapeshiftForms.dat` row** (the form the preview shows, Druid); looked up by `FUN_1423e57f0` against that table (`0x140495730`) | 0 |
 
 ### LeagueEntry (0xe8 bytes, reader `0x142716e10`)
-Wire order: five wstrings (+0x10 id, +0x40, +0x60 display name used by the select screen, +0x80, +0xa0), three u64 (+0xd0 start, +0xd8, +0xc8 end), 3 flag bytes (+0xe0), u8 +0xc0, u8 +0xc1, u8 +0xc2. After the list: a flags byte (bit 0 to +0x30, bit 1 to +0x31).
+Wire order: five wstrings (+0x10, +0x40, +0x60, +0x80, +0xa0), three u64 (+0xd0, +0xd8, +0xc8), 3 flag bytes (+0xe0), u8 +0xc0, u8 +0xc1, u8 +0xc2. After the list: a flags byte (bit 0 to +0x30, bit 1 to +0x31). Source: the official LeagueList (`dumps/0.5.5e.hotfix1/captures/official/2026-11-03_13-16-29_336`, 12 entries) plus Ghidra.
+
+**Strings.** +0x10 id; +0x40 display name (official sends keys such as `#LeagueStandardExpedition2`; we send the display name); +0x60 = SSF-of (SSF -> its base, HC SSF -> HC); +0x80 = HC-of (HC -> base, HC SSF -> SSF); +0xa0 = third pairing slot (Ruthless in the shared code), empty officially. `0x140e7ca80` builds the 8 creation slots from these.
+
+**Times** (unix seconds): +0xd0 start; +0xd8 early-access start, used when +0xe0 bit 5 (`0x1406c19a0` compares it with `_time64` plus the server offset `DAT_1445d8080`); +0xc8 end, checked when +0xe0 bit 4 (the banner and the Join entry drop after it).
 
 | Bit | Meaning |
 |---|---|
 | +0xe0 bit 1 | hardcore (red text and banner) |
 | +0xe0 bit 2 | timed event (Events panel `0x1408b3dd0`; bits 3/4/5 gate on the start/end times) |
-| +0xe0 bit 7 | **permanent league**: gets a banner at character creation and is not offered in the character-select "Join" list. Set for Standard and Hardcore (`[[leagues]] permanent`) |
-| +0xe1 bit 1 | **variant** of the league named at +0x80 (Hardcore of Standard): no banner of its own and not in the "Join" list (`0x1406bee00`); copied to characters (+0x3ab). Config `[[leagues]] variant_of` |
+| +0xe0 bit 4 / 5 | the end time +0xc8 / the early-access start +0xd8 is checked |
+| +0xe0 bit 7 | gets a banner at character creation (**not** "permanent"; challenge leagues have it too) and is not offered in the "Join" list |
+| +0xe1 bit 0 | unknown; set on Forbidden Rites |
+| +0xe1 bit 1 | **variant** of the league at +0x80: no banner of its own, not in the "Join" list (`0x1406bee00`); copied to characters (+0x3ab) |
 | +0xe1 bit 4 | entry faded (0.5 alpha) |
 | +0xe1 bits 5, 6 | extra confirmation warnings at character creation (`0x140ece3e0`) |
-| +0xe2 bit 2 | "green" variant / creation warning |
+| +0xe2 bits 2, 3 | SSF (`0c`); bit 2 also "green" variant / creation warning |
 
-- The character-select **"Join" list** (lower right) has one entry per league unless it has +0xe0 bit 7 or +0xe1 bit 1, or its end time has passed.
-- **Character creation** (second and later characters; the first goes straight to the class step) starts with a league step: "Choose a league by clicking on a banner below, then click OK". The banners are built by `0x140e7ca80`: one per entry with +0xe0 bit 7 and without +0xe1 bit 1. Variants are matched to their base banner by +0x80 = the base league's id (the Hardcore checkbox; +0xa0, probably SSF, and +0x60 are compared too). Creation needs a selected league (`0x140ece3e0`, screen +0x320 / +0x318). With +0xe1 bit 1 set on every league there would be no banners and the class step could not be reached.
+Official flag bytes (+0xe0..+0xe2): base `a8 00 00`, HC `2a 02 00`, SSF `28 02 0c`, HC SSF `2a 02 0c`. We send the same, plus bit 4 when the league has an end time.
+
+- +0xc1 = league category (`LeagueCategoryToDisplayName.Id`: Standard 1, Runes of Aldur 54, Forbidden Rites 56). 1 preselects the banner at creation; we send 1 for the default base league.
+- +0xc2 = `LeagueFlag` row + 1 of the creation banner (`0x140e77810` reads BannerArt/LogoArt of row c2-1). Official: 2, 3, 0x23, 0x24 = StandardFlag, HardcoreFlag, StandardSSF, HardcoreSSF; 0x97.. = Expedition2*. LeagueFlag sets are `<Set>Standard/Hardcore/StandardSSF/HardcoreSSF` (`LeagueFlagRow::variant_of`).
+- Mechanics list: `CoreLeagues.Id` (13 rows: Shrines, Strongboxes, Breach, Delirium, Ritual, Expedition, Essences, RogueExiles, Spirits, StoneCircles, Abyss, Incursion, Expedition2); stored only. Raw dumps in `runtime/p3/`.
+- The character-select **"Join" list** (lower right) comes from a second list (screen +0x738), not from these entries.
+- **Character creation** (second and later characters; the first goes straight to the class step) starts with a league step: "Choose a league by clicking on a banner below, then click OK". `0x140e7ca80` builds one banner per entry with +0xe0 bit 7 and without +0xe1 bit 1; the HC and SSF checkboxes pick the variant through the +0x60 / +0x80 ids. Creation needs a selected league (`0x140ece3e0`, screen +0x320 / +0x318). With +0xe1 bit 1 set on every league there would be no banners and the class step could not be reached.
+- **No league:** the server sends an empty list (chosen over sending none: a stale list would stay on a connected client); game test `leagues-none`.
+- **Server side:** login-server `session.rs` `league_entries` sends the active leagues, the default first; hidden and ended ones are not sent. Creation refusals: 26 unknown, 55 ended, 56 closed, 139 not started.
 - The **league label** under a character is grey (`0xff676767`) for every non-hardcore league and dark red for hardcore (`0x1406b95f0`). Grey is normal.
-- The **league banner** comes from CharacterEntry **+0x4d = `LeagueFlag.dat` row + 1** (`0x140c7e460`). 0 or 1 give the grey event banner. The row's IsHC/IsSSF pick red or blue and the green variant. Config: `[[leagues]] flag = "StandardFlag"`.
+- The **league banner** comes from CharacterEntry **+0x4d = `LeagueFlag.dat` row + 1** (`0x140c7e460`). 0 or 1 give the grey event banner. The row's IsHC/IsSSF pick red or blue and the green variant. The server stores the row id per league.
 
 ## Deleting a character
 1. **C→S `0x000c` DeleteCharacter**, sent after the confirmation dialog (builder `0x140ed8149`): `astring name` (`u16` byte length + bytes), `u8 slot`, `u32 account_id`. Officially the byte is 0 and the `u32` is the account id. The byte is the low byte of a `u32` at screen +0x214 that the select screen stores when the delete screen opens (`0xffffffff` when unset; probably the list index or the local player); our server identifies the character by name and may ignore it.

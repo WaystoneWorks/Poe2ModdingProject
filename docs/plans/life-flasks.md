@@ -3,7 +3,7 @@
 Steps P13 (pools, regeneration, damage taken, death) and P14 (flasks, charms, belt slots) of [../PLAN.md](../PLAN.md). Needs the stat calculator and items ([items-stats.md](items-stats.md)) and the checkpoints and wells of R4 ([r4-world.md](r4-world.md)).
 
 ## User decisions (2026-11-04)
-- First pass: **pools, regeneration and recovery** (max life, mana and ES from the calculator, regeneration ticks, ES recharge), and **damage taken and death** (monster hits and a debug command, the mitigation order, death, the death screen, resurrect at checkpoint or town). Hardcore death moves the character to the league's parent ([leagues.md](leagues.md)).
+- First pass: **pools, regeneration and recovery** (max life, mana and ES from the calculator, regeneration ticks, ES recharge), and **damage taken and death** (monster hits and a debug command, the mitigation order, death, the death screen, resurrect at checkpoint or town). Hardcore death moves the character to the league's parent ([leagues.md](../guides/server-admin.md#leagues)).
 - Not in the first pass: mana costs of skills, spirit reservation, leech and recoup.
 - Death is **official-like**: death screen, resurrect at checkpoint, and the official XP penalty.
 - Flasks: **life and mana flasks** (use by keys and controller, recovery over time, charges, quality, basic flask mods), **charms**, and **belt-dependent charm slots**.

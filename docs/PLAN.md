@@ -9,7 +9,6 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
-| P3 | Leagues in the database, web admin Leagues page, "needs a league" popup, variants, LeagueFlag banners, mechanics list, dates, lifecycle | O+S | [leagues.md](plans/leagues.md) | |
 | P4 | Terrain mismatch: compare tile and doodad hash at entry, kick to the previous instance or town, DLL alert with export | S | [terrain-mismatch.md](plans/terrain-mismatch.md) | |
 | P5 | Progress tracker site (static, statuses in `tracker/status.toml`, rows from game data) | S | [tracker.md](plans/tracker.md) | |
 | P6 | Overlay layout overhaul of every page, merges, Debug shell | S | [overlay.md](plans/overlay.md#p6-layout-overhaul) | P1 |
@@ -30,7 +29,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 P3 to P7 are independent of the game work and mostly Sonnet; P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
 
 ## Now
-- **P1** and **P2** are done. **P3** (leagues) is built and agent-tested (store, login list, CLI, web API, art endpoint, web admin page, launcher; game tests `leagues` and `leagues-none` pass, 2026-11-04) but NOT GATED: left are the `leagues` game test creating Dawn through `POST /api/v1/admin/leagues`, the docs (login.md LeagueEntry, setup.md, launcher.md) and folding [plans/leagues.md](plans/leagues.md).
+- **P1**, **P2** and **P3** (leagues: store, login list, CLI, web API and admin page, launcher; game tests `leagues`, creating Dawn through `POST /api/v1/admin/leagues`, and `leagues-none` pass, 2026-11-04) are done. **P4** (terrain mismatch) is next.
 
 ## Needs the user
 
