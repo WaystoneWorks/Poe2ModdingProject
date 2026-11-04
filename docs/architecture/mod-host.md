@@ -40,7 +40,7 @@ For each id in `state.toml`, in order (`ModHost::plan`):
 4. **Native library**: the platform file from `[server.library]` (`.so` on Linux, `.dll` on Windows); missing for this platform: skipped. `libloading` maps it, `poe_server_mod_abi_version` must equal `SERVER_API_VERSION` (checked before anything else is called), then `poe_server_mod_init(&ServerApi, &mut ModInfo)` runs. A non-zero return unmaps the library and skips the mod. A started mod is never unloaded.
 5. **Data tier**: `[[commands]]` are registered next to native ones; `[server] tables` directories go to `GameFiles::push_override` in load order (done by `poe-server` before the game data is shared); `config_defaults` and server `opcodes` are parsed but not applied (logged).
 
-Command names are unique: the server's own commands (passed as `reserved_commands`) win, then the earlier mod; a clash makes a native `register_command` return `ERR_EXISTS` (`hello-both` and `hello-server` both register `!hello` and cannot be enabled together) and drops a data-tier duplicate with a log line.
+Command names are unique: the server's own commands win (`commands::reserved_names`: the first path word of every built-in command and every alias, e.g. `instance`, `tp`, `transfer`), then the earlier mod; a clash makes a native `register_command` return `ERR_EXISTS` (`hello-both` and `hello-server` both register `!hello` and cannot be enabled together) and drops a data-tier duplicate with a log line.
 
 ## ServerApi and callbacks
 
@@ -64,7 +64,7 @@ Callbacks run on the thread that raised the event, so callbacks of one instance 
 
 ## Commands in the registry
 
-`instance-server/src/commands.rs` keeps the compile-time list of server commands and, after `install_mod_commands` (once at startup, before anything serves), a list of mod commands (`Extra`: a leaked `Spec`, the mod id and a `CommandAction`). `find`, `parse`, `all` and the overlay's registry lines use both, so a mod command appears in chat, `!help`, the overlay's Commands page and the role check (`admin` for `role = "admin"`) like a built-in. A mod command has one argument, the rest of the line (`args`).
+`instance-server/src/commands.rs` keeps the compile-time list of server commands and, after `install_mod_commands` (once at startup, before anything serves), a list of mod commands (`Extra`: a leaked `Spec`, the mod id and a `CommandAction`). `find`, `parse`, `all` and the overlay's registry lines use both, so a mod command appears in chat, `!help`, the overlay (category Mods, Debug > Help) and the role check (`admin` for `role = "admin"`) like a built-in. A mod command has one argument, the rest of the line (`args`).
 
 - `Reply(text)`: sends the text back (`{player}`, `{args}` filled in).
 - `Alias(line)`: runs another command line as the caller, parsed and role-checked like a typed command; aliases nest at most 4 deep.

@@ -9,9 +9,8 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
-| P7 | Command framework v2: subcommands, aliases, flags, levels, searchable help, Console, rework of existing commands, world tools | O+S | [commands.md](plans/commands.md) | |
 | P8 | `poe-stats`: PoB2 calculation port, stat map, stat-description formatter, PoB2 cross-check | O+S | [items-stats.md](plans/items-stats.md#p8-poe-stats-crate-the-pob2-port-opus-design-sonnet-for-the-mapping-tables-and-tests) | |
-| P9 | Items, inventory, equipment, weapon sets, stats pipeline, levels and XP, not-implemented chat lines, web admin inventory | O+S | [items-stats.md](plans/items-stats.md#p9-items-inventory-equipment-weapon-sets-levels-opus-for-the-re-sonnet-for-storage-and-web-admin) | P7, P8, C2 |
+| P9 | Items, inventory, equipment, weapon sets, stats pipeline, levels and XP, not-implemented chat lines, web admin inventory | O+S | [items-stats.md](plans/items-stats.md#p9-items-inventory-equipment-weapon-sets-levels-opus-for-the-re-sonnet-for-storage-and-web-admin) | P8, C2 |
 | P10 | Currency: mod rolling engine, basic orbs, quality currency, gold | O+S | [items-stats.md](plans/items-stats.md#p10-currency-opus-for-the-rules-sonnet-for-tests) | P9 |
 | P11 | Item creator and spawner (overlay with art, commands, paste, templates, random, edit in place) | O+S | [item-creator.md](plans/item-creator.md) | P10 |
 | P12 | R4: object stage, transitions, waypoints, checkpoints, wells, world map; T | O | [r4-world.md](plans/r4-world.md) | |
@@ -23,10 +22,10 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 | P18 | Loot drops, ground items, gold, parties, allocation by the party leader | O+S | [loot-parties.md](plans/loot-parties.md) | P17, G-PARTY |
 | P19 | NPCs and vendors | O+S | [npcs-vendors.md](plans/npcs-vendors.md) | P12, P10 |
 
-P7 is independent of the game work and mostly Sonnet; P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
+P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
 
 ## Now
-- **P1** to **P5** are done (P4: terrain check at area entry, kick to the previous instance, the act's town or character select, DLL popup with layout export; game test `terrain-mismatch` passes and `walk`, `cliffs`, `dungeon` never trigger it. P5: progress tracker site, `cargo xtask tracker gen|check|build|edit`, [guide](guides/tracker.md); the Pages workflow runs once the hub is on GitHub; 2026-11-04). **P6** (overlay layout overhaul: every page, merges, Debug shell; game test `overlay-pages` takes a screenshot per page) is done too (2026-11-04). **P7** (command framework v2) is in progress: WIP committed, NOT GATED; the code and game test `commands` exist, docs and the final test runs remain.
+- **P1** to **P7** are done (P4: terrain check at area entry, kick to the previous instance, the act's town or character select, DLL popup with layout export; game test `terrain-mismatch` passes and `walk`, `cliffs`, `dungeon` never trigger it. P5: progress tracker site, `cargo xtask tracker gen|check|build|edit`, [guide](guides/tracker.md); the Pages workflow runs once the hub is on GitHub; 2026-11-04). **P6** (overlay layout overhaul: every page, merges, Debug shell; game test `overlay-pages` takes a screenshot per page) is done too (2026-11-04). **P7** (command framework v2: subcommands, aliases, flags, levels, searchable help, Console, `time scale`; game test `commands`) is done (2026-11-04). **P8** is next.
 
 ## Needs the user
 

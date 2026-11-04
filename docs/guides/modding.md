@@ -47,7 +47,7 @@ The SDK takes the client ABI crate and manifest parser from `Poe2ClientHook` as 
 - **Data-driven content:** server logic reads game tables by column name, so modified tables flow through without code changes.
 - **Data mods (no code):** a server mod with only `[[commands]]` (a `reply` text or an `alias` of another command, `role` player or admin) and/or `[server] tables = [...]` folders. Table folders are pushed with `poe_data::GameFiles::push_override` in load order (`<folder>/<virtual path>` replaces the bundled file, later mods win) before the server shares its game data; a table the client also reads makes the mod `both` (the client half of an overlay is not applied).
 - **Native server mods:** every mod in `mods/` enabled in `state.toml` is loaded; the owner is responsible. The server API version and game version are still checked; a refused mod is a log line and the server keeps starting. Changes need a restart. Authors: the SDK guides. Design: [mod-host.md](../architecture/mod-host.md).
-- **Server commands:** one registry (`modules/server/servers/instance-server/src/commands.rs`, run by `exec.rs`) of built-ins plus mod-registered commands; a command works in chat (`!name`) and in the overlay's Commands page ([server-admin.md](server-admin.md)) and takes the rest of the line as its argument.
+- **Server commands:** one registry (`modules/server/servers/instance-server/src/commands.rs`, run by `exec.rs`) of built-ins plus mod-registered commands; a command works in chat (`!name`) and in the overlay's Debug > Help ([server-admin.md](server-admin.md)) and takes the rest of the line as its argument.
 
 ### Running server mods
 

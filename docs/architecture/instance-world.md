@@ -30,7 +30,7 @@ let me = world.spawn_player((x, y));            // EntityId, ids unique per worl
 world.input(me, MoveInput::Direction { x: 180, y: 0 });   // queued; answered by the next tick
 let events: Vec<WorldEvent> = world.tick();     // one frame; the caller owns the timing
 ```
-- **Frame clock.** `frame()` counts ticks; `tick()` advances exactly one frame of `tick_ms` (default 33). The world never reads a clock: the instance's timer calls `tick()`, so replays, tests and a paused instance (`set_paused`) need no special cases.
+- **Frame clock.** `frame()` counts ticks; `tick()` advances exactly one frame of `tick_ms` (default 33; `World::set_tick_ms` changes the frame length from the next frame on while the instance's timer keeps its rate: the `time scale` command, [../re/time-scale.md](../re/time-scale.md)). The world never reads a clock: the instance's timer calls `tick()`, so replays, tests and a paused instance (`set_paused`) need no special cases.
 - **Entities.** `Entity { id, next_buff, movement, config }`: a struct with components as fields (no ECS); `config` is an optional per-entity `MovementConfig` (`spawn_player_with_config`) for class-dependent values. `next_buff` is the buff index allocator shared by every component that adds buffs. `despawn`, `teleport(id, cell)` (reported as `MoveEvent::Teleport`), `set_grid` (the grid can arrive after the world).
 - **Counters.** `StartAction` ids come from one world-wide counter (the official one is server-wide, 32768+, `first_action_id`).
 - **Events.** `tick()` returns `WorldEvent { frame, entity, event }`, ordered by entity id and within an entity in send order. `Event` is `#[non_exhaustive]` (today only `Movement(MoveEvent)`). `frame` is the batch the message belongs to: the session sends every event of a tick before the `SimulationTick` marker.
@@ -110,6 +110,7 @@ client B ── run_session ──Cmd──►│ instance actor (World)│─�
 | `Input { session, input }` | a `MoveInput` for the session's entity (queued, answered by the next tick) |
 | `Leave { session, reply }` | the session ends (disconnect, kick, transfer, supersede, error); the reply is the cell the entity stood on |
 | `Teleport { session, cell }` | dev/admin |
+| `SetFrameMs { frame_ms }` | `time scale`: the instance's frame length ([../re/time-scale.md](../re/time-scale.md)); sends `0x2f5` to every member ahead of its next marker and calls `World::set_tick_ms` |
 | `SetPaused { session, paused, reply }` | the escape menu; the reply says whether it was applied |
 
 Local chat is not an actor message: `chat::deliver` sends it through `live.rs` to every session whose registered instance id matches the actor's key.

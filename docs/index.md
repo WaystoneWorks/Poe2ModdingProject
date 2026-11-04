@@ -59,6 +59,7 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | [re/movement-roll.md](re/movement-roll.md) | Exact port: dodge roll |
 | [re/movement-capture-index.md](re/movement-capture-index.md) | Movement capture indexes (2026-10-20, 2026-11-02 sessions) |
 | [re/movement-sprint.md](re/movement-sprint.md) | Exact port: sprint, end, coast |
+| [re/time-scale.md](re/time-scale.md) | Slowing the simulation with `0x2f5` (`time scale`) |
 | [re/terrain/README.md](re/terrain/README.md) | Terrain generator overview |
 | [re/terrain/tgr.md](re/terrain/tgr.md) | `.tgr` areas |
 | [re/terrain/dungeon.md](re/terrain/dungeon.md) | `.dgr` areas |
@@ -69,8 +70,8 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | Document | Contents |
 |---|---|
 | [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
-| [plans/overlay.md](plans/overlay.md) | Debug tab mockups still to build (P7 and the feature steps) |
-| [plans/commands.md](plans/commands.md) | Plan P7: command overhaul and catalogue |
+| [plans/overlay.md](plans/overlay.md) | Debug tab mockups still to build (feature steps) |
+| [plans/commands.md](plans/commands.md) | Commands still to add per step (registry v2 is current) |
 | [plans/items-stats.md](plans/items-stats.md) | Plan P8-P10: PoB2 stat port, items, currency |
 | [plans/item-creator.md](plans/item-creator.md) | Plan P11: item creator |
 | [plans/r4-world.md](plans/r4-world.md) | Plan P12: R4 world objects, world map; T |

@@ -1,6 +1,6 @@
 # Time scale
 
-Is there a client-honoured way to slow or speed the whole simulation? Static RE of 0.5.5e Hotfix 1; no private-server run yet. Frame queue and playback: [movement.md](../protocol/movement.md#timing).
+Is there a client-honoured way to slow or speed the whole simulation? Static RE of 0.5.5e Hotfix 1, and the private-server run below. Frame queue and playback: [movement.md](../protocol/movement.md#timing).
 
 ## The mechanism: `0x2f5` SimulationFrameValue
 There is no time-scale message, but `frame_ms` works as one, because the client's simulation time is the sum of recorded frame lengths.
@@ -16,9 +16,12 @@ There is no time-scale message, but `frame_ms` works as one, because the client'
 
 **Scope:** whole instance. The instance has one clock and one `dt`, so all its sessions must get the same value.
 
-## Server requirements
-- Simulate with `dt = frame_ms / 1000` in the same frame as the marker; real tick and `dt` become separate values (today both are `tick_ms`).
-- Rules counted in frames were measured at 33 ms and need review at another `frame_ms`: the `*_FRAMES` constants in `poe-game` `locomotion.rs` and `clientsim.rs` (for example `ATTACK_CANCEL_FRAMES`, `TAP_END_FRAMES`).
+## Server implementation and result
+`time scale <factor>` ([../guides/server-admin.md](../guides/server-admin.md#commands)) sets the instance's frame length: the actor (`Cmd::SetFrameMs`) sends `0x2f5` to every session before the marker of the first frame at the new length and calls `World::set_tick_ms`, so the world steps with `dt = frame_ms / 1000` while the real tick stays `[instance] tick_ms`. Factors run from 1/33 to 1 in whole milliseconds; factors above 1 are refused (they need a frame queue and add latency).
+
+Private-server result (game test `commands`, same walk at both factors): at factor 0.5 the walk covers about 58% of the distance (21.2 cells against 36.8), and the drift stays low (max 0.71 and 1.51 cells, under the test's limit of 2).
+
+Not reviewed: the `*_FRAMES` constants in `poe-game` `locomotion.rs` and `clientsim.rs` (for example `ATTACK_CANCEL_FRAMES`, `TAP_END_FRAMES`) were measured at 33 ms; beyond the drift test they were not checked at other frame lengths.
 
 ## Still real time
 Client timer list world +0x850 (decremented with real `dt` in `0x142130440`, purpose unknown), the session's report and latency logic (`0x142120cf0`; +0x11c read at `0x142121248` as `rtt + 2 * frame_ms`), AimTarget's 33 ms cadence, audio, UI. Effects of these untested.
@@ -31,6 +34,6 @@ Client timer list world +0x850 (decremented with real `dt` in `0x142130440`, pur
 - `frame_ms = 0`: drains at once with dt 0; use `SetPause`.
 
 ## Unknown
-- Client behaviour at low `frame_ms` (never exercised officially): needs a private-server run.
+- Client behaviour at very low `frame_ms` (only 0.5 was run).
 - `TimeStop`, `TrialmasterTimestop` (action classes, `0x1413e517b`, `0x1413e355b`): behaviour not read.
 - Where the caller of `0x142120cf0` gets real `dt`; no sweep of all instance handlers for a global time write.

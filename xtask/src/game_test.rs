@@ -176,6 +176,8 @@ struct Run {
     /// Server log length when the last action step (keys, cmd, walk_to, roll) started
     /// (`max_drift`).
     action_log_at: u64,
+    /// The same point in the hook log.
+    action_hook_at: u64,
 }
 
 pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result<()> {
@@ -202,6 +204,7 @@ pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result
         lock_taken: false,
         grids: (None, None),
         action_log_at: 0,
+        action_hook_at: 0,
     };
     println!("game-test {name}: {}", scenario.description);
     println!("logs: {}", dir.display());
@@ -618,6 +621,7 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         self.grids = (self.grids.1, now);
         if s.keys.is_some() || s.cmd.is_some() || s.walk_to.is_some() || s.roll.is_some() {
             self.action_log_at = self.log_len("server");
+            self.action_hook_at = self.log_len("hook");
         }
         if let Some(max) = s.max_drift {
             // One more sample after the action (`[dev] drift_interval_ms`, 1000 by default).
@@ -669,8 +673,9 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         if let Some(re) = &s.expect_log {
             let from = match s.since.as_deref() {
                 Some("start") => 0,
-                // A command's reply can land before the next step begins (server log only).
+                // A command's reply can land before the next step begins.
                 Some("action") if log == "server" => self.action_log_at,
+                Some("action") if log == "hook" => self.action_hook_at,
                 _ => self.log_len(log),
             };
             let t = Duration::from_secs(s.timeout_s.unwrap_or(30));

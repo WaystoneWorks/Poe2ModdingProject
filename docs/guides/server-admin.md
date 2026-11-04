@@ -2,31 +2,47 @@
 
 ## Commands
 
-One registry (`modules/server/servers/instance-server/src/commands.rs`) defines every server command: name, group, whether it needs an admin, typed arguments and help. The same commands work in two places:
+One registry (`modules/server/servers/instance-server/src/commands.rs`) defines every server command. A command has a **path** (`instance join`: a group word plus a subcommand, or one word), **aliases** (one word standing for the whole path; the old names `transfer`, `join`, `kick` and `teleport` are aliases of `instance transfer`, `instance join`, `player kick` and `tp`), positional arguments, `--flags`, a **level** (`player`, or `admin`, which needs the admin role, see Accounts below), a category, a one-line summary, help text, examples and the Debug tab that shows its form. Features that do not exist yet (items, stats, currency, passives, life, flasks, skills, monsters, loot, NPCs, waypoints) keep their commands out of the registry until built (`BUILT`), so `help` never lists a command that does nothing. The same commands work in two places:
 
-- **Chat**: `!name args` (prefix `[commands] prefix`; `/` stays with the client's own commands). Replies come back as chat lines from `<Server>`.
-- **Overlay**: the DLL's Commands page builds a form per command from the registry, which the server sends over the authenticated debug link (`cmds` lines in debug frames; the overlay asks with a `registry` command frame, [../protocol/side-channel.md](../protocol/side-channel.md)). Results arrive as `ack` lines. New registry commands show up by themselves.
+- **Chat**: `!path args` (prefix `[commands] prefix`; `/` stays with the client's own commands). Replies come back as chat lines from `<Server>`. A group word alone (`!instance`) lists its subcommands; an unknown name suggests the closest visible ones (never admin commands to a player).
+- **Overlay**: the DLL's Debug > Help and Console build forms and completion from the registry, which the server sends over the authenticated debug link as `cmdspec` JSON lines, only what the account may use ([../protocol/side-channel.md](../protocol/side-channel.md#command-registry)). Results arrive as `ack` lines. New registry commands show up by themselves.
 
-Execution is in `exec.rs` (`InstanceServer::run_command`). Admin commands need the **admin role** (checked when the command runs; see Accounts below) and are appended to `[commands] audit_log` (`unix ms, account, command, result`; passwords written as `***`).
+**Syntax.** Words split at spaces; `"double quotes"` keep spaces in one word (`\"` is a quote inside). `--flag value`, `--flag=value` or a bare `--switch` can stand anywhere before a rest argument; a quoted `"--x"` is a plain word. A `rest` argument (messages) takes the remaining line as typed, flags included. Argument kinds: `int`, `float`, `text`, `rest`, `bool` (`on`/`off`, also true/false, 1/0, yes/no), `duration` (`30s`, `5m`, `2h`, `1d`; a bare number counts minutes), a fixed choice, and **name kinds** checked against game data (id or display name, case-insensitive; a miss suggests the closest names): `area`, `class`, `ascendancy`, `item_base`, `unique`, `mod`, `stat`, `currency`, `gem`, `monster`, `league`, `waypoint`, `rarity`, `damage_type`. `player` and `instance` complete too but are resolved when the command runs. `seed`, `topology` and `orientation` are described below.
 
-| Command | Admin | What it does |
-|---|---|---|
-| `help [command]` | | the command list, or one command's usage |
-| `where` | | your instance, area, seed and cell |
-| `who` | yes | online players and their instances |
-| `kick <player>` | yes | disconnects a player |
-| `mute <player> [minutes]` / `unmute <player>` | yes | stops / restores a player's chat |
-| `announce <message>` | yes | a `<Server>` chat line to everyone |
-| `instances` | yes | every instance (id, area, seed, layout, players) |
-| `instance_new <area> [seed] [topology] [orientation]` | yes | creates an instance without entering it |
-| `transfer <area> [seed] [topology] [orientation]` | yes | creates an instance and moves you into it |
-| `join <instance>` | yes | moves you into an existing instance |
-| `close <instance>` | yes | closes an instance; its players are disconnected |
-| `teleport <x> <y>` | yes | moves you to a grid cell |
-| `speed [increased] [action]` | | sets your increased movement speed % and action speed % (until gear and buffs exist); the next frame moves at the new speed and sends the stats |
-| `account <action> [name] [value]` | yes | accounts, see below |
-| `terrain` | yes | generates this instance's terrain on the server and logs the comparison |
-| `area_info <area> <seed>` | yes | research: a second AreaInfo on the connection (the client may crash) |
+**Help.** `!help` lists the visible commands by category; `!help <command or path>` shows usage, the help paragraph, flags, examples, aliases and level; any other word searches names, aliases and summaries. Output over 12 lines is paged: `!help <search> 2` (the last word, when a number, is the page). A mod command is category Mods and shows in Debug > Help like a built-in ([../architecture/mod-host.md](../architecture/mod-host.md#commands-in-the-registry)).
+
+Execution is in `exec.rs` (`InstanceServer::run_command`). Admin commands are checked when the command runs and are appended to `[commands] audit_log` (`unix ms, account, command, result`; passwords written as `***`). The table below is generated by `cargo xtask commands-doc` (`--check` fails when it is stale); usage shows `<required>`, `[optional]` and `--flags`.
+
+<!-- commands-doc:begin -->
+| Command | Aliases | Level | Overlay | What it does |
+|---|---|---|---|---|
+| `help [search]` |  | player | Help | Lists, searches and explains the commands. |
+| `where` |  | player | Help | Your instance, area, league, seed, cell and the players with you. |
+| `uptime` |  | player | Help | Server uptime, version and supported client. |
+| `seed` |  | player | Help | This instance's terrain seed and layout. |
+| `speed [increased] [action]` |  | admin | Character | Your movement speed: increased % and action speed %. |
+| `stuck` |  | player | World | Moves you to the nearest walkable cell, or the area's start. |
+| `area list [search]` |  | admin | World | Areas from WorldAreas with act and level. |
+| `instance list` | `instances` | admin | World | Lists the instances (id, area, seed, layout, players). |
+| `instance new <area> [seed] [topology] [orientation]` | `instance_new` | admin | World | Creates an instance without entering it. |
+| `instance transfer <area> [seed] [topology] [orientation]` | `transfer`, `go` | admin | World | Creates an instance and moves you into it. |
+| `instance join <id>` | `join` | admin | World | Moves you into an existing instance. |
+| `instance close <id>` | `close` | admin | World | Closes an instance (its players are disconnected). |
+| `instance reset` |  | admin | World | A fresh instance of this area, with you inside. |
+| `tp <x\|player> [y]` | `teleport` | admin | World | Moves you to a grid cell or to a player. |
+| `time scale [factor]` |  | admin | World | Slows this whole instance down (client and server together). |
+| `league list` |  | admin | World | Lists the leagues with state and character count. |
+| `league end <league> <target>` |  | admin | World | Ends a league family and moves its characters into the target. |
+| `who` |  | admin | Players | Online players with their league, level and instance. |
+| `player kick <player> [reason]` | `kick` | admin | Players | Disconnects a player. |
+| `player mute <player> [duration]` | `mute` | admin | Players | Stops a player's chat, for a while or for good. |
+| `player unmute <player>` | `unmute` | admin | Players | Lets a muted player chat again. |
+| `summon <player>` |  | admin | Players | Brings a player to you. |
+| `announce <message>` |  | admin | Players | A server message to every player. |
+| `account <action> [name] [value]` |  | admin | Players | Lists and manages accounts. |
+| `terrain compare` | `terrain` | admin | World | Generates this instance's terrain and compares it with the client's. |
+| `research area_info <area> <seed>` | `area_info` | admin | World | Sends a second AreaInfo on this connection (the client may crash). |
+<!-- commands-doc:end -->
 
 `seed` takes `random` (the server picks); `topology` and `orientation` take `natural` (the client's own choice; with `[terrain] force_layout`, the default, the server computes that choice and sends it). Any area in `WorldAreas` works. Topology numbers are 1-based in the area's topology list; orientations are checked against that topology's allowed ones.
 
@@ -152,10 +168,15 @@ C→S `0x0016` ChatSend (`u8`, wstring text, `u8`) carries the line as typed. Li
 
 ## Overlay pages (our server only, DEBUG group)
 
-Hidden while the read-only latch is on (official servers), like the Sync page. Debug tabs other than Help and Console are admin-only and hidden for other accounts. Every Debug tab ends with a Results strip (the last 20 command results).
+Hidden while the read-only latch is on (official servers), like the Sync page. Debug tabs other than Help and Console are admin-only and hidden for other accounts. Every Debug tab ends with a Results strip (the last 20 command results). Each tab shows hand-laid controls for its common actions, then a form generated from the registry for every other command whose overlay is that tab, so no command lacks one. A mod command is category Mods with overlay Debug > Help.
 
-- **Help**: every command the account may run, grouped and searchable; the right pane shows the usage and the form (arguments as widgets, layout form for areas) with Run.
-- **Console**: a raw command line with history (Up/Down), Tab completion of the command name and suggestions; results come back as ack lines.
-- **World**: the server's instances (id, area, seed, layout, players, time until an empty one closes) with Join and Close, a new-instance form (area picker with search, kind and act filters, recent picks, every area from `poe-hook-data/areas.tsv`, written by `cargo xtask dll-data` or `deploy-client`; seed, topology and orientation) with "Transfer there" and "Create without transferring", and teleport.
-- **Character, Stats, Items, Monsters, Life, Players**: shells that say which step brings them ([../PLAN.md](../PLAN.md)).
+- **Help**: every command the account may run, grouped and searchable; the right pane shows the usage and the form (arguments as widgets, name kinds as pickers fed by `complete`, layout form for areas) with Run.
+- **Console**: a raw command line with history (Up/Down), Tab completion of command names, subcommands, flags, choices and game-data names, and a suggestion strip (click takes the word); results come back as ack lines.
+- **World**: the server's instances (id, area, seed, layout, players, time until an empty one closes) with Join and Close, a new-instance form (area picker with search, kind and act filters, recent picks, every area from `poe-hook-data/areas.tsv`, written by `cargo xtask dll-data` or `deploy-client`; seed, topology and orientation) with "Transfer there" and "Create without transferring", teleport and the time scale.
+- **Players**: the online players (character, account, level, league, area, instance) with kick, mute, teleport and summon, announcements and accounts. The list comes from `online` lines, sent to admins only.
+- **Character**: your character as the server sees it (`state` lines) and the `speed` form. **Stats, Items, Monsters, Life** are shells that say which step brings them ([../PLAN.md](../PLAN.md)).
 - **Sync** (own entry): the server's state table and the client position against the server's prediction (desync plots and the worst frames, Copy TSV).
+
+## Tested and not tested
+
+Non-admin filtering (help, registry, suggestions, completion lists) is covered by unit tests only: the game-test account is an admin. The Console's Tab and suggestion strip are unit tested through `suggest`; the `complete` round trip runs in game (game test `commands`), but no game test types into the Console UI. `summon` and `tp <player>` need two players and have only been compiled. `stuck` was run on open ground only. Time scale: [../re/time-scale.md](../re/time-scale.md).

@@ -58,6 +58,7 @@ cmd = "complete stat base_maximum_l"
 [[step]]
 name = "the DLL got names"
 log = "hook"
+since = "action"
 expect_log = 'completion stat "base_maximum_l": [1-9]\d* names'
 
 [[step]]

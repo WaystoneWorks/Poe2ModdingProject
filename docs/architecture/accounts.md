@@ -53,7 +53,7 @@ Accounts from before migration `0006` (made by the old machine-hash login) have 
 
 ## Admins and account commands
 
-Admin is the `admin` role. Commands (chat `!account ...`, the overlay's Commands page, or offline `cargo xtask server run -- account ...`): `create`, `role`, `disable`, `enable`, `passwd`, `list`; see [../guides/server-admin.md](../guides/server-admin.md). The first admin is made offline: `account create <name> <password>`, then `account role <name> admin`. Passwords typed in chat are replaced by `***` in the log and audit file. An admin cannot demote or disable themselves.
+Admin is the `admin` role. Commands (chat `!account ...`, the overlay's Debug > Help, or offline `cargo xtask server run -- account ...`): `create`, `role`, `disable`, `enable`, `passwd`, `list`; see [../guides/server-admin.md](../guides/server-admin.md). The first admin is made offline: `account create <name> <password>`, then `account role <name> admin`. Passwords typed in chat are replaced by `***` in the log and audit file. An admin cannot demote or disable themselves.
 
 `[accounts] open_registration` (default false) lets `POST /api/v1/register` create player accounts ([web-api.md](web-api.md)); server commands always work.
 

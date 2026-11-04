@@ -108,6 +108,7 @@ rows = [
   { id = "proj:instances", group = "World", name = "Instance directory, transfers and forced layouts" },
   { id = "proj:terrain", group = "World", name = "Terrain generator (server port of the client's)" },
   { id = "proj:terrain_check", group = "World", name = "Terrain check at area entry" },
+  { id = "proj:time_scale", group = "World", name = "Time scale (slow an instance, client and server together)" },
   { id = "proj:movement", group = "World", name = "Movement (exact port: walk, click, roll, sprint)" },
   { id = "proj:players", group = "World", name = "Other players in an instance" },
   { id = "proj:chat", group = "World", name = "Chat channels and commands" },

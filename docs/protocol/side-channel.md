@@ -36,8 +36,8 @@ The key is the client-to-server key for kinds 1, 2, 4, 5 and 6 and the server-to
 | Kind | Name | Way | Transport | Payload |
 |---|---|---|---|---|
 | 1 | Report | C to S | UDP | 26 bytes: `u16 flags` (actor `+0x2a2`), `u32 frame`, `f32 x`, `f32 y` (grid cells), `u16 action`, `u16 action2`, `i16 cursor x`, `i16 cursor y`, `u16 window width`, `u16 window height` |
-| 2 | Command | C to S | UDP | text: a server command line (the overlay's, [../guides/server-admin.md](../guides/server-admin.md)); `registry` asks for the command registry |
-| 3 | Debug | S to C | UDP | text lines `key<TAB>value` (simulation state), `cmds`/`instances` lists, `ack<TAB>command<TAB>result`, [`alert` blocks](#alerts); at most about 3000 bytes |
+| 2 | Command | C to S | UDP | text: a server command line (the overlay's, [../guides/server-admin.md](../guides/server-admin.md)); `registry` asks for the command registry; `complete <kind> <typed>` asks for names ([below](#command-registry)) |
+| 3 | Debug | S to C | UDP | text lines `key<TAB>value` (simulation state), `cmds`/`instances` lists, `state`/`online` lines, `completion`/`name` replies, `ack<TAB>command<TAB>result`, [`alert` blocks](#alerts); at most about 3000 bytes |
 | 4 | Upload | C to S | TCP | see [terrain upload](#terrain-upload) |
 | 5 | UploadOffer | C to S | TCP | `u32 tile hash` |
 | 6 | ModReport | C to S | TCP | the loaded client mods, see [Mod report](#mod-report) |
@@ -52,6 +52,14 @@ Streams: the client's UDP stream (kinds 1 and 2, shared counter), the client's u
 - A datagram is dropped silently if it is malformed, has another version, names an unknown session, fails the tag, travels the wrong way, has an unexpected kind, or replays a counter. The first rejection and every thousandth are logged (`side-channel datagram rejected`, with the reason).
 - Debug frames go to the source address of the session's latest **authentic** datagram (NAT rebinding follows; spoofed packets cannot redirect it).
 - Reports never move the player; only the drift checker reads them ([movement.md](movement.md#drift-checker)).
+
+## Command registry
+
+The overlay is generated from the server's command registry ([../guides/server-admin.md](../guides/server-admin.md#commands)). Debug datagrams (about 3000 bytes each; a longer list continues in another datagram):
+
+- `cmds<TAB>begin` (or `more` in a continuation), then one `cmdspec<TAB><JSON>` line per command the account may use, then `you<TAB>account<TAB>admin 0/1<TAB>prefix`. The JSON is `poe_hook_shared::cmdspec::CmdSpec`: `path`, `aliases`, `category`, `admin`, `args` (`name`, `kind`, `optional`), `flags` (`name`, `kind` or null for a switch, `help`), `summary`, `help`, `examples`, `overlay` (a Debug tab). `kind` is `int`, `float`, `text`, `rest`, `bool`, `duration`, `choice=a|b`, `seed`, `topology`, `orientation` or a name kind (`area`, `player`, `instance`, `class`, `stat`, ...). A line over 2900 bytes (a long mod help) is cut.
+- `complete <kind> <typed>` (Command frame, name kinds only) is answered by `completion<TAB>kind<TAB>typed` and a `name<TAB>id<TAB>display` line per match, prefix matches first, at most 30. Player, instance and league lists are empty for non-admins.
+- `state<TAB>begin`, then `state<TAB>key<TAB>value` (character, level, class, league, area, instance, seed, cell, time_scale, muted), about every second; for admins also `online<TAB>character<TAB>account<TAB>area<TAB>instance<TAB>league<TAB>level<TAB>muted` per online player.
 
 ## Alerts
 A Debug datagram that starts with `alert<TAB><kind>` is a popup for the player. One kind exists, `terrain_mismatch` (sent by the [terrain check](instance.md#terrain-check)); the block is `key<TAB>value` lines up to `end`:

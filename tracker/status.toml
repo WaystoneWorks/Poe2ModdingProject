@@ -31,7 +31,7 @@
 "proj:chat" = { status = "partial", note = "channels and commands; whisper, party and trade chat missing", link = "docs/architecture/instance-world.md" }
 "proj:check_build" = { status = "fully_functional", link = "docs/guides/new-game-version.md" }
 "proj:client_mods" = { status = "implemented", link = "docs/guides/modding.md" }
-"proj:debug_commands" = { status = "partial", note = "Help, Console and World work; Character, Stats, Items, Monsters, Life, Players are shells until their steps", link = "docs/architecture/client-dll.md" }
+"proj:debug_commands" = { status = "partial", note = "framework, Help, Console, World and Players work; Character, Stats, Items, Monsters and Life wait for their steps", link = "docs/architecture/client-dll.md" }
 "proj:flasks" = { status = "not_implemented", note = "P14", link = "docs/plans/life-flasks.md" }
 "proj:game_test" = { status = "fully_functional", link = "docs/guides/setup.md" }
 "proj:instances" = { status = "fully_functional", link = "docs/protocol/instance.md" }
@@ -68,6 +68,7 @@
 "proj:terrain_check" = { status = "implemented", note = "always kicks on a mismatch", link = "docs/protocol/instance.md" }
 "proj:tracker" = { status = "implemented", note = "this site", link = "docs/guides/tracker.md" }
 "proj:trade" = { status = "not_implemented", link = "docs/plans/backlog.md" }
+"proj:time_scale" = { status = "implemented", note = "factors 1/33 to 1 only; run at 0.5", link = "docs/re/time-scale.md" }
 "proj:transitions" = { status = "not_implemented", note = "P12", link = "docs/plans/r4-world.md" }
 "proj:vendors" = { status = "not_implemented", note = "P19", link = "docs/plans/npcs-vendors.md" }
 "proj:web_accounts" = { status = "implemented", link = "docs/architecture/web-api.md" }
