@@ -1,0 +1,35 @@
+# Overlay look and settings (PLAN P1): the overlay opens on the page and with the checkbox state
+# saved in GameFiles/logs/poe-hook/overlay.toml (seed it before the run: last_page = "Settings",
+# show_slow_hook_popups = false), a snapshot screenshot shows it, and the file is unchanged
+# afterwards. Format: docs/guides/setup.md, "Game tests".
+description = "overlay opens on the saved Settings page, screenshot, settings file kept"
+
+after = [
+  "grep -q 'show_slow_hook_popups = false' GameFiles/logs/poe-hook/overlay.toml && grep -q 'last_page = \"Settings\"' GameFiles/logs/poe-hook/overlay.toml && echo overlay.toml kept",
+  "cp \"$(ls -t {session}/snapshots/*/*.png | head -1)\" runtime/game-test/overlay-settings.png && echo screenshot copied",
+]
+
+[[step]]
+name = "position reports"
+expect_log = "client position reports started"
+since = "start"
+timeout_s = 30
+
+[[step]]
+name = "show the overlay (Insert)"
+keys = "0x2d wait:1500"
+
+[[step]]
+name = "snapshot with screenshot (Home)"
+keys = "0x24 wait:3000"
+
+[[step]]
+name = "screenshot written"
+expect_log = "snapshot: screenshot "
+log = "hook"
+since = "start"
+timeout_s = 20
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

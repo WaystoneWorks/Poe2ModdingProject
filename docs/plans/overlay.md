@@ -1,6 +1,6 @@
 # Plan: DLL overlay look, layout and Settings
 
-Steps P1 (look and Settings) and P6 (layout overhaul) of [../PLAN.md](../PLAN.md). The Debug group's pages are built here as a shell; their commands come from [commands.md](commands.md) and each feature step. Current overlay: [../architecture/client-dll.md](../architecture/client-dll.md#overlay-overlay). Code: `modules/client-hook/poe-hook-core/src/ui/` (`mod.rs` sidebar, pages and notices; `theme.rs`; one `*_tab.rs` per page).
+Step P6 (layout overhaul) of [../PLAN.md](../PLAN.md); P1 (look, Settings, `overlay.toml`) is done and described in [client-dll.md](../architecture/client-dll.md#overlay-overlay). The Debug group's pages are built here as a shell; their commands come from [commands.md](commands.md) and each feature step. Current overlay: [../architecture/client-dll.md](../architecture/client-dll.md#overlay-overlay). Code: `modules/client-hook/poe-hook-core/src/ui/` (`mod.rs` sidebar, pages and notices; `theme.rs`; one `*_tab.rs` per page).
 
 ## User decisions (2026-11-04)
 - Look: ImGui's stock `StyleColorsDark`, stock spacing and rounding, and the built-in ProggyClean font scaled by `overlay.scale`. Cinzel and the Ash & Blood colours leave the overlay. The launcher and web admin keep Ash & Blood.
@@ -13,15 +13,6 @@ Steps P1 (look and Settings) and P6 (layout overhaul) of [../PLAN.md](../PLAN.md
 - The ASCII mockups below are the approval; no HTML previews before building.
 - Every page gets a full redesign, the research pages too.
 - No hotkeys for commands.
-
-## P1: look, Settings rename, slow-hook popups (small, Sonnet)
-1. `theme.rs`: replace the token table with `style.use_dark_colors()` (dear-imgui-rs `Style::use_dark_colors`) and the default font at `overlay.scale`. Remove `assets/Cinzel.ttf`, its licence note and the heading-font plumbing (`App::new(heading)`, `page_head`). Keep one helper for semantic colours that ImGui has no slot for: `ok` (green), `warn` (yellow), `bad` (red), `muted` (`TextDisabled`). Every page uses these instead of literal RGBA.
-2. Rename `features_tab.rs` to `settings_tab.rs`, `Page::Features` to `Page::Settings`, and the sidebar group and entry "SETTINGS > Settings". Update the `every_page_is_in_the_sidebar_once` and `groups_fold_and_hide_as_agreed` tests.
-3. `overlay.toml` (new module `ui/settings.rs`): `serde` struct with `show_slow_hook_popups = true`, `last_page`, `sidebar_folded = []`, `scale_override` (optional). Loaded at core start, written on change (atomic: temporary file and rename). It replaces `overlay_page.txt`: read the old file once if `overlay.toml` is missing.
-4. `hooks.rs` `slow_call`: still `log::warn!`, and calls `ui::notice` only when `settings().show_slow_hook_popups`.
-5. Settings page, first section "General": the checkbox, then the existing runtime switches (movement log, position sync), then the `poe-hook.toml` table, read-only, under a collapsing header "Deployed config (edit poe-hook.toml, then Reload core)".
-6. Docs: client-dll.md overlay paragraph (look, Settings, overlay.toml); setup.md if it names Features.
-- Done when: the overlay shows stock dark ImGui, Settings has the checkbox, a forced slow hook (test build or `SLOW_NS` lowered in a test) logs without a popup when it is off, and the setting survives a core reload and a game restart.
 
 ## P6: layout overhaul
 Rules for every page:
@@ -203,5 +194,4 @@ General
 `ui::notice` stays the small corner notice. A new `ui::alert(Alert)` is a centred modal for things that need reading: the terrain mismatch ([terrain-mismatch.md](terrain-mismatch.md)) is the first user. An alert has a title, `key: value` rows, buttons (`Copy report`, `OK`) and is queued like notices.
 
 ## Steps and gates
-- P1: Sonnet, one session. Done when the P1 "Done when" holds.
 - P6: Sonnet (UI work), one session per two or three pages: Status, Player, Entities, Minimap; Log, Sync, Settings; Packets, Protocol, Timing, RE tools; the Debug shell (Help and Console wired to the existing commands; other tabs show "comes with <step>" until their step). Gate: `cargo xtask` overlay build, the sidebar tests, and an agent game test that opens every page (screenshot per page into `runtime/game-test/`).
