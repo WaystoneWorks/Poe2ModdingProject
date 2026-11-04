@@ -505,7 +505,7 @@ Only runs while a ramp is active (`A+0x444 > 0`). A plain walk: `A+0x440 = 1`, n
 ## Aim and stun messages (moved verbatim from the protocol doc)
 #### Aim
 - C→S `0x62` mode 2 with the **absolute** cell under the cursor, at most one per frame, about every frame while the mouse moves; none in click-to-move mode. S→C `0x1dc` kind 0 with the same cell, header `(player,0,0,0)`, at `f+1` (94 %). Not every input is echoed: **never while rolling or sprinting**, mostly not while an attack runs (204/237), 0.5 % of idle/walking inputs.
-- Mode 3 (entity, hovered) is sent often but only 11 `0x1dc` with kind 1 exist: not echoed one-to-one. Facing is entirely a `0x1dc` effect; there is no `0x1df`.
+- Mode 3 (entity, hovered) is sent often but only 11 `0x1dc` with kind 1 exist: not echoed one-to-one. Facing is entirely a `0x1dc` effect (conditions: [movement-roll.md](movement-roll.md#facing-event-first-heading-checked-by-replay)); there is no `0x1df`.
 
 #### Stun
 One light stun (f4072, a monster hit the player while attacking): `0x1d3` `is_light_stunned=1, is_immobilised=1` (header `(7,11)`), `0x1eb` buff row 2404 (flag `0x02`), `0x1d3 on_full_energy_shield=0` (`(7,14)`); 7 frames later `0x1d3 number_of_times_stunned_in_past_duration_from_ot=1` and `virtual_light_stun_threshold_+%_final=50`; **15 frames after the start the stats go back** (`is_light_stunned=0, is_immobilised=0`, header `(5,1)`) and the attack asked for meanwhile starts (`0x1c8` flags `0x410`, header `(5,2)`, `0x1ca`). Attacks and Move presses during the stun get their `0x1ae` only; the server cell stays put. Knockback (`0x1e0`) and stuns while walking or rolling: not captured.

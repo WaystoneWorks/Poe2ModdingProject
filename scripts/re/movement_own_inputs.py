@@ -14,6 +14,10 @@ replies = [q for q in msgs if q.dir == "in" and q.d and q.op in mf.REPLY_OPS]
 out, used, unanswered = [], set(), 0
 for m in msgs:
     k = mf.key_input(m)
+    # Cursor aims too (key episodes drop them): their echo 0x1dc turns the player (the facing a roll
+    # starts with).
+    if k is None and m.dir == "out" and m.op == 0x62 and m.d and m.d.get("mode") == 2:
+        k = mf.to_input(m)
     if not k or k["op"] in ("pause", "unsupported"):
         continue
     frame = None

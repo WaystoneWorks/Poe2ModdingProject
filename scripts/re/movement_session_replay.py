@@ -53,6 +53,8 @@ def inputs(trace, port):
             out.append({"f": at, "op": "sprint", "held": "held: true" in body})
         elif k == "in-SkillReleased":
             out.append({"f": at, "op": "released", "skill": NUM(body, "skill"), "flag": NUM(body, "flag")})
+        elif k == "in-AimTarget" and body.startswith("Aim {"):
+            out.append({"f": at, "op": "aim", "x": NUM(body, "x"), "y": NUM(body, "y")})
         elif k == "in-AimTarget" and body.startswith("AimMode"):
             out.append({"f": at, "op": "aim_mode", "mode": NUM(body, "mode")})
         elif k == "in-StanceRequest":
