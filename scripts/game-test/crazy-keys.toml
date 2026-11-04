@@ -4,6 +4,8 @@ input_mode = "wasd"
 
 [client_env]
 POE_HOOK_MOVEMENT_LOG = "1"
+POE_HOOK_PHASE_LOG = "1"
+POE_HOOK_PATH_LOG = "1"
 
 [server]
 "dev.drift_check" = true

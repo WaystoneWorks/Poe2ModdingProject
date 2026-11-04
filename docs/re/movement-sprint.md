@@ -135,7 +135,10 @@ CORRECTION: Move is ended only when the Move slot holds a `0x2909` action; the f
 (0 -> 2, 1 -> 3); `no_anim` (3rd arg, always 0 from the check) skips the animation; `Life+0x1e0 > 0` is the
 alive test.
 
-The SprintEnd clip keeps the rate it was played at (`0x141e56ae0` sets it once; game test crazy-keys f439: walk refused 20 frames at the sprint's rate; seg2 f800: 30 at walking rate). OPEN: `must_sprint` off and sprint-off in one batch with no `0x64` coasts at the sprint's rate (8 of 8), with a `0x64` in the batch at walking rate (7 of 7); the code behind it is unread.
+The SprintEnd clip keeps the rate it was played at (`0x141e56ae0` sets it once; game test crazy-keys f439: walk refused 20 frames at the sprint's rate; seg2 f800: 30 at walking rate). 
+
+### Keys of the sprint-off
+A message runs when world `+0x67e` (phase) reaches its seq (`0x142130360`). Phase steps `0x1421303e0` (world vf `+0xa0`) in the Actor tick: `0x141e42b87`, `0x141e43f05`, `0x141e440c5`, then in the end check `0x141415cc5` right before `SprintPart_End`, then `0x141e451de` at the tail; also `0x141e502a5` (`Actor_StartWasdWalk`), `0x141e50488` (re-aim), `0x141de36be`, `0x141de4bf0`; Positioned `0x141ddcbe8` (blocked), `0x141ddddda` (ApplyStep). Measured with `POE_HOOK_PHASE_LOG` (`runtime/replay/phasetab.py`, `phseq.py`): the end runs at phase 4 with no `0x64` and no re-aim, 7 with a `0x64` (official keys `(9,4)`, `(9,7)`). A seq above the phase at the end runs after it and the clip takes the sprint's rate (this was the coast at 1.5x). Ported: `(9,4)` when no `0x64` goes out. A re-aim of the same frame runs before the stats: `ClientSim::actor_tick_axes` then seqs from 4, then `actor_tick_actions`.
 
 ### Play animation `0x141e57b80(actor, req)` (type-3 = movement-speed animation)
 For a row with type `+0x4d == 3` (`SprintEnd` is): `v = 0x141e4db00(actor) * req.factor(+0x4c, 1.0)`
