@@ -21,6 +21,7 @@ mod game_test;
 mod release_mirror;
 mod server;
 mod terrain_matrix;
+mod tracker;
 mod versions;
 
 /// The client DLL workspace (Poe2ClientHook submodule), relative to the repo root.
@@ -164,6 +165,12 @@ enum Cmd {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// The progress tracker site: `gen` (rows from the game data), `check`, `build`, `edit`
+    /// (docs/guides/tracker.md).
+    Tracker {
+        #[command(subcommand)]
+        cmd: tracker::Cmd,
+    },
     /// Write the web API's OpenAPI document to modules/server/docs/openapi.json (the web admin
     /// and the launcher generate their types from it). Runs `cargo xtask openapi` of Poe2Server.
     Openapi {
@@ -227,6 +234,9 @@ fn main() -> Result<()> {
     if let Cmd::TerrainMatrix { dumps, out } = cli.cmd {
         return terrain_matrix::run(&root, dumps, out);
     }
+    if let Cmd::Tracker { cmd } = cli.cmd {
+        return tracker::run(&root, &config_path, cmd);
+    }
     if let Cmd::Versions { check } = cli.cmd {
         return versions::run(&root, check);
     }
@@ -276,6 +286,7 @@ fn main() -> Result<()> {
         | Cmd::Server { .. }
         | Cmd::LoginToken { .. }
         | Cmd::TerrainMatrix { .. }
+        | Cmd::Tracker { .. }
         | Cmd::Versions { .. }
         | Cmd::ReleaseMirror(_)
         | Cmd::CheckBuild { .. } => {

@@ -1,0 +1,79 @@
+# Row statuses of the progress tracker (docs/guides/tracker.md). A row that is not here is
+# unknown. Edit [status] by hand or with `cargo xtask tracker edit`; [auto] is written by
+# `cargo xtask tracker gen` and wins over [status]. Statuses: unknown, not_implemented,
+# partial, implemented, fully_functional, not_planned.
+
+[auto]
+"cmd:account" = { status = "implemented" }
+"cmd:announce" = { status = "implemented" }
+"cmd:area_info" = { status = "implemented" }
+"cmd:close" = { status = "implemented" }
+"cmd:help" = { status = "implemented" }
+"cmd:instance_new" = { status = "implemented" }
+"cmd:instances" = { status = "implemented" }
+"cmd:join" = { status = "implemented" }
+"cmd:kick" = { status = "implemented" }
+"cmd:league" = { status = "implemented" }
+"cmd:mute" = { status = "implemented" }
+"cmd:speed" = { status = "implemented" }
+"cmd:teleport" = { status = "implemented" }
+"cmd:terrain" = { status = "implemented" }
+"cmd:transfer" = { status = "implemented" }
+"cmd:unmute" = { status = "implemented" }
+"cmd:where" = { status = "implemented" }
+"cmd:who" = { status = "implemented" }
+
+[status]
+"proj:accounts" = { status = "fully_functional", note = "argon2id accounts, roles, rolling tokens", link = "docs/architecture/accounts.md" }
+"proj:alert" = { status = "implemented", link = "docs/architecture/client-dll.md" }
+"proj:capture" = { status = "fully_functional", link = "docs/re/captures.md" }
+"proj:characters" = { status = "implemented", note = "creation, selection, deletion; refusal codes unchecked in game", link = "docs/protocol/login.md" }
+"proj:chat" = { status = "partial", note = "channels and commands; whisper, party and trade chat missing", link = "docs/architecture/instance-world.md" }
+"proj:check_build" = { status = "fully_functional", link = "docs/guides/new-game-version.md" }
+"proj:client_mods" = { status = "implemented", link = "docs/guides/modding.md" }
+"proj:debug_commands" = { status = "implemented", link = "docs/architecture/client-dll.md" }
+"proj:flasks" = { status = "not_implemented", note = "P14", link = "docs/plans/life-flasks.md" }
+"proj:game_test" = { status = "fully_functional", link = "docs/guides/setup.md" }
+"proj:instances" = { status = "fully_functional", link = "docs/protocol/instance.md" }
+"proj:items" = { status = "not_implemented", note = "P9", link = "docs/plans/items-stats.md" }
+"proj:launcher_deploy" = { status = "implemented", link = "docs/guides/launcher.md" }
+"proj:launcher_host" = { status = "partial", note = "Host a server untested on Windows", link = "docs/guides/launcher.md" }
+"proj:launcher_install" = { status = "partial", note = "Steam depot download untested on a real install", link = "docs/guides/launcher.md" }
+"proj:launcher_mods" = { status = "partial", note = "mod sync not run against a real server with mods", link = "docs/guides/launcher.md" }
+"proj:launcher_servers" = { status = "implemented", link = "docs/guides/launcher.md" }
+"proj:launcher_update" = { status = "partial", link = "docs/guides/launcher.md" }
+"proj:launcher_windows" = { status = "partial", note = "no Windows machine to test on", link = "docs/guides/launcher.md" }
+"proj:leagues" = { status = "implemented", note = "Standard, Hardcore, custom leagues; end league", link = "docs/guides/server-admin.md" }
+"proj:life" = { status = "not_implemented", note = "P13", link = "docs/plans/life-flasks.md" }
+"proj:loader" = { status = "fully_functional", link = "docs/architecture/client-dll.md" }
+"proj:login" = { status = "fully_functional", note = "key exchange bypass and standalone login", link = "docs/protocol/login.md" }
+"proj:loot" = { status = "not_implemented", note = "P18", link = "docs/plans/loot-parties.md" }
+"proj:mod_sdk" = { status = "implemented", link = "docs/guides/modding.md" }
+"proj:mods" = { status = "implemented", link = "docs/architecture/mod-host.md" }
+"proj:monsters" = { status = "not_implemented", note = "P17", link = "docs/plans/monsters.md" }
+"proj:movement" = { status = "fully_functional", note = "exact port, gated by user test 6", link = "docs/protocol/movement.md" }
+"proj:npcs" = { status = "not_implemented", note = "P19", link = "docs/plans/npcs-vendors.md" }
+"proj:official_mode" = { status = "fully_functional", note = "observe and log only", link = "docs/guides/official-mode.md" }
+"proj:overlay" = { status = "implemented", note = "layout overhaul planned (P6)", link = "docs/architecture/client-dll.md" }
+"proj:parties" = { status = "not_implemented", note = "P18", link = "docs/plans/loot-parties.md" }
+"proj:passive_tree" = { status = "not_implemented", note = "P15", link = "docs/plans/passives.md" }
+"proj:players" = { status = "partial", note = "positions and chat only; no equipment on remote players", link = "docs/architecture/instance-world.md" }
+"proj:release_mirror" = { status = "implemented", link = "docs/guides/launcher.md" }
+"proj:settings" = { status = "implemented", link = "docs/architecture/client-dll.md" }
+"proj:side_channel" = { status = "fully_functional", link = "docs/protocol/side-channel.md" }
+"proj:skills" = { status = "not_implemented", note = "P16", link = "docs/plans/skills.md" }
+"proj:stats" = { status = "not_implemented", note = "P8 and P9", link = "docs/plans/items-stats.md" }
+"proj:terrain" = { status = "partial", note = "remaining areas, see the terrain matrix", link = "docs/status/terrain.md" }
+"proj:terrain_batch" = { status = "fully_functional", link = "docs/re/terrain/batch.md" }
+"proj:terrain_check" = { status = "implemented", note = "always kicks on a mismatch", link = "docs/protocol/instance.md" }
+"proj:tracker" = { status = "implemented", note = "this site", link = "docs/guides/tracker.md" }
+"proj:trade" = { status = "not_implemented", link = "docs/plans/backlog.md" }
+"proj:transitions" = { status = "not_implemented", note = "P12", link = "docs/plans/r4-world.md" }
+"proj:vendors" = { status = "not_implemented", note = "P19", link = "docs/plans/npcs-vendors.md" }
+"proj:web_accounts" = { status = "implemented", link = "docs/architecture/web-api.md" }
+"proj:web_api" = { status = "implemented", note = "no TLS in the server itself", link = "docs/architecture/web-api.md" }
+"proj:web_dashboard" = { status = "implemented", link = "docs/architecture/web-api.md" }
+"proj:web_inventory" = { status = "not_implemented", note = "P9", link = "docs/architecture/web-api.md" }
+"proj:web_leagues" = { status = "implemented", link = "docs/architecture/web-api.md" }
+"proj:web_tree" = { status = "not_implemented", note = "P15", link = "docs/architecture/web-api.md" }
+"proj:world_map" = { status = "not_implemented", note = "P12", link = "docs/plans/r4-world.md" }

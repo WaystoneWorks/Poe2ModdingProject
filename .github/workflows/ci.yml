@@ -48,6 +48,8 @@ jobs:
       - run: cargo test --locked
       - name: The launcher's version files are current
         run: cargo xtask versions --check
+      - name: The tracker's statuses name existing rows
+        run: cargo xtask tracker check
 
   secrets:
     name: Secret scan

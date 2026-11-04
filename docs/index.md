@@ -19,6 +19,7 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | [server-list-template/README.md](server-list-template/README.md) | Template of the `Poe2ServerList` repository |
 | [mod-index-template/README.md](mod-index-template/README.md) | Template of the `Poe2Mods` repository |
 | [guides/agent-workflow.md](guides/agent-workflow.md) | How agents work |
+| [guides/tracker.md](guides/tracker.md) | The progress tracker site: statuses, rows, `cargo xtask tracker` |
 
 ## Architecture
 | Document | Contents |
@@ -69,7 +70,6 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 |---|---|
 | [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
 | [plans/overlay.md](plans/overlay.md) | Plan P1, P6: overlay look, Settings, page redesigns with mockups |
-| [plans/tracker.md](plans/tracker.md) | Plan P5: progress tracker site |
 | [plans/commands.md](plans/commands.md) | Plan P7: command overhaul and catalogue |
 | [plans/items-stats.md](plans/items-stats.md) | Plan P8-P10: PoB2 stat port, items, currency |
 | [plans/item-creator.md](plans/item-creator.md) | Plan P11: item creator |

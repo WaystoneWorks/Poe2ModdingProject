@@ -24,7 +24,7 @@ A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.h
 ## Doc rules (`python3 scripts/check-links.py` enforces links and word limits)
 - One owner per topic; link, never copy. Docs state what is true now, not what happened. Keep every address, offset, opcode and format.
 - A failed theory stays only as a short "ruled out" line, when it would otherwise be retried.
-- New work goes in PLAN.md (order) and `docs/plans/<feature>.md` (spec), deleted when done. No handoff or status files. Update `tracker/status.toml` with the work. RE findings go in `docs/re/`. Docs change in the same commit as the code.
+- New work goes in PLAN.md (order) and `docs/plans/<feature>.md` (spec), deleted when done. No handoff or status files. Update `tracker/status.toml` with the work ([guide](docs/guides/tracker.md)). RE findings go in `docs/re/`. Docs change in the same commit as the code.
 
 ## Memory rules
 - Memory holds only durable user preferences and pointers to things outside the repo: never progress, status, plans, commit hashes or anything the docs or git record.

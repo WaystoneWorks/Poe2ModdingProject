@@ -60,7 +60,7 @@ Specs in [plans/](plans/backlog.md); each spec repeats its decisions in detail.
 - Skills: the official gem panel; punch, weapon default attacks and one starter skill per class; exact port of action timing.
 - Monsters: the Riverbank and Clearfell first; AI from game data only, no AI calibration capture; XP from kills.
 - Loot: game data plus configurable tables with cited community research; official-like ownership with the party leader's allocation setting; basic parties. NPCs and vendors, checkpoints and wells are in the plan.
-- Tracker: static site, statuses in a hub file edited by commit, sections from game data plus project sections, no hour estimates, built locally until GitHub Pages is available.
+- Tracker ([guides/tracker.md](guides/tracker.md)): static site, statuses in a hub file edited by commit, sections from game data plus project sections, no hour estimates (rows weigh equally; partial counts 0.5, implemented 0.85, fully functional 1, not planned is left out), built locally until GitHub Pages is available.
 
 ## Repositories
 - The hub holds docs, xtask and scripts; everything else is a submodule under `modules/`; nested submodules stay so each repo builds alone. Versions live in Poe2Protocol. Repo map: [overview.md](overview.md).

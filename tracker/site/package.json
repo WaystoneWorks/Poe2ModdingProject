@@ -1,0 +1,24 @@
+{
+  "name": "poe2-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Progress tracker site of the PoE2 0.5.5e.hotfix1 private server (docs/guides/tracker.md)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.node.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^22.20.5",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.7",
+    "typescript": "~5.9",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

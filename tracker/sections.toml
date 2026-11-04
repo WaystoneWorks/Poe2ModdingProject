@@ -1,0 +1,191 @@
+# Sections of the progress tracker, in page order (docs/guides/tracker.md).
+# `generator` sections are filled from the game data by `cargo xtask tracker gen` into rows.json;
+# the other sections list their rows here (ids `proj:`, `mechanic:`).
+
+[[section]]
+id = "classes"
+title = "Classes and ascendancies"
+description = "Playable classes and their ascendancies."
+generator = "classes"
+
+[[section]]
+id = "gems"
+title = "Skill gems"
+description = "Active skill gems (Vaal variants and uncut gems left out)."
+generator = "gems"
+
+[[section]]
+id = "supports"
+title = "Support gems"
+description = ""
+generator = "supports"
+
+[[section]]
+id = "passives"
+title = "Passive notables and keystones"
+description = "Keystones, notables and ascendancy notables; small passives are one row per stat."
+generator = "passives"
+
+[[section]]
+id = "uniques"
+title = "Unique items"
+description = ""
+generator = "uniques"
+
+[[section]]
+id = "base"
+title = "Base item types"
+description = "Grouped by item class (gems, flasks, charms and currency have their own sections)."
+generator = "base"
+
+[[section]]
+id = "stats"
+title = "Stats and mods"
+description = "The stats that mods and passives use."
+generator = "stats"
+
+[[section]]
+id = "currency"
+title = "Currency"
+description = ""
+generator = "currency"
+
+[[section]]
+id = "flasks"
+title = "Flasks and charms"
+description = ""
+generator = "flasks"
+
+[[section]]
+id = "monsters"
+title = "Monsters and bosses"
+description = "By the first campaign act they appear in."
+generator = "monsters"
+
+[[section]]
+id = "areas"
+title = "Areas"
+description = "Campaign areas by act, and endgame maps."
+generator = "areas"
+
+[[section]]
+id = "mechanics"
+title = "League mechanics"
+description = "Endgame and league content."
+rows = [
+  { id = "mechanic:breach", group = "Mechanics", name = "Breach" },
+  { id = "mechanic:delirium", group = "Mechanics", name = "Delirium" },
+  { id = "mechanic:expedition", group = "Mechanics", name = "Expedition" },
+  { id = "mechanic:ritual", group = "Mechanics", name = "Ritual" },
+  { id = "mechanic:abyss", group = "Mechanics", name = "Abyss" },
+  { id = "mechanic:essence", group = "Mechanics", name = "Essences" },
+  { id = "mechanic:strongbox", group = "Mechanics", name = "Strongboxes" },
+  { id = "mechanic:shrines", group = "Mechanics", name = "Shrines" },
+  { id = "mechanic:rogue_exiles", group = "Mechanics", name = "Rogue exiles" },
+  { id = "mechanic:waystones", group = "Mechanics", name = "Waystones and the atlas" },
+]
+
+[[section]]
+id = "trials"
+title = "Trials"
+description = ""
+rows = [
+  { id = "mechanic:trial_sekhemas", group = "Trials", name = "Trial of the Sekhemas" },
+  { id = "mechanic:trial_chaos", group = "Trials", name = "Trial of Chaos" },
+  { id = "mechanic:trial_ancestors", group = "Trials", name = "Trial of the Ancestors" },
+  { id = "mechanic:trial_ascendancy", group = "Trials", name = "Ascendancy trials (labyrinth)" },
+]
+
+[[section]]
+id = "server"
+title = "Server systems"
+description = "What the private server does today."
+rows = [
+  { id = "proj:accounts", group = "Accounts and login", name = "Accounts, roles and tokens" },
+  { id = "proj:login", group = "Accounts and login", name = "Login server, key exchange and standalone login" },
+  { id = "proj:characters", group = "Accounts and login", name = "Character creation, selection and deletion" },
+  { id = "proj:leagues", group = "Accounts and login", name = "Leagues (Standard, Hardcore, custom leagues, ending a league)" },
+  { id = "proj:instances", group = "World", name = "Instance directory, transfers and forced layouts" },
+  { id = "proj:terrain", group = "World", name = "Terrain generator (server port of the client's)" },
+  { id = "proj:terrain_check", group = "World", name = "Terrain check at area entry" },
+  { id = "proj:movement", group = "World", name = "Movement (exact port: walk, click, roll, sprint)" },
+  { id = "proj:players", group = "World", name = "Other players in an instance" },
+  { id = "proj:chat", group = "World", name = "Chat channels and commands" },
+  { id = "proj:transitions", group = "World", name = "Area transitions, waypoints and checkpoints" },
+  { id = "proj:world_map", group = "World", name = "World map" },
+  { id = "proj:items", group = "Characters", name = "Items, inventory and equipment" },
+  { id = "proj:stats", group = "Characters", name = "Stats pipeline, levels and experience" },
+  { id = "proj:life", group = "Characters", name = "Life, mana, energy shield and death" },
+  { id = "proj:flasks", group = "Characters", name = "Flasks and charms" },
+  { id = "proj:passive_tree", group = "Characters", name = "Passive tree and ascendancies" },
+  { id = "proj:skills", group = "Characters", name = "Skill gems, skill bar and attacks" },
+  { id = "proj:monsters", group = "Combat", name = "Monsters, their AI and combat" },
+  { id = "proj:loot", group = "Combat", name = "Loot drops and ground items" },
+  { id = "proj:parties", group = "Social", name = "Parties" },
+  { id = "proj:trade", group = "Social", name = "Trade" },
+  { id = "proj:npcs", group = "Social", name = "NPCs and quests" },
+  { id = "proj:vendors", group = "Social", name = "Vendors" },
+  { id = "proj:mods", group = "Server", name = "Server mod host" },
+  { id = "proj:web_api", group = "Server", name = "Web API" },
+]
+
+[[section]]
+id = "dll"
+title = "Client DLL"
+description = "The hook injected into the game client."
+rows = [
+  { id = "proj:loader", group = "Core", name = "Loader and hot-reloadable debug core" },
+  { id = "proj:official_mode", group = "Core", name = "Official read-only mode (observe and log)" },
+  { id = "proj:client_mods", group = "Core", name = "Client mod loader" },
+  { id = "proj:overlay", group = "Overlay", name = "Overlay and its pages" },
+  { id = "proj:debug_commands", group = "Overlay", name = "Debug commands" },
+  { id = "proj:settings", group = "Overlay", name = "Settings page and overlay.toml" },
+  { id = "proj:alert", group = "Overlay", name = "Alert popup (terrain mismatch)" },
+  { id = "proj:capture", group = "Tools", name = "Packet capture" },
+  { id = "proj:side_channel", group = "Tools", name = "Side channel to the server" },
+]
+
+[[section]]
+id = "launcher"
+title = "Launcher"
+description = "The player and host launcher."
+rows = [
+  { id = "proj:launcher_deploy", group = "Play", name = "Deploying the hook and starting the game" },
+  { id = "proj:launcher_servers", group = "Play", name = "Server browser and server selection" },
+  { id = "proj:launcher_install", group = "Play", name = "Installing the client from Steam depots" },
+  { id = "proj:launcher_mods", group = "Play", name = "Mod browser and mod sync" },
+  { id = "proj:launcher_host", group = "Host", name = "Hosting a server" },
+  { id = "proj:launcher_update", group = "Host", name = "Signed auto-update" },
+  { id = "proj:launcher_windows", group = "Platforms", name = "Windows" },
+]
+
+[[section]]
+id = "webadmin"
+title = "Web admin"
+description = "The admin site served by the server."
+rows = [
+  { id = "proj:web_dashboard", group = "Pages", name = "Dashboard, players and instances" },
+  { id = "proj:web_accounts", group = "Pages", name = "Accounts and audit log" },
+  { id = "proj:web_leagues", group = "Pages", name = "Leagues" },
+  { id = "proj:web_inventory", group = "Pages", name = "Inventory panel" },
+  { id = "proj:web_tree", group = "Pages", name = "Passive tree panel" },
+]
+
+[[section]]
+id = "tooling"
+title = "Tooling and modding"
+description = "Development tools, tests and the mod SDK."
+rows = [
+  { id = "proj:game_test", group = "Tests", name = "Game tests (headless client scenarios)" },
+  { id = "proj:check_build", group = "Tests", name = "Check-build for new client builds" },
+  { id = "proj:terrain_batch", group = "Tests", name = "Terrain batch and regression gates" },
+  { id = "proj:mod_sdk", group = "Modding", name = "Mod SDK and mod index" },
+  { id = "proj:release_mirror", group = "Modding", name = "Release mirror (static release source)" },
+  { id = "proj:tracker", group = "Tooling", name = "This tracker" },
+]
+
+[[section]]
+id = "commands"
+title = "Server commands"
+description = "Chat commands of the instance server (parsed from its command table)."
+generator = "commands"

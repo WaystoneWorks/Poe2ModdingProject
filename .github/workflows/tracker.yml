@@ -1,0 +1,55 @@
+name: Tracker
+
+# Builds the progress tracker site (docs/guides/tracker.md) and deploys it to GitHub Pages.
+# Needs Settings, Pages, Source: GitHub Actions, once the hub is on its final account.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tracker/**'
+      - '.github/workflows/tracker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Full history: the recent changes come from `git log -p tracker/status.toml`.
+      # Submodules: xtask has path dependencies in them and the tokens come from the web admin.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Install the pinned Rust toolchain
+        run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: cargo xtask tracker build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: runtime/tracker-site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
