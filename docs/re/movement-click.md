@@ -20,7 +20,7 @@ World mode = `world vfunc +0x1d8` (2 = lockstep in game, 1 = predictive). Raw ti
 | `+0x88` | `0x1419852d0` | Player mode 2/3 only: `0x141971b80(M, &M+0x150)` |
 | `+0xd8` | `0x1413ca440` | goal ptr: target entity ? `&ent.P+0x444` : **`&M+0x150`** |
 | `+0x100` | `0x1401651e0` | orientation byte[1] = 0 (none: Positioned `+0x1e3` decides) |
-| `+0x1f0` | `0x1419850f0` | **`sqrt(|grid - M+0x150|^2) >= 9.0`** (can start) |
+| `+0x1f0` | `0x1419850f0` | **`|grid - M+0x150|^2 >= 9.0`** (can start; `0x140163990` is the squared length, so the limit is 3 cells) |
 | `+0x218` | `0x1401073d0` | 0 |
 | `+0x220` | `0x1419850b0` | entity target ? `max(P+0x1f8,P+0x1f9)+2` : 0 |
 | `+0x228` | `0x1413ca520` | `vf220 - vf258` = 0 for a point |
@@ -62,7 +62,7 @@ if A+0x2a2 bit0: return; set bit0 (re-entry guard, cleared at exit)
 (A+0x2a0 bit1 slot-0 combo block: not for a plain click walk)
 if !Actor_CanStartAction(A, 0, M+0x142, 0): return   // 0x141e3ff70: server flags (<0) -> true unless
                                                      // world vf188 gate, entity+0x8c bit0, A+0x2a1 bit1
-if !M.vf1f0():   0x141e5d9f0(A, M) (feedback); destroy M; return      // TARGET WITHIN 9 CELLS: dropped,
+if !M.vf1f0():   0x141e5d9f0(A, M) (feedback); destroy M; return      // TARGET WITHIN 3 CELLS: dropped,
                                                                       // the running Move is untouched
 if M.vf70 and anim A+0x380 in {0x36a,0x36b,0x371,0x372}: destroy M; return
 if A+0x2a0 bit6 or entity+0x8c bit0: destroy; if !A.vfC0(skill id, type): destroy
@@ -235,8 +235,8 @@ if stop and A+0x2a0 bit7: Pathfinding_EndPath(pf, 0)                   // only s
 `Pathfinding_GetSpeed` `0x141dccfa0(pf, .., reduce)`: `pf+0x554 >= 0` -> that value. Else stats component index `(i8)(pf+0x548)+0x59` (< 0: `pf+0x550 * pf+0x55c`): `f = 1 + max(stat 0xec, -10000)/10000`; stat `0xc39` != 0: `f *= 1 + max(v,-100)/100`; `base = pf+0x550`, `reduce`: `base = max(base - pf+0x558, 0)`; `v = base * f * pf+0x55c`; stat `0x44a` > 0: `v = 0x14014dca0(v, cap)` (cap). Same for Move and WASD. `pf+0x580` writer = `Pathfinding_Tick` (`= dt`).
 
 ## 5. Held click (new `0x1c8` Move while a Move runs)
-- A Move closer than 9 cells does not start (vf `+0x1f0` `0x1419850f0`); test in `crates/poe-game/tests/rules.rs`.
-- Same path as a press: new action, `Actor_StartQueuedAction` in the packet drain. If `|grid - new target| < 9.0`: dropped, old Move continues to its old target.
+- A Move closer than 3 cells (squared distance < 9) does not start (vf `+0x1f0` `0x1419850f0`); test in `crates/poe-game/tests/rules.rs`.
+- Same path as a press: new action, `Actor_StartQueuedAction` in the packet drain. If `|grid - new target|^2 < 9.0`: dropped, old Move continues to its old target.
 - Otherwise `Actor_EndMoveAction(A, 0)`: old Move deleted, **no line stop**, `pf+0x560` bit0 stays (no new "started" event, `A+0x2a0` bit7 stays), `pf+0x540` points at the saved old goal copy until the new `FollowPath`.
 - Snap only when `0x1c8.start != grid` (lockstep exact); a snap stops the line (`0x141ddb6f0` -> `0x141de5f50`), so the new line starts at the snapped cell with `len = 0` (no continuity).
 - No snap: new plan from the grid; `Positioned_MoveToWaypoint` -> `FUN_141ec86a0` keeps continuity (`running` = `+0x61 == 0`, `len != 0`, old current cell == s; `p` = old line point if `p != e` and `|s-p|^2 < 4`).

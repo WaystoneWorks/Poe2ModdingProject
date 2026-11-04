@@ -135,6 +135,8 @@ CORRECTION: Move is ended only when the Move slot holds a `0x2909` action; the f
 (0 -> 2, 1 -> 3); `no_anim` (3rd arg, always 0 from the check) skips the animation; `Life+0x1e0 > 0` is the
 alive test.
 
+The SprintEnd clip keeps the rate it was played at (`0x141e56ae0` sets it once; game test crazy-keys f439: walk refused 20 frames at the sprint's rate; seg2 f800: 30 at walking rate). OPEN: `must_sprint` off and sprint-off in one batch with no `0x64` coasts at the sprint's rate (8 of 8), with a `0x64` in the batch at walking rate (7 of 7); the code behind it is unread.
+
 ### Play animation `0x141e57b80(actor, req)` (type-3 = movement-speed animation)
 For a row with type `+0x4d == 3` (`SprintEnd` is): `v = 0x141e4db00(actor) * req.factor(+0x4c, 1.0)`
 where `0x141e4db00 = Pathfinding_GetSpeed(pf) * 10.869565` (world units/s), then

@@ -106,6 +106,7 @@ if part+0x3d:
     if n > part+0x50: if part+0xa0: part+0xa0->vfunc+0x10(&(n - part+0x50)); part+0x50 = n
     if part+0x3c && left > 1.0: DodgeRollMove_Step(part)
 ```
+A blocked step clears `part+0x3d`: Positioned "blocked" delegates `0x141defd50` -> listener vtable `0x143453ce0` `+0x10` `0x141b8d4e0` (`this` = part+0x10). The roll then makes no more lines until `ReloadCurve` (`part+0x3e` path or the sprint switch).
 
 ### `DodgeRollMove_ReloadCurve` `0x141b8d440`
 `Positioned_SetMoveCurve(pos, part+0x30, 0, Tlen)`; `Positioned_SetMoveCurveTime(pos, ac+0x1a4, Tlen)`;
