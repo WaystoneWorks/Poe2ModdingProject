@@ -1,0 +1,23 @@
+# A server with no league (PLAN P3): the empty league list is sent, the select screen shows the
+# account's character (its league no longer exists), Create opens a league step without banners
+# (screenshot), and Play still enters the world. Format: docs/guides/setup.md.
+description = "no league: empty list, select screen, create step, Play works"
+setup = [
+  "db=$(sed -n 's/^path = \"\\(.*\\)\"/\\1/p' \"$CFG\" | head -1); sqlite3 \"$db\" \"DELETE FROM leagues\"",
+]
+after = [
+  "f=\"$(ls -t \"third_party/proton-prefix/pfx/drive_c/users/steamuser/Documents/My Games/Path of Exile 2/Screenshots\"/*.png | head -1)\"; magick \"$f\" -resize 1280x720 runtime/game-test/leagues-none-create.png && echo screenshot runtime/game-test/leagues-none-create.png",
+]
+
+[[select]]
+name = "empty league list"
+expect_log = "league list sent leagues=0"
+since = "start"
+
+[[select]]
+name = "Create, screenshot, back"
+keys = "wait:4000 inclick:2144,1088 wait:5000 0x77 wait:1500 0x1b wait:3000"
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

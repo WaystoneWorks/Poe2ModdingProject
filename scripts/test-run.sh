@@ -18,6 +18,7 @@ srv() { POE_CONFIG=$CFG modules/server/target/debug/poe-server "$@"; }
 grep -q '^login_mode *= *"standalone"' GameFiles/poe-hook.toml \
     || { echo "GameFiles is not in standalone login mode: cargo xtask deploy-client --no-build --login-mode standalone"; exit 1; }
 ta_ensure "$ACCT" admin
+ta_league
 srv character list "$ACCT" 2>/dev/null | grep -qP "^$ACCT\t" \
     || srv character create "$ACCT" "${ACCT}Ranger" "${TEST_CLASS:-DexFourDefault}" "${TEST_AREA:-G1_town}" >/dev/null
 tok=$(ta_token "$ACCT" "$(ta_web_port "$CFG")")

@@ -57,6 +57,7 @@ cmd_setup() {
         -e 's|^path = "runtime/server.sqlite"|path = "runtime/server-mp.sqlite"|' \
         -e 's|^audit_log = .*|audit_log = "runtime/server-mp-audit.log"|' $CFG
     grep -q "public_host = \"$LAN_IP\"" $CFG && echo "config: $CFG (public_host $LAN_IP)"
+    ta_league
     for n in 1 2; do
         acct=mp$n
         ta_ensure "$acct"

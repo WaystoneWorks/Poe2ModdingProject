@@ -29,6 +29,13 @@ ta_ensure() {
     return 0
 }
 
+# ta_league: a test server needs a league to create characters (a new server has none): makes the
+# Standard family (Hardcore, SSF and HC SSF variants, default, permanent) when no league exists.
+ta_league() {
+    srv league list 2>/dev/null | grep -qP '\tfamily ' && return 0
+    srv league create Standard --hardcore --ssf --permanent --default --flag StandardFlag >/dev/null
+}
+
 # ta_token <name> <web port>: a fresh Remember Me token (64 hex digits) on stdout; empty on failure.
 # The password and the intermediate launcher token go through stdin and a header file descriptor,
 # not through the command line.

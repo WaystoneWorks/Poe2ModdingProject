@@ -1,0 +1,45 @@
+# Leagues (PLAN P3): a "Dawn" family with Hardcore and SSF variants and the Runes of Aldur banner
+# set; the client lists it next to Standard, a character is made through the creation screens
+# (Dawn banner, SSF and Hardcore ticked, Ranger, name, the Hardcore confirmation) and lands in
+# "HC SSF Dawn"; afterwards Dawn ends into Standard and the character moves to "Hardcore SSF".
+# Clicks are client positions at 2560x1440 (gamescope default). Format: docs/guides/setup.md.
+description = "league list, creation in HC SSF Dawn through the UI, end into Standard"
+play = false
+setup = [
+  "db=$(sed -n 's/^path = \"\\(.*\\)\"/\\1/p' \"$CFG\" | head -1); sqlite3 \"$db\" \"DELETE FROM characters WHERE name = 'DawnHcSsf'\"",
+  "srv league delete Dawn >/dev/null 2>&1 || true",
+  "srv league create Dawn --hardcore --ssf --flag Expedition2Standard --migrate-to Standard",
+]
+after = [
+  "db=$(sed -n 's/^path = \"\\(.*\\)\"/\\1/p' {dir}/server.toml | head -1); test \"$(sqlite3 $db \"SELECT league FROM characters WHERE name = 'DawnHcSsf'\")\" = 'HC SSF Dawn' && echo created in HC SSF Dawn",
+  "POE_CONFIG={dir}/server.toml modules/server/target/debug/poe-server league end Dawn Standard 2>/dev/null | grep -P '^DawnHcSsf\\tHC SSF Dawn -> Hardcore SSF$'",
+]
+
+[[select]]
+name = "league list (Standard and Dawn families)"
+expect_log = "league list sent leagues=8"
+since = "start"
+
+[[select]]
+name = "Create, Dawn banner, SSF, Hardcore, Continue, Ranger, Continue"
+keys = "wait:4000 inclick:2144,1088 wait:5000 inclick:1576,600 wait:800 inclick:1484,904 wait:800 inclick:1484,958 wait:800 inclick:1280,1296 wait:8000 inclick:1076,1082 wait:2000 inclick:1280,1296 wait:6000"
+
+[[select]]
+name = "name, Continue, Hardcore confirmation OK"
+keys = "inclick:1280,1077 wait:800 text:DawnHcSsf wait:1000 inclick:1280,1296 wait:3000 inclick:1536,786 wait:2000"
+
+[[select]]
+name = "created in HC SSF Dawn"
+expect_log = "create character name=DawnHcSsf league=HC SSF Dawn"
+since = "start"
+timeout_s = 30
+
+[[select]]
+name = "the new character enters the world"
+expect_log = "player entered the world"
+since = "start"
+timeout_s = 120
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

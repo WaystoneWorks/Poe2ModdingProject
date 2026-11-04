@@ -30,7 +30,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 P3 to P7 are independent of the game work and mostly Sonnet; P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
 
 ## Now
-- **P1** (overlay look, Settings, `overlay.toml`) and **P2** (release source, `release-mirror`, `set-owner.sh`; agent-tested 2026-11-04) are done; **P3** (leagues) is next.
+- **P1** and **P2** are done. **P3** (leagues) is built and agent-tested (store, login list, CLI, web API, art endpoint, web admin page, launcher; game tests `leagues` and `leagues-none` pass, 2026-11-04) but NOT GATED: left are the `leagues` game test creating Dawn through `POST /api/v1/admin/leagues`, the docs (login.md LeagueEntry, setup.md, launcher.md) and folding [plans/leagues.md](plans/leagues.md).
 
 ## Needs the user
 

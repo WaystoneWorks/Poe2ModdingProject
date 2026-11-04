@@ -8,7 +8,7 @@ The window is a sidebar (brand, **game version** picker, five pages) and the pag
 - **Game version picker:** the private-server versions this launcher supports and *Official (read-only)*, each *installed* / *not installed*. It drives the install folder and depots, verification, hook deploy, Play, the server-release filter of *Create a server* and server compatibility ([below](#game-versions-and-the-official-mode)).
 - **Play** (`#/home`): the selected server, the **Play** button with one line of state, the *Get ready to play* checklist while something is missing, and the newest news item ([below](#play-and-news)).
 - **News:** one feed, newest first, filter chips; the selected server's message of the day is pinned on top.
-- **Servers:** *My servers* (rows with **Start** for hosted ones, *Check*, **Web admin**, **Create account** when registration is open, *Edit*/*Manage*, *Remove*; a hosted server is **deleted**), *Browse public* ([below](#server-browser)), *Host* ([below](#host-a-server)).
+- **Servers:** *My servers* (rows with **Start** for hosted ones, *Check*, **Web admin**, details with the server's **active leagues and banners**, **Create account** when registration is open, *Edit*/*Manage*, *Remove*; a hosted server is **deleted**), *Browse public* ([below](#server-browser); **Show leagues** on an online server), *Host* ([below](#host-a-server)).
 - **Library:** *Game* (status, **Verify files**, **Client hook** card, *Download or repair from Steam* with your own Steam login, pause/resume, speed, disk-space check), *Mods* ([below](#mods)), *Logs* ([below](#logs-and-crash-dumps)).
 - **Settings:** every change saves on its own: *General*, *Game & Proton* (per-version install folder, Steam root, Proton), *Steam* (remember login, Guard code, **Log out of Steam**), *Mods* (**Mod sync**, cache), *Updates & About*, *Advanced* (hook DLL folder, desktop entry on a Linux AppImage).
 - **Play** deploys the hook ([../architecture/client-dll.md](../architecture/client-dll.md)) pointed at the selected server and starts the game (Proton on Linux, native on Windows) at its own login screen.
@@ -150,7 +150,7 @@ Players outside your network add your server as `<public host>:<web port>` (http
 
 ## Open web admin
 
-**Web admin** in a server's row opens its web admin in your system browser; it asks for its own login (an account with the `admin` role of that server). For a server hosted on this computer, **Open web admin** in *Manage* opens it too, and on a new server it shows the page that creates the first admin.
+**Web admin** in a server's row opens its web admin in your system browser; it asks for its own login (an account with the `admin` role of that server). For a server hosted on this computer, **Open web admin** in *Manage* opens it too, and on a new server it shows the page that creates the first admin, then (the hash `#/leagues` is kept) the Leagues page, where its first league is created: a new server has none. Leagues and banners come from the server's `GET /api/v1/leagues`; the launcher fetches each base league's PNG banner from the server's own `/api/v1/art/` path (at most 8, 600 KB each) and shows it as a data URL.
 
 ## Plain http warning
 

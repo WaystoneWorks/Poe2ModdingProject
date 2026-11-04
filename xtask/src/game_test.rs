@@ -82,15 +82,31 @@ struct Scenario {
     /// Overrides on the dev config, `"section.key" = value` (`"dev.drift_check" = true`).
     #[serde(default)]
     server: toml::Table,
+    /// Shell commands run from the hub root once the server is up and the account signed in,
+    /// before the client starts; `srv` runs `poe-server` against the run's config, `$WEB` is the
+    /// web API port and `$ACCT` the account. A failing command ends the run (`setup-<n>.txt`).
+    #[serde(default)]
+    setup: Vec<String>,
+    /// Steps at the character select screen, after the login and before Play.
+    #[serde(default, rename = "select")]
+    select_steps: Vec<Step>,
+    /// Press Play after the `select` steps (default). `false`: the `select` steps enter the
+    /// world themselves (a character creation plays the new character).
+    #[serde(default = "yes")]
+    play: bool,
     #[serde(default, rename = "step")]
     steps: Vec<Step>,
     /// Checks run from the hub root after the client and server are closed, one shell command
-    /// each, `{session}` replaced by the DLL's session folder (packets, hook log); a check passes
+    /// each, `{session}` replaced by the DLL's session folder (packets, hook log) and `{dir}` by
+    /// the run folder (its `server.toml`); a check passes
     /// on exit code 0. Output goes to `after-<n>.txt`, its last line to the summary.
     #[serde(default)]
     after: Vec<String>,
 }
 
+fn yes() -> bool {
+    true
+}
 fn default_account() -> String {
     "testrun".into()
 }
@@ -202,7 +218,7 @@ pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result
             results.push((label, false, "no DLL session folder".into()));
             continue;
         };
-        let cmd = cmd.replace("{session}", &session.display().to_string());
+        let cmd = cmd.replace("{session}", &session.display().to_string()).replace("{dir}", &dir.display().to_string());
         match Command::new("sh").arg("-c").arg(&cmd).current_dir(&run.root).output() {
             Ok(out) => {
                 let text = format!("$ {cmd}\n{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
@@ -269,6 +285,7 @@ impl Run {
         let cfg = self.server_config(sc)?;
         let bin = self.start_server(&cfg, args.no_build)?;
         let token = self.sign_in(&bin, &cfg, sc)?;
+        self.setup(&bin, &cfg, sc)?;
         crate::login_token(&self.prefix, &sc.account, &token)?;
         drop(token);
         if let Some(mode) = &sc.input_mode {
@@ -281,7 +298,19 @@ impl Run {
         self.wait_log("server", &login, 0, t)
             .context("no login (client start, Steam or the token)")?;
         std::thread::sleep(Duration::from_secs(3));
-        self.send_keys("0x0d")?;
+        for (i, step) in sc.select_steps.iter().enumerate() {
+            let label = format!("select: {}", step.name.clone().unwrap_or_else(|| format!("step {}", i + 1)));
+            match self.step(step) {
+                Ok(detail) => results.push((label, true, detail)),
+                Err(e) => {
+                    results.push((label, false, format!("{e:#}")));
+                    return Ok(());
+                }
+            }
+        }
+        if sc.play {
+            self.send_keys("0x0d")?;
+        }
         let entered = self
             .wait_log("server", "player entered the world", 0, Duration::from_secs(120))
             .context("did not enter the world after Play")?;
@@ -462,6 +491,7 @@ set -e
 srv() { POE_CONFIG="$CFG" "$BIN" "$@"; }
 . scripts/lib/test-accounts.sh
 ta_ensure "$ACCT" admin
+ta_league
 srv character list "$ACCT" 2>/dev/null | grep -qP "^$ACCT\t" \
     || srv character create "$ACCT" "${ACCT}Ranger" "$CLASS" "$AREA" >/dev/null
 ta_token "$ACCT" "$(ta_web_port "$CFG")"
@@ -481,6 +511,27 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
             bail!("no game token for {} (account.log; is the web API on?)", sc.account);
         }
         Ok(token)
+    }
+
+    fn setup(&self, bin: &Path, cfg: &Path, sc: &Scenario) -> Result<()> {
+        for (n, cmd) in sc.setup.iter().enumerate() {
+            let script = format!(
+                "set -e\nsrv() {{ POE_CONFIG=\"$CFG\" \"$BIN\" \"$@\"; }}\n. scripts/lib/test-accounts.sh\nWEB=$(ta_web_port \"$CFG\")\n{cmd}\n"
+            );
+            let out = Command::new("bash")
+                .args(["-c", &script])
+                .current_dir(&self.root)
+                .env("CFG", cfg)
+                .env("BIN", bin)
+                .env("ACCT", &sc.account)
+                .output()?;
+            let text = format!("$ {cmd}\n{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+            fs::write(self.dir.join(format!("setup-{}.txt", n + 1)), &text)?;
+            if !out.status.success() {
+                bail!("setup command {} failed: {}", n + 1, text.trim_end());
+            }
+        }
+        Ok(())
     }
 
     fn set_input_mode(&mut self, mode: &str) -> Result<()> {
