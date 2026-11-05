@@ -16,6 +16,7 @@ poe-data.workspace = true
 poe-hook-deploy.workspace = true
 poe-hook-sig.workspace = true
 poe-proto.workspace = true
+poe-stats.workspace = true
 poe-world.workspace = true
 regex.workspace = true
 serde.workspace = true

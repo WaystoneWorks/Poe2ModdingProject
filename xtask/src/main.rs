@@ -20,6 +20,8 @@ mod game_state;
 mod game_test;
 mod release_mirror;
 mod server;
+mod stats_check;
+mod stats_map;
 mod terrain_matrix;
 mod tracker;
 mod versions;
@@ -184,6 +186,18 @@ enum Cmd {
         #[arg(long)]
         check: bool,
     },
+    /// Render every game stat with the stat descriptions and feed it to PoB2's ModParser
+    /// (dumps/<version>/stats/stat_map.tsv).
+    StatsMap,
+    /// Compare poe-stats with PoB2 headless on the fixture corpus.
+    StatsCheck {
+        /// Store the corpus and PoB2's numbers in poe-stats/tests/fixtures.json.
+        #[arg(long)]
+        write: bool,
+        /// Print every difference.
+        #[arg(long)]
+        verbose: bool,
+    },
     /// The server (modules/server) from the hub: build, run with the hub as working directory
     /// (rebuilding the web admin when its sources are newer than dist/build.json), test.
     Server {
@@ -231,6 +245,12 @@ fn main() -> Result<()> {
         .clone()
         .or_else(|| std::env::var_os(poe_config::ENV_PATH).map(PathBuf::from))
         .unwrap_or_else(|| PathBuf::from(DEFAULT_CONFIG));
+    if let Cmd::StatsMap = cli.cmd {
+        return stats_map::run(&root, "0.5.5e.hotfix1");
+    }
+    if let Cmd::StatsCheck { write, verbose } = cli.cmd {
+        return stats_check::run(&root, "0.5.5e.hotfix1", write, verbose);
+    }
     if let Cmd::Server { cmd } = cli.cmd {
         return server::run(&root, &config_path, cmd);
     }
@@ -294,6 +314,8 @@ fn main() -> Result<()> {
         Cmd::Openapi { .. }
         | Cmd::CommandsDoc { .. }
         | Cmd::Server { .. }
+        | Cmd::StatsMap
+        | Cmd::StatsCheck { .. }
         | Cmd::LoginToken { .. }
         | Cmd::TerrainMatrix { .. }
         | Cmd::Tracker { .. }

@@ -28,6 +28,7 @@ iced-x86 = { version = "1.21", default-features = false, features = ["std", "dec
 # version files, the game data and the terrain generator).
 poe-config = { path = "modules/server/crates/poe-config" }
 poe-data = { path = "modules/server/crates/poe-data" }
+poe-stats = { path = "modules/server/crates/poe-stats" }
 poe-world = { path = "modules/server/crates/poe-world" }
 # Poe2Protocol as the server's nested submodule (modules/server/modules/protocol): poe-world
 # and xtask must share ONE poe-proto, so xtask takes it from the same checkout as the server.

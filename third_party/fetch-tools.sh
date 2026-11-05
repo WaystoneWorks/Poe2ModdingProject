@@ -9,6 +9,9 @@ LIBGGPK3=v2.7.5
 GITLEAKS=v8.30.1
 ACTIONLINT=v1.7.12
 CARGO_XWIN=0.23.1
+# Path of Building 2 reference: the latest dev commit (user decision 2026-11-05: release v0.23.1 predates the 0.5.5 data).
+POB2_COMMIT=bb52d6b3
+LUAUTF8=0.1.6
 
 echo "== poe_data_tools CLI ($POE_DATA_TOOLS_CLI)"
 mkdir -p poe_data_tools
@@ -53,6 +56,12 @@ for repo in adamthedash/poe_data_tools annalithic/poeformats Crypto137/KiwiNet n
     dir="reference/$(basename "$repo")"
     if [ -d "$dir/.git" ]; then git -C "$dir" pull -q --ff-only; else git clone -q --depth 1 "https://github.com/$repo.git" "$dir"; fi
 done
+
+echo "== PathOfBuilding-PoE2 ($POB2_COMMIT, MIT, headless reference for poe-stats; needs luajit and gcc from the system)"
+if [ ! -d PathOfBuilding-PoE2/.git ]; then git clone -q --filter=blob:none https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2.git; fi
+git -C PathOfBuilding-PoE2 fetch -q origin && git -C PathOfBuilding-PoE2 checkout -q "$POB2_COMMIT"
+if [ ! -d lua-utf8/.git ]; then git clone -q --depth 1 --branch "$LUAUTF8" https://github.com/starwing/luautf8.git lua-utf8; fi
+(cd lua-utf8 && gcc -O2 -fPIC -shared -I/usr/include/luajit-2.1 lutf8lib.c -o lua-utf8.so)
 
 echo "== cargo-xwin (Windows MSVC cross-linking for the client DLL)"
 cargo +stable install cargo-xwin --version "$CARGO_XWIN" --locked --root cargo-xwin

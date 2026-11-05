@@ -1605,6 +1605,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "poe-stats"
+version = "0.5.1"
+
+[[package]]
 name = "poe-world"
 version = "0.5.1"
 dependencies = [
@@ -2985,6 +2989,7 @@ dependencies = [
  "poe-hook-deploy",
  "poe-hook-sig",
  "poe-proto",
+ "poe-stats",
  "poe-world",
  "regex",
  "serde",
