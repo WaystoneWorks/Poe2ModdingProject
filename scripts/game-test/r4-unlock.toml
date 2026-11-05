@@ -1,0 +1,77 @@
+# P9: unlock by command for one act (the overlay World tab's "Unlock act" sends the same line):
+# lock everything, unlock act 2, check the waypoint panel and the world panel key (U).
+description = "act unlock by command, waypoint panel and world panel"
+input_mode = "mouse_and_keyboard"
+
+[[step]]
+name = "transfer G1_town 1"
+cmd = "transfer G1_town 1"
+
+[[step]]
+name = "in G1_town"
+expect_state = { area = "G1_town" }
+timeout_s = 60
+
+[[step]]
+name = "lock everything"
+cmd = "lock testrunRanger all"
+
+[[step]]
+name = "locked"
+expect_log = "command=lock .*ok=true"
+since = "action"
+timeout_s = 8
+
+[[step]]
+name = "unlock act 2 (overlay button line)"
+cmd = "waypoint unlock act 2"
+
+[[step]]
+name = "unlocked act 2"
+expect_log = "command=waypoint unlock act 2 ok=true"
+since = "action"
+timeout_s = 8
+
+[[step]]
+name = "travel status"
+cmd = "travel status"
+
+[[step]]
+name = "teleport 290 258"
+cmd = "teleport 290 258"
+
+[[step]]
+name = "at the waypoint"
+expect_state = { near = [290, 258, 4] }
+
+[[step]]
+name = "click the waypoint"
+click_cell = [282, 252]
+
+[[step]]
+name = "screenshot panel act 1 (locked but town)"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "act 2 tab"
+keys = "inmove:1158,94 wait:400 inpress:1158,94 wait:120 inrelease:1158,94 wait:1200"
+
+[[step]]
+name = "screenshot panel act 2"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "close"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "world panel key U"
+keys = "0x55 wait:1500"
+
+[[step]]
+name = "screenshot world panel"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "
