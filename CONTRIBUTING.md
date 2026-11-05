@@ -40,7 +40,7 @@ cargo xtask server test
 python3 scripts/check-links.py
 ```
 
-Tests that need the game files (`poe-data`, in the server) skip themselves when `GameFiles/` is missing, so a plain clone builds and tests. To run the server and a client: [docs/guides/setup.md](docs/guides/setup.md#run). The committed `modules/server/config/server.toml` is safe by default (loopback, no password-less login). Developer switches live in a git-ignored `runtime/server.dev.toml` that `python3 scripts/dev-config.py` writes; start with `POE_CONFIG=runtime/server.dev.toml` ([setup.md](docs/guides/setup.md#developer-config)). Playing and deploying the client: [docs/guides/client.md](docs/guides/client.md). Hosting for others: [modules/server/docs/hosting.md](modules/server/docs/hosting.md).
+Tests that need the game files (`poe-data` and the movement replays, in the server) skip themselves or are left out when `GameFiles/` is missing, so a plain clone and CI build and test, without that coverage. To run the server and a client: [docs/guides/setup.md](docs/guides/setup.md#run). The committed `modules/server/config/server.toml` is safe by default (loopback, no password-less login). Developer switches live in a git-ignored `runtime/server.dev.toml` that `python3 scripts/dev-config.py` writes; start with `POE_CONFIG=runtime/server.dev.toml` ([setup.md](docs/guides/setup.md#developer-config)). Playing and deploying the client: [docs/guides/client.md](docs/guides/client.md). Hosting for others: [modules/server/docs/hosting.md](modules/server/docs/hosting.md).
 
 ## Branches and pull requests
 
