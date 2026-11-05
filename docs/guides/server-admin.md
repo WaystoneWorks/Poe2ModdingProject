@@ -25,6 +25,11 @@ Execution is in `exec.rs` (`InstanceServer::run_command`). Admin commands are ch
 | `area list [search]` |  | admin | World | Areas from WorldAreas with act and level. |
 | `instance list` | `instances` | admin | World | Lists the instances (id, area, seed, layout, players). |
 | `instance new <area> [seed] [topology] [orientation]` | `instance_new` | admin | World | Creates an instance without entering it. |
+| `unlock <character> [what] [value]` |  | admin | World | Unlocks act maps and waypoints for an online character. |
+| `lock <character> [what] [value]` |  | admin | World | Locks act maps and waypoints of an online character again. |
+| `waypoint unlock [what] [value]` |  | admin | World | Unlocks waypoints and act maps for you. |
+| `checkpoint unlock [scope]` |  | admin | World | Unlocks every checkpoint of the instance you are in. |
+| `travel status` |  | admin | World | Your unlocked waypoints, this layout's checkpoints and your respawn point. |
 | `instance transfer <area> [seed] [topology] [orientation]` | `transfer`, `go` | admin | World | Creates an instance and moves you into it. |
 | `instance join <id>` | `join` | admin | World | Moves you into an existing instance. |
 | `instance close <id>` | `close` | admin | World | Closes an instance (its players are disconnected). |
@@ -43,6 +48,8 @@ Execution is in `exec.rs` (`InstanceServer::run_command`). Admin commands are ch
 | `terrain compare` | `terrain` | admin | World | Generates this instance's terrain and compares it with the client's. |
 | `research area_info <area> <seed>` | `area_info` | admin | World | Sends a second AreaInfo on this connection (the client may crash). |
 <!-- commands-doc:end -->
+
+**Travel unlocks** (P9; each is also in `help`): `waypoint unlock [all|act <n>|waypoint <area>]` (own character), `unlock <character> [acts|waypoints|all|act|waypoint] [value]`, `lock` (same choices), `checkpoint unlock all` (every checkpoint of your instance), `travel status`. The overlay World tab has a Travel row: "Unlock all acts", an act number with "Unlock act", an area with "Unlock waypoint", "Unlock checkpoints here". The web admin Players page has an **Unlock** button (dialog: all, one act or one waypoint, or lock instead): `POST /api/v1/admin/players/{name}/unlock`, body `{what, value, lock}`, which runs `unlock` or `lock`. The world panel shows only acts with unlocked waypoints. `[travel] skip_objects = ["HealingWell"]` in `server.toml` leaves out spawned object types whose path contains a listed string.
 
 `seed` takes `random` (the server picks); `topology` and `orientation` take `natural` (the client's own choice; with `[terrain] force_layout`, the default, the server computes that choice and sends it). Any area in `WorldAreas` works. Topology numbers are 1-based in the area's topology list; orientations are checked against that topology's allowed ones.
 

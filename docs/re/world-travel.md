@@ -1,14 +1,14 @@
 # World travel: transitions, waypoints, checkpoints, world map
 
-Client facts for P9 ([plan](../plans/r4-world.md)), from the capture `2026-11-02_18-31-34_336` and static RE. Marked **inferred** or **untested** where no capture or game test proves it. Longer notes while P9 runs: `runtime/r4/world-panel-re.md`.
+Client facts for P9 ([plan](../plans/r4-world.md)), from the capture `2026-11-02_18-31-34_336` and static RE. Marked **inferred** or **untested** where no capture or game test proves it. Game tests of 2026-11-05 (`r4-objects`, `r4-click`, `r4-travel`, `r4-unlock`, [setup.md](../guides/setup.md#game-tests-cargo-xtask-game-test)) pass on a private server. Longer notes while P9 runs: `runtime/r4/world-panel-re.md`.
 
 ## Objects
-Official servers stream these by range with `AddObject`, not all at entry. Keys are `murmur2(path)`; `Metadata/MiscellaneousObjects/AreaTransition_Animate` is the fog gate (key `0x41012847`, from the capture; the hash of that path was not computed yet), `Waypoint` `0x20e8d38a`, `Checkpoint` as listed in `dumps/<version>/client-tables/object_types.txt`.
+Official servers stream these by range with `AddObject`, not all at entry. Keys are `murmur2(path)`; `Metadata/MiscellaneousObjects/AreaTransition_Animate` is the fog gate (key `0x41012847`, murmur2 of that path, test in poe-data `hash.rs`), `Waypoint` `0x20e8d38a`, `Checkpoint` as listed in `dumps/<version>/client-tables/object_types.txt`.
 
 Blob (flags, `n`=0, then Positioned): `i32 x, i32 y, f32 angle, u16 team, u8 flags[3]` with optional parts, then Animated `0x41`, `u32 len + UTF-16 .ao path`, `u8`, then the type's tail:
 | Type | Positioned flags (captured) | Tail after the Animated `u8` |
 |---|---|---|
-| Fog gate | raw head after the angle: `0000 000000` (cylinder), `0000 040000 eeffffff 0000 1143` (`_vert`, `G1_2`), `0000 050000 fdffffff 0000 f041` (`_vert`, `G1_3`) | `02, u16 LE target HASH16, u8 index`, zeros, `01 08 00000000 01 000000`. Zeros: 6 bytes in `G1_town`, 5 in `G1_2` and `G1_3`, unexplained |
+| Fog gate | raw head after the angle: `0000 000000` (cylinder), `0000 040000 eeffffff 0000 1143` (`_vert`, `G1_2`), `0000 050000 fdffffff 0000 f041` (`_vert`, `G1_3`) | `02, u16 LE target HASH16, u8 index`, zeros, `01 08 00000000 01 000000`. Zeros: 6 in a town (`WorldAreas.IsTown`), 5 elsewhere; 5 in a town hangs the load at "[SCENE] Set Source" (game test) |
 | Waypoint | raw head: `0000 000000` or `0000 040000 00000000 0000 0000` | `01 00` |
 | Checkpoint | raw head: `0000 040000` or `0000 050000`, then `00000000 0000c040` | `02 00 00 00 00 00 00` |
 
@@ -25,10 +25,10 @@ The generator already places these objects: `G1_town` seed 1 gives gates at (324
 Client: `UseSkill` (`0x1a5`) skill `0x2000c266`, target flag 8, entity, the object's cell. Official reply: `StartAction` (flags `0x90`, target entity), `ActionEvent`, `UseSkillAck`, `SkillInputEndAck`, then:
 - **Far click:** official `StartAction` and ack at the click, no `0x64`, `ActionEvent` on arrival. A click from 41.4 cells acted 0.4 s later at (292,276), 26.0 cells from the waypoint. Clicks from up to 25.5 cells act at once. So the reach is about 26 cells.
 - **Ruled out:** range as the reason for the clicks at t 81.6 and 82.9 that did not transfer: t 90.5 transferred from the same cell. Their reason is unknown.
-- **Fog gate in range:** the client sends `ExitReport` (`0x355`) and goes to the area. Ctrl-click (`flags 0x0404`): `0xce` (instance list), client `0xcf` (`01 ff` new, **inferred**), then the transfer.
+- **Fog gate in range:** the client sends `ExitReport` (`0x355`) and goes to the area. Ctrl-click (`flags 0x0404`): `0xce` (instance list), client `0xcf` (`01 ff` new, **inferred**, **untested** in game), then the transfer. Game: a gate click in `G1_town` transfers to `G1_2`.
 - **Waypoint in range:** `0x5a` then `0x98` (below); the client answers `0x5b`, then `0x2f1` and the transfer.
 
-Types: a gate has the `AreaTransition` component, a waypoint interaction `action_name=waypoint`, a checkpoint `ControlZone` (`.ot`). Only the fog gate, `Waypoint` and `Checkpoint` component sets have captured blobs; other sets are sent as those types with their own art (**untested**). No capture holds a healing well: its blob is a guess. `HealingWell*` are static, the others are not.
+Types: a gate has the `AreaTransition` component, a waypoint interaction `action_name=waypoint`, a checkpoint `ControlZone` (`.ot`). Only the fog gate, `Waypoint` and `Checkpoint` component sets have captured blobs; other sets are sent as those types with their own art (**untested**). No capture holds a healing well: both guessed blobs (the checkpoint tail; InteractionAction flags before Animated and an empty StateMachine) hang the area load, so wells are not spawned (`[travel] skip_objects = ["HealingWell"]`). `HealingWell*` are static, the others are not.
 
 Touching a waypoint or checkpoint: `0x6b` (`u8 local, u32be entity`; sets `checkpoint_state` old 1, new 2; `session+0x2274`), `0x196`, `0x2ff`, and for a checkpoint `0x2f9` `04 02 0001 000000` on the object. `006b 01 00000000` clears it.
 
@@ -42,12 +42,12 @@ Touching a waypoint or checkpoint: `0x6b` (`u8 local, u32be entity`; sets `check
 | S `0xce` | `u8, u16be hash, u8, u8 n, n x (u64, u32be, u8, u8 m, names)` | Instance list |
 | C `0xcf` | `u8 local, u8 choice` | Instance choice |
 | S `0x352` | `u8 (not read), u8 n, n x (u8 bit 7 boss, bits 0-6 index; u16be x, u16be y)` | Checkpoint warp list, session `+0x2330`, case `0x142125446`; sent at entry |
-| C `0x353` | `u8 local, u8 index` | Warp request (`0x140cfd2a0`). **Never captured**, server reply unknown; use the teleport the server already has |
+| C `0x353` | `u8 local, u8 index` | Warp request (`0x140cfd2a0`). Seen from the client in game: index 2 after a checkpoint click; the server answers with a teleport only (to (328,1014), drift 0.71 cells) |
 
 Waypoint mask bits (`0x141f68b30`, list `0x141f68930`): position among WorldAreas rows, in table order, with `HasWaypoint` and `+0x1b4` (schema `_45`) in {1, 2, 31}. Bit 0 `G1_town`, bit 1 `G1_2`, bit 2 `G1_4`, bit 3 `G1_5`; 103 bits (`runtime/r4/waypoint_bits.tsv`).
 
 ## Checkpoint warp: the client has the UI
-Answer to the spec's open question: **the client offers it, the overlay does not need to pick a destination.** The area map (`AreaMapScreen`, UI `+0x970`, ctor `0x140cfb370`) shows one button per `0x352` entry ("Travel to Checkpoint", "Travel to Boss Checkpoint", index 0 = "WarpWaypointButtonHover"), rebuilt on every `0x352` (`0x140cfce10`), visible only while that screen is open. The capture shows `03 010b 049e` and `00 0137 0471` for `G1_2` after re-entry: index 0 is the waypoint at its cell, others are touched checkpoints. Clicking one sends `0x353`. The capture has no checkpoint click and no `0x353`. The client has no special code for clicking a Checkpoint, so a click should get `0098 <local> 2a 0 0 0 0` (**inferred**, test it).
+Answer to the spec's open question: **the client offers it, the overlay does not need to pick a destination.** The area map (`AreaMapScreen`, UI `+0x970`, ctor `0x140cfb370`) shows one button per `0x352` entry ("Travel to Checkpoint", "Travel to Boss Checkpoint", index 0 = "WarpWaypointButtonHover"), rebuilt on every `0x352` (`0x140cfce10`), visible only while that screen is open. The capture shows `03 010b 049e` and `00 0137 0471` for `G1_2` after re-entry: index 0 is the waypoint at its cell, others are touched checkpoints. Clicking one sends `0x353` (`u8 local, u8 index`; handler `0x140cfd2a0` sends it when screen `+0x318` is set; `0x140cfc1f0` sets it and builds the buttons from session `+0x2330` via `0x140cfce10`; node ctor `0x140cfae90`). The button for the player's current spot reads "You are here" (the player marker `AreaNodePlayer` covers nodes close to the player at that map scale). The capture has no checkpoint click; in game a click is answered `0352`, `0098 01 2a 00..` and opens the map titled "Checkpoints" (sub `0x2a` confirmed).
 
 ## World panel unlock state
 Node `+0x2d0` is a `MapPins` row, flags `0x140b747e0`:
@@ -57,6 +57,9 @@ Node `+0x2d0` is a `MapPins` row, flags `0x140b747e0`:
 
 Flags are the first `AddObject` Player list (Player `+0x248`, `u16 n + (u8 chunk, 8 bytes)[n]`; chunk = flag >> 6, byte = (flag & 63) >> 3, bit = flag & 7). `WorldAreas.FlagOnEntered` gives the `Visited-*` flag (2889 `Visited-G1_1`, 2890 `G1_town`, 2891 `G1_2`; 2934 `MillerDefeated`). `G1_town` and `G1_2` require 2934.
 
-Minimal bytes, **untested**: `005a 00 00000000 03 00*21`; Player list `0100 2d 000e000000004000`.
+Minimal bytes (work in game: with `waypoint unlock all` the panel has tabs Act 1-4 and Interlude, which appears with act 6 waypoints; a click on a `G1_2` node travels and arrives on the waypoint cell (585,1344)): `005a 00 00000000 03 00*21`; Player list `0100 2d 000e000000004000`.
 
-Warp from the panel needs panel `+0x340` != 0 (`0x140bb4a70`): a panel opened with M alone cannot warp, only one opened by `0x98` with a waypoint entity. What makes an act's tab selectable is **unproven**; test it with the flags above. Which message changes a flag after spawn is unproven: the server sends the Player delta `0x0002` flag words (reader `0x141dd0b90`, near writer `0x141dd222e`; **untested**); otherwise an unlock needs a re-entry.
+Warp from the panel needs panel `+0x340` != 0 (`0x140bb4a70`): a panel opened with M alone cannot warp, only one opened by `0x98` with a waypoint entity. The act tabs list only acts with unlocked waypoints. The panel key is `U` (`0x55`); `M` opens the shop. Flag changes after spawn go by the Player delta `0x0002` flag words (reader `0x141dd0b90`, near writer `0x141dd222e`).
+
+## Unknown
+The clicks that did not transfer in the capture; the exact gate arrival rule (server approximates); the `_vert` gate head; one clean client `ExitProcess(0)` while loading `G1_2` after a waypoint jump in one `r4-travel` run (not reproduced; same class as the open T item in [r4-world.md](../plans/r4-world.md)).
