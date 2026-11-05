@@ -119,7 +119,7 @@ The default `[accounts] flags = [0x23, 0x03]` (`poe-config` default and both con
 
 The error code `0x1cf` (`LoginRequiresUnlockCodeStrict`) opens the Unlock window with the same red text in front. The server never sends it.
 
-**"Get Full Access" is not an account flag.** The escape-menu button comes from the in-game InitialState flag at `+0x3edc` (`0x1420edd56`, `[accounts] full_access`), not from `0x0004`.
+**"Get Full Access" is not an account flag.** The escape-menu button comes from the in-game InitialState flag at `+0x3edc` (`0x1420edd56`; the server always sets it), not from `0x0004`.
 
 ## Incoming packet factory
 The client's login factory is `0x14214fbe0` (opcode to class, then vtable slot 2 = deserialize). Classes by opcode (vtable):

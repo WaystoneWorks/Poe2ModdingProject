@@ -42,7 +42,7 @@ Steam may be started for private tests. Never log in to official servers; before
 - Input mode: real WASD needs `user_input_mode=wasd` and `last_selected_KBM_input_mode=wasd` in the test prefix while the client is closed, restored afterwards. In `mouse_and_keyboard`, W does not move. `use_wasd_to_move` is unrelated.
 - Server config: `python3 scripts/dev-config.py --out runtime/<name>.toml`, `drift_check = true`; read `drift server=... max_cells=...` from `runtime/server-run.log`. `G1_1` open ground (grid 1866332366): x 985..1110, y 600..740. `python3 scripts/re/send_dev.py "teleport x y"`.
 - The cursor changes reliably only after a double move: `inmove:1000,300`, `wait:300`, `inmove:<x>,<y>`, `wait:400`. Tap roll: `indown:0x20`, `0x20`, `wait:250`, `inup:0x20`. Sprint: `indown:0x20`, `0x20:1400`, `inup:0x20`.
-- Window 2560x1440, player near 1280,590: cursor right is offset `(+38,-29)`, left `(-30,+32)`, up `(+45,+45)`, down `(-35,-35)`. Per-frame truth: `runtime/movement-trace.tsv` and `GameFiles/logs/poe-hook/<session>`.
+- Window 2560x1440, player near 1280,590: cursor right is offset `(+38,-29)`, left `(-30,+32)`, up `(+45,+45)`, down `(-35,-35)`. Per-frame truth: `GameFiles/logs/poe-hook/<session>`.
 - Hidden-desktop runs broke sprint-end checks (23-28 cells against 0.1-4.2 visible). Prove any new isolated display (PLAN T0) with the same case. Two-client tests: `scripts/test-mp.sh`.
 
 ## RE

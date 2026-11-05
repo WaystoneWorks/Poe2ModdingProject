@@ -85,7 +85,7 @@ Mod commands need a game session (not offered through `AdminControl` or the web 
 | Part | Where |
 |---|---|
 | The report: id, version, SHA-256 of `mod.toml` and of the entry DLL of every loaded client mod | `poe_hook_shared::modreport` (client-hook), built by the hook loader (`poe-hook/src/mods.rs`), handed to the core through `HostApi::mod_report` (core ABI 3) |
-| The transport: side-channel frame `Kind::ModReport` (6), TCP on the instance port with the `PSUP` framing, sealed with the session keys, answered with `PSUR` status 0 | `poe-hook-core/src/side.rs`, `modules/server/servers/instance-server/src/{terrain_store,sync}.rs`; [../protocol/side-channel.md](../protocol/side-channel.md#mod-report) |
+| The transport: side-channel frame `Kind::ModReport` (6), TCP on the instance port with the `PSUP` framing, sealed with the session keys, answered with `PSUR` status 0 | `poe-hook-core/src/side.rs`, `modules/server/servers/instance-server/src/{side_stream,sync}.rs`; [../protocol/side-channel.md](../protocol/side-channel.md#mod-report) |
 | The comparison | `poe_mod_host::check_client(required, allow_extra, report)` (pure, unit-tested) |
 | Where it is acted on | `InstanceServer::handle`: the server waits up to `[mods] report_wait_secs` for the report (it arrives while the terrain is generated), joins the instance, enters the world, sends the refusal as server chat lines, waits 8 seconds so the client can show them, and ends the session before the player is registered as online |
 

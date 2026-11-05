@@ -95,7 +95,7 @@ A new login ends the old one: `LoginSessions::supersede(account)` (`poe-cluster`
 
 - **Storage:** accounts, characters and per-account character lists are in SQLite (`poe-store`). Character names are unique across accounts (case-insensitive). The slot limit comes from config.
 - **Tickets and sessions** (`poe-cluster`): tickets with random keys per hand-off; single-use resume tickets; login sessions per account (logout, supersede, transfers).
-- **Account settings:** `[accounts] flags` (default `[0x23, 0x03]`, [login.md](../protocol/login.md#authenticationresult-flags-and-the-suspicious-activity-popup)), `full_access`, `stash_tabs` are global for every account.
+- **Account settings:** `[accounts] flags` (default `[0x23, 0x03]`, [login.md](../protocol/login.md#authenticationresult-flags-and-the-suspicious-activity-popup)) is global for every account. Every account has full access (`CHARACTER_FULL_ACCESS`) and the official new-account stash tabs "1".."4" (`NEW_ACCOUNT_STASH_TABS`); `poe-store` `Store::create_account(login_key)` makes a password-less account `account<id>` (tests only).
 - **Steam path:** `0x0005` carries the Steam encrypted app ticket, encrypted with GGG's key, so the server cannot verify it.
 
 ## Not done yet

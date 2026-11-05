@@ -10,8 +10,6 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 ## Terrain
 - Goal: 1:1 tile hash, doodad hash and collision grid for every area, topology and orientation in the default league mode (4,508 combinations). The 84 league-mode topologies and the client's server-only spawn scatter in the doodad pass are out of scope.
 - Acceptance: client batches with 50 random seeds; a combination counts when every seed matches or has a documented reason (39 combinations error in the client on every seed). Out of scope: the 10 fixed areas, Incursion temples, effects of successful league rolls. Never special-case an area.
-- `[terrain] generate` and `force_layout` default on.
-- 2026-11-02: the generated collision grid and spawn layout are the default (`generated_grid = true`); the client terrain upload (`[spawn.upload]`) is off, a fallback for trusted hosts and areas the generator cannot make. Closes audit S-08 for the default config.
 
 ## Movement and world
 - **Principle (2026-11-03): the server runs an exact port of the client's movement code.** The client predicts its own movement; the server is authoritative and corrects it (a `0x64` with a cell that differs from the client's grid snaps it: `0x1421497c0` -> `0x141ddb6f0`). Official servers show no snaps because their code matches the client's; fitting or approximating cannot work. Source: https://www.pathofexile.com/forum/view-thread/889669/filter-account-type/staff (Chris Wilson, 2014: client prediction is mandatory, the server resyncs drifted entities).
@@ -46,10 +44,10 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 - UI style: direction "Ash & Blood" with the rune seal logo (launcher, web admin, tracker site; not the DLL overlay). For redesigned screens, the user sees a mockup before building; for the overlay, the ASCII mockups in its plan are enough (2026-11-04).
 
 ## Config (2026-11-05)
-- The server is the terrain authority: generation, its own grid and its forced layout are always on, not options. The client terrain upload and the mismatch log go.
+- The server is the terrain authority: generation, its own grid and its forced layout are always on, not options. The client terrain upload and the mismatch log go; closes audit S-08 (2026-11-02 made the generated grid the default and the upload off). An area the generator cannot make runs without a server grid.
 - Research and test switches go (seed sweep, known seeds, remote blob experiments, fake terrain hash, movement trace); drift check, position sync and debug link stay.
 - Account placeholders go: full access is always on, stash tabs and the account name prefix leave the config.
-- Game and protocol facts stay in the config. Plan: [plans/config-cleanup.md](plans/config-cleanup.md).
+- Game and protocol facts stay in the config.
 
 ## New features (2026-11-04)
 Specs in [plans/](plans/backlog.md); each spec repeats its decisions in detail.

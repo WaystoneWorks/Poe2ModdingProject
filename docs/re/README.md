@@ -44,8 +44,7 @@ Run with the project's Python environment from `third_party/fetch-tools.sh` ([..
 | `packets_diff.py`, `clientlog_entries.py`, `clientlog_terrain.py` | Compare captures, read the live client log: [captures.md](captures.md) |
 | `movement_sequences.py list\|events\|scen\|never <session>` | Movement and skill message sequences in a capture, with frame offsets against `0x2f4` ticks: [../protocol/movement.md](../protocol/movement.md) |
 | `tick_timing.py [packets.jsonl ...]` | Official `0x2f4` tick sizes, rate, spacing, `0x2f5` count and stall catch-up: [../protocol/movement.md](../protocol/movement.md#timing) |
-| `movement_trace.py` | Movement hitches in a server movement trace: [../protocol/movement.md](../protocol/movement.md#movement-trace) |
-| `sweep_drive.py`, `send_dev.py` | Drive a terrain seed sweep, send a server command over the debug link: [terrain/README.md](terrain/README.md#tools), [../guides/setup.md](../guides/setup.md#unattended-client-tests) |
+| `send_dev.py` | Send a server command over the debug link: [../guides/setup.md](../guides/setup.md#unattended-client-tests) |
 
 ## Where findings go
 | Topic | File |

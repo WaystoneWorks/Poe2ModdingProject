@@ -84,7 +84,7 @@ Recorded: `2026-11-03_13-16-29_336` (230 s in the instance, `G1_4`/`G1_5`, WASD,
 | Login `0x0017` | u16 `0x0014` right after `InstanceDetails` makes the client `shutdown()` its login connection, which our transfers need (`[network.login] close_after_handoff`) |
 | `AddObject` header (player) | (0xffffffff, 0, 0), with and without the first-visit intro |
 | AreaInfo league (+0x38) | the character's league |
-| InitialState | flags 7 (zone) or 4 (town: no PauseRequest follows, bits 0/1 would freeze it), four stash tabs "1".."4" (`[accounts] stash_tabs`), character flags `68 40 00`, player entry `0x40`/`7` |
+| InitialState | flags 7 (zone) or 4 (town: no PauseRequest follows, bits 0/1 would freeze it), four stash tabs "1".."4" (`NEW_ACCOUNT_STASH_TABS` in instance-server `lib.rs`), character flags `68 40 00`, player entry `0x40`/`7` |
 | Entry order | `LocalPlayers`, `PlayerEntity`, inventories |
 
 ## Open (by priority)

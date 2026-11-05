@@ -1,8 +1,8 @@
 # Movement restart (e): the user's sprint snaps (2026-11-03 session 1 f2142-2358: a WASD sprint
 # with the 0x64 stream, a key turn during it). Records the client's grid every frame
-# (POE_HOOK_MOVEMENT_LOG) and the server's movement trace, to compare the 0x64 cells with the
-# client's own grid (scripts/re/movement_gridcmp.py). Spot as in sprint-w.toml (70+ free cells every way).
-description = "Sprint with a key turn and a straight sprint, client grid and server trace recorded (G1_1 seed 1)"
+# (POE_HOOK_MOVEMENT_LOG) and the drift checker's log. Spot as in sprint-w.toml (70+ free cells
+# every way).
+description = "Sprint with a key turn and a straight sprint, client grid recorded (G1_1 seed 1)"
 input_mode = "wasd"
 
 [client_env]
@@ -10,7 +10,6 @@ POE_HOOK_MOVEMENT_LOG = "1"
 
 [server]
 "dev.drift_check" = true
-"dev.movement_trace" = "runtime/game-test/sprint-turn-trace.tsv"
 
 [[step]]
 name = "transfer to G1_1 seed 1"

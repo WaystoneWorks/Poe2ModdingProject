@@ -153,13 +153,7 @@ not sent by the server. The port's doodad pass and collision grid: [doodads.md](
 - **In-client batch generation** (`[gen_batch]`, `scripts/re/terrain_batch.py`): the DLL runs the
   client's generator for `area seed topology orientation` jobs on worker threads, with no login,
   and writes tile hash, doodad hash and size per job to `batch-results.tsv`: [batch.md](batch.md).
-- **Seed sweep:** the server's `[dev] sweep` (or `POE_SWEEP=<file>`) lists
-  `<WorldAreas.Id> <seed> [count]`. Each instance session generates the next entry instead of the
-  character's area, appends `area, seed, tile hash, doodad hash` to `sweep_results`
-  (`dumps/0.5.5e.hotfix1/terrain/vectors/sweep-results.tsv`) and closes.
-  `scripts/re/sweep_drive.py` logs the test client in again and presses Play per entry; the DLL
-  exports every layout. A second AreaInfo on one connection crashes the client (the old objects
-  sample the regenerated terrain, `0x141d05030`), hence one layout per session.
+- Ruled out: a second AreaInfo on one connection crashes the client (the old objects sample the regenerated terrain, `0x141d05030`), so a seed sweep could use only one layout per session; the sweep is removed.
 - **Server command** `area_info <area> <seed>` (`scripts/re/send_dev.py area_info G1_1 12345`)
   sends a new AreaInfo on a live connection; it crashes the client for the reason above.
 - **Port examples** (`cargo run --release -p poe-world --example <name> -- <args>`):

@@ -11,7 +11,7 @@ Besides the private server, the client hook has **official mode**: you play the 
 | Starts your own copy of the game (`GameFiles/`, never the Steam install) with the original realm list, so the normal Steam login and official realms work | Send anything to an official server that the game would not send itself |
 | Records every login and instance message (plaintext, read inside the client after decryption) to `packets.jsonl` and `packets.txt` | Change, inject, replay or block a packet |
 | Writes logs, an optional per-frame movement log, and snapshots and area exports you ask for in the overlay | Move your character, press keys, or change game memory values |
-| Shows an overlay (Insert) with packets and coverage; the badge `OFFICIAL: read-only` is always visible | Patch the login, bypass the key exchange, or use the debug link, position sync or terrain upload |
+| Shows an overlay (Insert) with packets and coverage; the badge `OFFICIAL: read-only` is always visible | Patch the login, bypass the key exchange, or use the debug link, position sync or the mod report |
 | Redacts the bodies of login, credential and ticket messages before storing them | Load mods (the mod loader does not read the mods folder in this mode) |
 
 ### The read-only latch

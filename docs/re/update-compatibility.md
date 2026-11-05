@@ -4,7 +4,7 @@ What breaks when a game build changes. The signature table, `cargo xtask check-b
 
 ## Still open
 - Struct offsets listed as literal in client-dll.md (terrain cell grids, tile record internals, generator-trace object layouts, diagnostic reads, component indices 0 and 9).
-- Runtime sanity checks after resolution (position inside the terrain; the side-channel key against the server's first report); a failed tile-hash check disabling the export upload (row 15).
+- Runtime sanity checks after resolution (position inside the terrain; the side-channel key against the server's first report); a failed tile-hash check flagging the export (row 15).
 - `symbols.tsv` per build (row 20); the opcode/layout drift report beyond the server-to-client deserializer fingerprints.
 - `cargo xtask sig-gen` (the generator stays `scripts/re/sig_gen.py`).
 - Renumbered opcodes and client-to-server layouts are not derived from the exe; the factory is not found by the `Unable to deserialise packet` string (its address and switch numbers come from Ghidra and `find_switches.py`).
@@ -18,7 +18,7 @@ GGG's first build after the signature tooling was **0.5.5e Hotfix 1** ("Fixed a 
 - **Code:** `scripts/re/addr_map.py` aligned 154,521 of 154,537 functions by size; code moved in runs by +0x0 to +0x2d0. 16 functions changed (10 changed bodies, 6 merged away), all undocumented: around `0x1410087e0`, `0x141208f80`, `0x141211c50`, `0x141342af0`-`0x141344427`, `0x14218df4e`-`0x14218e030`, `0x1421bd410`-`0x1421bd9d0` (0.5.5e addresses). Nothing in the terrain generator (`0x141f…`) changed.
 - **Data** (`scripts/re/bundlediff`): 36 files added, 28 removed, 173,868 changed, almost all texture `.header` files (173,857), plus 8 `.fmt` models, `metadata/exe_hash_*.txt`, one monster `.ot`; added: a telescope object in the act 5 town (`metadata/terrain/gallows/act5/5_town/objects/towntelescope.ot`, its `.ao`, model) and renamed portal effects. No `.datc64`, `.tgr`, `.dgr`, `.tdt`, `.tmd` or `.arm`: the server's tables and terrain inputs are byte-identical, so the terrain vectors stay valid.
 - **Work needed:** a new signature table (the old spec with every address moved by the map: patterns identical, `sig_gen.py` output differs only in `[build]` and addresses), a new version file sharing the 0.5.5e opcode folder, the server's `[game] version`, and test fixtures that named the newest version. The name is `0.5.5e.hotfix1` (not `0.5.5e-hotfix1`): release file names allow only letters, digits, dots. Procedure: [../guides/new-game-version.md](../guides/new-game-version.md).
-- **In-game check:** `scripts/test-run.sh` on the hotfix copy: the DLL logged `table 0.5.5e.hotfix1: timestamp ok, size ok, revision 326410` and every feature `ok`; standalone login screen, token login, hand-off, G1_1 with the client's terrain upload (tile hash 1866332366) and click-to-move worked. The login server logged no `client_hash cannot be checked yet` line, so `hashes_confirmed = true`, `status = "supported"`. Not repeated for this build: the refusal of another build and an official read-only session (the user's).
+- **In-game check:** `scripts/test-run.sh` on the hotfix copy: the DLL logged `table 0.5.5e.hotfix1: timestamp ok, size ok, revision 326410` and every feature `ok`; standalone login screen, token login, hand-off, G1_1 (client tile hash 1866332366) and click-to-move worked. The login server logged no `client_hash cannot be checked yet` line, so `hashes_confirmed = true`, `status = "supported"`. Not repeated for this build: the refusal of another build and an official read-only session (the user's).
 - **Ghidra:** the hotfix exe is `/0.5.5e.hotfix1/PathOfExileSteam.exe` with the old program's names, signatures, comments and data types ported by the address map (`scripts/re/ghidra/PortFromAddrMap.java`; Version Tracking failed, [README.md](README.md#a-new-build-in-the-ghidra-project)).
 
 ## How to read the table
@@ -46,7 +46,7 @@ Ratings L/M/H (low/medium/high), written D/H/M. Detection: **easy** = fails at s
 | 12 | dat schema `third_party/dat-schema` (rolling `latest`, `fetch-tools.sh:15-17`) and table columns | H/M/M | Column names or widths drift; a wider schema only warns (`dat.rs:97-103`); positional access reads wrong data (hard) | Partly: `check-build` checks every used table and column (`poe_data::used`), row width and the schema's sha256 pin; `fetch-tools.sh` warns on a different schema but cannot fetch a given release |
 | 13 | Version plumbing: `game.version` is a label; `v0_5_5e` module (`poe-proto/src/opcodes.rs:11`); `0.5.5e` in login-server tests, `xtask`, config defaults | M/M/M | Mixed tables from two builds; dumps in the wrong folder (silent) | Done: `modules/protocol/versions/<ver>.toml` is the single source for xtask, the server (`[game] version`, `{version}` in paths, `protocol_dir` default) and the launcher (byte-identical copy, `cargo xtask versions`); the server refuses an unknown client hash |
 | 14 | Terrain generator port (`poe-world`, 14,800 lines, 500 address refs) and data formats (`.tgr` version 25, `.dgr`, `.tdt`, `.ot`) | M/M/H | Layouts differ from the client's: walls and spawn wrong; data patches change tile sets even with an unchanged exe (hard; the client logs `Tile hash` / `Doodad hash` as an oracle) | Re-run vectors per build; `check-build` reports stale `terrain-vectors.tsv` by its `build` column |
-| 15 | Terrain export hooks and offsets (`area_export`: world `+0x98/+0x1b4/+0x114/+0x118`, terrain `+0x18/+0x20/+0x28`, tile record `0x38`, grid `+0xd0/+0xe8/+0x100/+0x118`) | L/H/M | Wrong layouts uploaded (easy: the export re-checks the client's tile hash, `terrain_tools.rs:1050`) | Keep the hash check; make a failed check disable the upload |
+| 15 | Terrain export hooks and offsets (`area_export`: world `+0x98/+0x1b4/+0x114/+0x118`, terrain `+0x18/+0x20/+0x28`, tile record `0x38`, grid `+0xd0/+0xe8/+0x100/+0x118`) | L/H/M | Wrong layouts exported to the dump dir (easy: the export re-checks the client's tile hash, `terrain_tools.rs:1050`) | Keep the hash check; make a failed check flag the export |
 | 16 | HNC table: `key_xor` and `swaps` (`opcodes/0.5.5e.hotfix1/hnc.toml`, exe `0x142f10980`, `0x1421c52f0`); Salsa20 key/IV split (`poe-net/src/cipher.rs:40`) | L/L/M | Our side of the HNC channel cannot decode (the client disconnects after `0x1c`; easy) | Done for `key_xor`: `check-build` re-extracts the 64 bytes and compares. The `swaps` are not re-derived |
 | 17 | Packet capture stream offsets (`packets.rs:333-440`, `protocol.rs:102-123`) and caller ranges `LOGIN_READER`/`INSTANCE_READER` (`packets.rs:41-42`) | L/H/M | Wrong messages or channel in captures; no crash (guarded reads) (hard) | Done: offsets are fields; the channel is the `.pdata` range of the two session loops |
 | 18 | Packet redaction by opcode name (`packets.rs:198-211`) | L/L/H | After a renumber, secrets reach `packets.jsonl` (silent) | Done: `Credentials` added and every login message is redacted on an unverified build (`redact.rs`) |
@@ -180,8 +180,8 @@ Deriving an operand safely:
 ## 5. Version strings and where the version lives
 | Place | What |
 |---|---|
-| `modules/server/config/server.toml`, `server.example.toml` | `version`, `protocol_dir`, `layout_dir`, `known_seeds`, `sweep_results` contain `0.5.5e` (`:5,11,54,72,175`) |
-| `modules/server/crates/poe-config/src/lib.rs` | `[game] version` is a plain `String`; the default sweep path contains `0.5.5e` (`:329`, `:523`) |
+| `modules/server/config/server.toml`, `server.example.toml` | `version`, `protocol_dir` contain `0.5.5e` |
+| `modules/server/crates/poe-config/src/lib.rs` | `[game] version` is a plain `String` |
 | `xtask/src/main.rs` | `dump_dir = dumps/<config.game.version>` (`:274`) |
 | `xtask/src/terrain_matrix.rs` | `VECTORS_DIR = "dumps/0.5.5e.hotfix1/terrain/vectors"` (`:30`) |
 | `modules/protocol/poe-proto/src/opcodes.rs` | module `v0_5_5e`, `include_str!` paths (`:11-19`, tests `:236-260`); DLL `packets.rs:164,168` uses `v0_5_5e` |
@@ -202,7 +202,7 @@ Other identifiers: the 0.5.5e sizes were `Bundles2/_.index.bin` 115,154,591; `st
 ## 7. `Client.txt` parsing in scripts and the DLL
 - `scripts/re/clientlog_terrain.py:13-16`: four regexes including `Build Revision`.
 - `scripts/re/clientlog_entries.py:13-19`: a line regex (`^\S+ \S+ (\d+) \S+ \[(\w+) Client \d+\] (.*)$`) and the `Generating level` regex.
-- `scripts/re/sweep_drive.py`, `scripts/test-run.sh`, `scripts/test-mp.sh` read the **server** log (`authenticated`, `listening`), not `Client.txt`.
+- `scripts/test-run.sh`, `scripts/test-mp.sh` read the **server** log (`authenticated`, `listening`), not `Client.txt`.
 - DLL `gamelog.rs` and the Log page read `logs/Client.txt` lines of this launch.
 - Risk is low (stable format, tools print counts). Add the build revision to every output header; at count 0 say "no lines matched; the log format may have changed".
 

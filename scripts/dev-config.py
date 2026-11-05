@@ -30,9 +30,7 @@ DEFAULT_OUT = ROOT / "runtime" / "server.dev.toml"
 OVERRIDES = {
     ("network.login", "bind"): '"0.0.0.0:20481"',
     ("network.instance", "bind"): '"0.0.0.0:6112"',
-    ("dev", "known_seeds"): '"dumps/{version}/terrain/vectors/terrain-vectors.tsv"',
     ("dev", "position_sync"): "true",
-    ("dev", "movement_trace"): '"runtime/movement-trace.tsv"',
     ("dev", "debug_link"): "true",
 }
 

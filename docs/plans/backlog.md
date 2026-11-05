@@ -28,6 +28,7 @@ Facts: [world-travel.md](../re/world-travel.md).
 - Quest-disabled gates: rooms tagged `*disabled` (e.g. `teleport3disabled-Arena`, `G1_8` boss gate (792,866)) come with quests; the client does not show (792,866).
 - Generator failures: `G2_10_1`, `G4_14` (seed 1); `G2_1`, `G2_10_1`, `G3_5` (seed 2); `G1_14`, `G3_8` (seed 3).
 - The exact `0xce`/`0xcf` and gate arrival rule (the server approximates).
+- `r4-areas` failed once (client exited during `G3_6_1`'s load, "client disconnected during terrain generation" about 4 s after forcing the layout) and passed on rerun: unexplained, timing suspected, not caused by C1.
 
 ## Generator inputs the batches hold fixed (needed for "any seed" in real play)
 - Area level: G3_10's level 75+ path, the trial's rooms (UltimatumPlugin `0x141f101e0`).

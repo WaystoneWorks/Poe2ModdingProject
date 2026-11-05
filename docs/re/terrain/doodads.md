@@ -310,9 +310,8 @@ server may send only one. The server-only scatter is not ported.
 
 ## Server use
 
-`[terrain] generated_grid` (default on) makes the instance server build the grid (and the spawn
-layout) with the port instead of using the client's files, but only when the generated
-tile hash equals the client's; otherwise it warns and uses the client's grid. `poe-world` depends
+The instance server always builds the grid (and the spawn
+layout) with the port and kicks a client whose tile hash differs; it never reads the client's files. `poe-world` depends
 neither on `poe-game` nor on `poe-config`; the instance server is the adapter
 (`poe_world::collision::build(..).pwg1()` into `poe_game::grid::Grid::parse`), see
 [../../architecture/instance-world.md](../../architecture/instance-world.md#terrain-grid-sources).
