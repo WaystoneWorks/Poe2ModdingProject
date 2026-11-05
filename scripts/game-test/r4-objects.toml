@@ -1,0 +1,79 @@
+# P9: travel objects spawn without crashing the client. G1_town seed 1 and G1_2 seed 1: fog gates,
+# waypoints, checkpoints. Screenshots (F8) go to the test prefix's Screenshots folder.
+# Cells: `area_objects G1_town 1` and `area_objects G1_2 1`.
+description = "travel objects spawn, the client stays up, the terrain check still passes"
+input_mode = "wasd"
+
+[server]
+"dev.drift_check" = true
+
+[[step]]
+name = "transfer to G1_town seed 1"
+cmd = "transfer G1_town 1"
+
+[[step]]
+name = "in G1_town"
+expect_state = { area = "G1_town" }
+timeout_s = 60
+
+[[step]]
+name = "objects spawned"
+expect_log = "spawned the travel objects"
+since = "start"
+
+[[step]]
+name = "teleport to the waypoint"
+cmd = "teleport 290 258"
+
+[[step]]
+name = "at the waypoint"
+expect_state = { near = [290, 258, 4] }
+
+[[step]]
+name = "screenshot waypoint"
+keys = "wait:1500 0x77 wait:500"
+
+[[step]]
+name = "teleport to a fog gate"
+cmd = "teleport 330 200"
+
+[[step]]
+name = "at the gate"
+expect_state = { near = [330, 200, 4] }
+
+[[step]]
+name = "screenshot gate"
+keys = "wait:1500 0x77 wait:500"
+
+[[step]]
+name = "transfer to G1_2 seed 1"
+cmd = "transfer G1_2 1"
+
+[[step]]
+name = "in G1_2"
+expect_state = { area = "G1_2" }
+timeout_s = 60
+
+[[step]]
+name = "teleport between the waypoint and a checkpoint"
+cmd = "teleport 605 1365"
+
+[[step]]
+name = "at the spot"
+expect_state = { near = [605, 1365, 4] }
+
+[[step]]
+name = "screenshot waypoint and checkpoint"
+keys = "wait:1500 0x77 wait:500"
+
+[[step]]
+name = "teleport to the vert gate"
+cmd = "teleport 645 1395"
+
+[[step]]
+name = "screenshot vert gate"
+keys = "wait:1500 0x77 wait:500"
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

@@ -149,6 +149,11 @@ struct Step {
     /// after `hold_ms` (default 1000).
     roll: Option<String>,
     hold_ms: Option<u64>,
+    /// `click_cell = [x, y]`: moves the cursor to that grid cell, from the player's cell and the
+    /// camera's fixed projection (2560 x 1440), and clicks there; `lift` raises the click by that many
+    /// pixels (an object's label stands above its cell). The cell must be on screen.
+    click_cell: Option<Vec<f64>>,
+    lift: Option<f64>,
     /// `max_drift = 5`: fails when a server `drift` line (scenario `"dev.drift_check" = true`)
     /// since the last action step started (keys, cmd, walk_to, roll; `since = "start"`: since
     /// the scenario started) shows
@@ -158,6 +163,13 @@ struct Step {
     log: Option<String>,
     since: Option<String>,
     timeout_s: Option<u64>,
+}
+
+/// The client position (2560 x 1440) of a cell at this grid offset from the player: fitted on the
+/// `r4-objects` screenshots, with the character at the centre of the fixed camera. Good to a few
+/// pixels near the player; terrain height moves it.
+fn screen_of_cell((dx, dy): (f64, f64)) -> (f64, f64) {
+    (1280.0 + 9.67 * (dx - dy), 647.0 - 8.0 * (dx + dy))
 }
 
 /// The run: files, children and what to undo; `Drop` cleans up whatever is left.
@@ -619,7 +631,7 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
             .and_then(|t| crate::game_state::parse(&t).ok())
             .and_then(|v| crate::game_state::grid(&v));
         self.grids = (self.grids.1, now);
-        if s.keys.is_some() || s.cmd.is_some() || s.walk_to.is_some() || s.roll.is_some() {
+        if s.keys.is_some() || s.cmd.is_some() || s.walk_to.is_some() || s.roll.is_some() || s.click_cell.is_some() {
             self.action_log_at = self.log_len("server");
             self.action_hook_at = self.log_len("hook");
         }
@@ -628,6 +640,19 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
             std::thread::sleep(Duration::from_millis(1500));
             let from = if s.since.as_deref() == Some("start") { 0 } else { self.action_log_at };
             return self.check_drift(max, from);
+        }
+        if let Some(c) = &s.click_cell {
+            let [x, y] = c[..] else { bail!("click_cell needs [x, y]") };
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as u64;
+            let from = self.player_cell(now.saturating_sub(3000))?;
+            let (px, py) = screen_of_cell((x - from.0, y - from.1));
+            let py = py - s.lift.unwrap_or(0.0);
+            if !(0.0..2560.0).contains(&px) || !(0.0..1440.0).contains(&py) {
+                bail!("cell ({x},{y}) is off screen from ({},{}): {px},{py}", from.0, from.1);
+            }
+            let (px, py) = (px as i32, py as i32);
+            self.send_keys(&format!("inmove:{px},{py} wait:400 inpress:{px},{py} wait:120 inrelease:{px},{py} wait:300"))?;
+            return Ok(format!("clicked {px},{py} from ({},{})", from.0, from.1));
         }
         if let Some(k) = &s.keys {
             self.send_keys(k)?;

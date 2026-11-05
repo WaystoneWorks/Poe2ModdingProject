@@ -1,0 +1,146 @@
+# P9: travels with the client's own panels: waypoint panel to G1_2, checkpoint map warp, M and the
+# act tabs after `waypoint unlock all`. UI positions come from screenshots at 2560 x 1440.
+description = "waypoint travel, checkpoint warp, world map tabs"
+input_mode = "mouse_and_keyboard"
+
+[server]
+"dev.drift_check" = true
+
+[[step]]
+name = "transfer G1_town 1"
+cmd = "transfer G1_town 1"
+
+[[step]]
+name = "in G1_town"
+expect_state = { area = "G1_town" }
+timeout_s = 60
+
+[[step]]
+name = "waypoint unlock all"
+cmd = "waypoint unlock all"
+
+[[step]]
+name = "teleport 290 258"
+cmd = "teleport 290 258"
+
+[[step]]
+name = "at the waypoint"
+expect_state = { near = [290, 258, 4] }
+
+[[step]]
+name = "click the waypoint"
+click_cell = [282, 252]
+
+[[step]]
+name = "screenshot panel, all unlocked"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "act 2 tab"
+keys = "inmove:1158,94 wait:400 inpress:1158,94 wait:120 inrelease:1158,94 wait:1200"
+
+[[step]]
+name = "screenshot act 2"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "interlude tab"
+keys = "inmove:1495,94 wait:400 inpress:1495,94 wait:120 inrelease:1495,94 wait:1200"
+
+[[step]]
+name = "screenshot interlude"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "act 1 tab"
+keys = "inmove:1050,94 wait:400 inpress:1050,94 wait:120 inrelease:1050,94 wait:1200"
+
+[[step]]
+name = "screenshot act 1"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "waypoint to G1_2"
+keys = "inmove:1328,343 wait:400 inpress:1328,343 wait:120 inrelease:1328,343 wait:1200"
+
+[[step]]
+name = "in G1_2 by waypoint"
+expect_state = { area = "G1_2" }
+timeout_s = 60
+
+[[step]]
+name = "screenshot arrival by waypoint"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "travel status"
+cmd = "travel status"
+
+[[step]]
+name = "transfer G1_2 1"
+cmd = "transfer G1_2 1"
+
+[[step]]
+name = "in G1_2 seed 1"
+expect_state = { area = "G1_2" }
+timeout_s = 60
+
+[[step]]
+name = "checkpoint unlock all"
+cmd = "checkpoint unlock all"
+
+[[step]]
+name = "teleport 640 1375"
+cmd = "teleport 640 1375"
+
+[[step]]
+name = "at the checkpoint"
+expect_state = { near = [640, 1375, 4] }
+
+[[step]]
+name = "click the checkpoint"
+click_cell = [630, 1388]
+lift = 80
+
+[[step]]
+name = "hover the far checkpoint (328, 1014)"
+keys = "inmove:1345,1105 wait:800"
+
+[[step]]
+name = "screenshot checkpoint map"
+keys = "wait:500 0x77 wait:400"
+
+[[step]]
+name = "warp button"
+keys = "inpress:1345,1105 wait:120 inrelease:1345,1105 wait:1500"
+
+[[step]]
+name = "warp request seen"
+expect_log = "warp"
+since = "action"
+timeout_s = 8
+
+[[step]]
+name = "screenshot after warp"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "warped to the far checkpoint"
+expect_state = { near = [328, 1014, 20] }
+timeout_s = 6
+
+[[step]]
+name = "server and client agree after the warp"
+max_drift = 5
+
+[[step]]
+name = "world panel key (U; M opens the shop)"
+keys = "0x55 wait:1200"
+
+[[step]]
+name = "screenshot world panel"
+keys = "wait:800 0x77 wait:400"
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "
