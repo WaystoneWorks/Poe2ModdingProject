@@ -1,6 +1,6 @@
 # Stats (`poe-stats`)
 
-Owner of the stat calculator: what it ports, the tools that check it, what it does not cover and which stats the server sends. Step P8 is done; the geared stat list and items come with P9 ([plans/items-stats.md](../plans/items-stats.md)).
+Owner of the stat calculator: what it ports, the tools that check it, what it does not cover and which stats the server sends. Step P8 is done; the geared stat list and items come with P10 ([plans/items-stats.md](../plans/items-stats.md)).
 
 ## Crate
 `modules/server/crates/poe-stats` is a port of the PathOfBuilding-PoE2 rules (MIT, notice in `crates/poe-stats/LICENSE-PathOfBuilding.md`; the reference commit is pinned in `third_party/fetch-tools.sh`). No I/O. Files:
@@ -59,7 +59,7 @@ Other categories seen on official servers:
 - Per-item counters (`number_of_equipped_*`, `base_helmet_maximum_energy_shield`, `base_boots_maximum_energy_shield`, `base_maximum_energy_shield_on_equipped_armour_items`).
 - Resist uncapped/capped pairs (`uncapped_cold_damage_resistance_%` and `cold_damage_resistance_%`, `base_cold_damage_resistance_%`).
 
-The captures hold only a low-level character with a few items, so the geared list (armour, evasion, etc.) is not known: that needs capture C2 ([re/captures.md](../re/captures.md)), taken by P9.
+The captures hold only a low-level character with a few items, so the geared list (armour, evasion, etc.) is not known: that needs capture C2 ([re/captures.md](../re/captures.md)), taken by P10.
 
 ## Movement
-The calculator's increased and final numbers reach `speed_stats` through `base_movement_velocity_+%` and `combined_movement_velocity_+%_final` (`Output.movement_inc_percent`, `movement_final_percent`). Both are 0 without gear, so movement is unchanged (replay 27 passed, game test `walk` passes, max drift 0.71 cells). The admin command `speed` stays as the debug override until P9's debug-mod layer.
+The calculator's increased and final numbers reach `speed_stats` through `base_movement_velocity_+%` and `combined_movement_velocity_+%_final` (`Output.movement_inc_percent`, `movement_final_percent`). Both are 0 without gear, so movement is unchanged (replay 27 passed, game test `walk` passes, max drift 0.71 cells). The admin command `speed` stays as the debug override until P10's debug-mod layer.

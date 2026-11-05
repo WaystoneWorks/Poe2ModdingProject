@@ -34,7 +34,7 @@ Recorded: `2026-11-02_18-31-34_336` (movement parts of steps 6 and 7; the R4 par
 After: Claude runs `cargo xtask deploy-client` (private again), turns the desktop rules back on and moves the session to `dumps/<version>/captures/official/`.
 
 ## Planned: capture C2 for gameplay (items, stats, life, flasks, passives, skills, monsters, loot, NPCs)
-For P9-P19 of [PLAN.md](../PLAN.md) ([plans/](../plans/items-stats.md)). Protocol only: monster AI is built from game data, not fitted to this capture. The user records it (read-only official session, about 30-40 minutes, can be split in two sessions); Claude only prepares and reverts the client, as above.
+For P10-P19 of [PLAN.md](../PLAN.md) ([plans/](../plans/items-stats.md)). Protocol only: monster AI is built from game data, not fitted to this capture. The user records it (read-only official session, about 30-40 minutes, can be split in two sessions); Claude only prepares and reverts the client, as above.
 In the game (a character around level 10-20 in Act 1 with some gear, a few currency orbs, an uncut gem, flasks and a charm; wait about 2 s between steps and note the clock time of each step):
 1. Login, then stand still 10 s in town (stat sets and pools at login).
 2. Inventory: open it, pick an item up to the cursor and put it down elsewhere; split a stack; equip a ring, unequip it; equip a weapon in weapon set 2; swap weapon sets twice (standing), then once while walking and once during a roll (movement gap #7).

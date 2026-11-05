@@ -31,10 +31,10 @@ Items (item creator, [item-creator.md](item-creator.md)):
 +--------------------+---------------------------+---------------------+
 [Give to inventory] [Drop at feet] [Save template] [Random x N]
 ```
-World gains waypoint unlocks (R4).
+World gains (R4) buttons to unlock chosen act maps and waypoints, and `[Unlock all checkpoints in this instance]`.
 
 Monsters: monster search, count, rarity, level, `[Spawn]`, `[Kill all]`, toggles `freeze AI`, `no aggro`; an inspector of the nearest or selected monster (server AI state, target, life, skills, cooldowns) from the debug link.
 
 Life: life, mana, ES bars with `[Heal]`, `[Damage N type]`, toggles `god`, `no cost`; `[Kill me]`, `[Revive]`; flask charges `[Refill]`.
 
-Players gains `[Inspect]` per row (P9).
+Players gains `[Inspect]` per row (P10).

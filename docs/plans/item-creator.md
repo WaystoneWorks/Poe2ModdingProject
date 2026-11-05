@@ -1,6 +1,6 @@
 # Plan: item creator and spawner
 
-Step P11 of [../PLAN.md](../PLAN.md), after items (P9) and the mod rolling engine (P10) of [items-stats.md](items-stats.md). Overlay tab: Debug > Items ([overlay.md](overlay.md#debug-help--console--character--stats--items--world--monsters--life--players)). Commands: `item ...` in [commands.md](commands.md).
+Step P12 of [../PLAN.md](../PLAN.md), after items (P10) and the mod rolling engine (P11) of [items-stats.md](items-stats.md). Overlay tab: Debug > Items ([overlay.md](overlay.md#debug-help--console--character--stats--items--world--monsters--life--players)). Commands: `item ...` in [commands.md](commands.md).
 
 ## User decisions (2026-11-04)
 - Lets an admin **search any item and change anything**: any base, rarity, item level, quality, sockets, corrupted state, any mod at any tier and value, including mods and values that cannot normally roll on that base (marked "illegal").
@@ -16,7 +16,7 @@ Step P11 of [../PLAN.md](../PLAN.md), after items (P9) and the mod rolling engin
 3. Rare names: two random `Words.dat` entries of the right type, or free text (free text sets `illegal`).
 4. **Paste**: a parser of the game's item text (Ctrl+C format: `Item Class:`, `Rarity:`, name lines, `--------` sections, `Item Level:`, `Quality:`, requirements, `(implicit)`, `(enchant)`, `(rune)`, `Corrupted`) and of PoB2's item text format. Mod lines are matched back to mods through the stat-description formatter (reverse lookup over the base's eligible mods first, then all mods). Unmatched lines are listed for the user and skipped.
 5. **Templates**: `item_templates(account, name, spec JSON, favourite)` in `poe-store`, per account. Commands `item template save|give|list|delete`.
-6. **Random**: `item random <class|base> [--rarity] [--ilvl] [--count n]` uses the P10 rolling engine, legal only.
+6. **Random**: `item random <class|base> [--rarity] [--ilvl] [--count n]` uses the P11 rolling engine, legal only.
 7. **Edit in place**: `item edit <slot>` (equipment slot name, or `inv <x> <y>`) loads an existing item's spec; saving replaces it with the same uid and sends the update.
 8. **Ground drop**: uses the ground item support of [loot-parties.md](loot-parties.md) (P18). Until P18, `--ground` answers "ground items come with loot (P18)".
 9. Debug link: `itemspec` request and reply (the spec as JSON with issues), `complete itembase|unique|mod <prefix>` with filters (item class, mod generation type, tags, tier), and `mods_for <base>` (eligible mods by group with tiers, weights and ranges).

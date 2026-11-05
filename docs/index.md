@@ -73,9 +73,9 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
 | [plans/overlay.md](plans/overlay.md) | Debug tab mockups still to build (feature steps) |
 | [plans/commands.md](plans/commands.md) | Commands still to add per step (registry v2 is current) |
-| [plans/items-stats.md](plans/items-stats.md) | Plan P9-P10: items, currency |
-| [plans/item-creator.md](plans/item-creator.md) | Plan P11: item creator |
-| [plans/r4-world.md](plans/r4-world.md) | Plan P12: R4 world objects, world map; T |
+| [plans/items-stats.md](plans/items-stats.md) | Plan P10-P11: items, currency |
+| [plans/item-creator.md](plans/item-creator.md) | Plan P12: item creator |
+| [plans/r4-world.md](plans/r4-world.md) | Plan P9: R4 world objects, world map; T |
 | [plans/life-flasks.md](plans/life-flasks.md) | Plan P13, P14: life, damage, death, flasks, charms |
 | [plans/passives.md](plans/passives.md) | Plan P15: passive tree, ascendancies, class changer |
 | [plans/skills.md](plans/skills.md) | Plan P16: gems, skill bar, basic skills |

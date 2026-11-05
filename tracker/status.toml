@@ -35,7 +35,7 @@
 "proj:flasks" = { status = "not_implemented", note = "P14", link = "docs/plans/life-flasks.md" }
 "proj:game_test" = { status = "fully_functional", link = "docs/guides/setup.md" }
 "proj:instances" = { status = "fully_functional", link = "docs/protocol/instance.md" }
-"proj:items" = { status = "not_implemented", note = "P9", link = "docs/plans/items-stats.md" }
+"proj:items" = { status = "not_implemented", note = "P10", link = "docs/plans/items-stats.md" }
 "proj:launcher_deploy" = { status = "implemented", link = "docs/guides/launcher.md" }
 "proj:launcher_host" = { status = "partial", note = "Host a server untested on Windows", link = "docs/guides/launcher.md" }
 "proj:launcher_install" = { status = "partial", note = "Steam depot download untested on a real install", link = "docs/guides/launcher.md" }
@@ -62,19 +62,19 @@
 "proj:settings" = { status = "implemented", link = "docs/architecture/client-dll.md" }
 "proj:side_channel" = { status = "fully_functional", link = "docs/protocol/side-channel.md" }
 "proj:skills" = { status = "not_implemented", note = "P16", link = "docs/plans/skills.md" }
-"proj:stats" = { status = "partial", note = "calculator and login stats done (P8); items and the geared list are P9", link = "docs/architecture/stats.md" }
+"proj:stats" = { status = "partial", note = "calculator and login stats done (P8); items and the geared list are P10", link = "docs/architecture/stats.md" }
 "proj:terrain" = { status = "partial", note = "remaining areas, see the terrain matrix", link = "docs/status/terrain.md" }
 "proj:terrain_batch" = { status = "fully_functional", link = "docs/re/terrain/batch.md" }
 "proj:terrain_check" = { status = "implemented", note = "always kicks on a mismatch", link = "docs/protocol/instance.md" }
 "proj:tracker" = { status = "implemented", note = "this site", link = "docs/guides/tracker.md" }
 "proj:trade" = { status = "not_implemented", link = "docs/plans/backlog.md" }
 "proj:time_scale" = { status = "implemented", note = "factors 1/33 to 1 only; run at 0.5", link = "docs/re/time-scale.md" }
-"proj:transitions" = { status = "not_implemented", note = "P12", link = "docs/plans/r4-world.md" }
+"proj:transitions" = { status = "not_implemented", note = "P9", link = "docs/plans/r4-world.md" }
 "proj:vendors" = { status = "not_implemented", note = "P19", link = "docs/plans/npcs-vendors.md" }
 "proj:web_accounts" = { status = "implemented", link = "docs/architecture/web-api.md" }
 "proj:web_api" = { status = "implemented", note = "no TLS in the server itself", link = "docs/architecture/web-api.md" }
 "proj:web_dashboard" = { status = "implemented", link = "docs/architecture/web-api.md" }
-"proj:web_inventory" = { status = "not_implemented", note = "P9", link = "docs/architecture/web-api.md" }
+"proj:web_inventory" = { status = "not_implemented", note = "P10", link = "docs/architecture/web-api.md" }
 "proj:web_leagues" = { status = "implemented", link = "docs/architecture/web-api.md" }
 "proj:web_tree" = { status = "not_implemented", note = "P15", link = "docs/architecture/web-api.md" }
-"proj:world_map" = { status = "not_implemented", note = "P12", link = "docs/plans/r4-world.md" }
+"proj:world_map" = { status = "not_implemented", note = "P9", link = "docs/plans/r4-world.md" }

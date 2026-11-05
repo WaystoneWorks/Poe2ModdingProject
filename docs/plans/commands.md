@@ -12,30 +12,32 @@ Registry v2 is current: subcommands, aliases, flags, levels, name kinds, searcha
 - Class change keeps level, XP, items and gold; it resets the passive tree, ascendancy and weapon-set allocations and refunds the points; the player leaves and rejoins the same instance automatically.
 - Extra commands wanted: god mode and friends, monster tools, world and time tools, economy and info commands.
 - No hotkeys.
-- `speed [increased] [action]` stays until P9; then `stat add movement_speed_+% 20` replaces it and `speed` remains as an alias that writes debug modifiers.
+- `speed [increased] [action]` stays until P10; then `stat add movement_speed_+% 20` replaces it and `speed` remains as an alias that writes debug modifiers.
 
 ## New commands (catalogue)
 Each row is delivered by its step; the overlay column is the Debug tab.
 
 | Command | Level | Overlay | Step | What |
 |---|---|---|---|---|
-| `save` | player | Character | P9 | saves your character now |
-| `inspect <player>` | player | Players | P9 | another player's level, class, equipment summary |
+| `save` | player | Character | P10 | saves your character now |
+| `inspect <player>` | player | Players | P10 | another player's level, class, equipment summary |
 | `unlock <character> [acts\|waypoints\|all]`, `lock ...` | admin | World | R4 | world map and waypoints |
+| `unlock <character> act <n>`, `unlock <character> waypoint <area>` | admin | World | R4 | one act map (interludes included) or one waypoint |
 | `waypoint unlock all` | admin | World | R4 | alias of `unlock <me> waypoints` |
-| `level set <n> [--no-points]` | admin | Character | P9 | sets the level and grants its points unless `--no-points` |
-| `xp add <n>`, `xp set <n>` | admin | Character | P9 | XP with level-ups |
-| `points passive\|weaponset\|ascendancy add\|set <n>` | admin | Character | P9/P15 | unspent points |
-| `stat add <stat> <value> [--kind flat\|increased\|more\|override]` | admin | Stats | P9 | debug modifier |
-| `stat list [search]`, `stat show <stat>` | admin | Stats | P9 | calculator values and breakdown |
-| `stat remove <stat\|#id>`, `stat clear` | admin | Stats | P9 | removes debug modifiers |
-| `item give <base\|unique> [--rarity] [--ilvl] [--quality] [--mods ...] [--ground] [--count n]` | admin | Items | P11 | [item-creator.md](item-creator.md) |
-| `item random <class\|base> [--rarity] [--ilvl] [--count n] [--ground]` | admin | Items | P11 | random rolls for loot testing |
-| `item paste` (overlay only: clipboard), `item template save\|give\|list\|delete <name>` | admin | Items | P11 | |
-| `item edit <slot\|inventory x y>` | admin | Items | P11 | opens the item in the creator |
-| `inv clear [--equipped]` | admin | Items | P9 | empties the inventory |
-| `currency <orb> [n]` | admin | Items | P10 | gives a stack |
-| `gold add\|set <n>` | admin | Items | P10 | gold |
+| `checkpoint unlock all` | admin | World | R4 | unlocks every checkpoint of the instance you are in |
+| `level set <n> [--no-points]` | admin | Character | P10 | sets the level and grants its points unless `--no-points` |
+| `xp add <n>`, `xp set <n>` | admin | Character | P10 | XP with level-ups |
+| `points passive\|weaponset\|ascendancy add\|set <n>` | admin | Character | P10/P15 | unspent points |
+| `stat add <stat> <value> [--kind flat\|increased\|more\|override]` | admin | Stats | P10 | debug modifier |
+| `stat list [search]`, `stat show <stat>` | admin | Stats | P10 | calculator values and breakdown |
+| `stat remove <stat\|#id>`, `stat clear` | admin | Stats | P10 | removes debug modifiers |
+| `item give <base\|unique> [--rarity] [--ilvl] [--quality] [--mods ...] [--ground] [--count n]` | admin | Items | P12 | [item-creator.md](item-creator.md) |
+| `item random <class\|base> [--rarity] [--ilvl] [--count n] [--ground]` | admin | Items | P12 | random rolls for loot testing |
+| `item paste` (overlay only: clipboard), `item template save\|give\|list\|delete <name>` | admin | Items | P12 | |
+| `item edit <slot\|inventory x y>` | admin | Items | P12 | opens the item in the creator |
+| `inv clear [--equipped]` | admin | Items | P10 | empties the inventory |
+| `currency <orb> [n]` | admin | Items | P11 | gives a stack |
+| `gold add\|set <n>` | admin | Items | P11 | gold |
 | `class set <class> [ascendancy]`, `ascendancy set <name>` | admin | Character | P15 | rejoins the instance |
 | `tree reset [--weaponset 1\|2] [--ascendancy]`, `tree allocate <node>` | admin | Character | P15 | |
 | `heal`, `god [on\|off]`, `nocost [on\|off]` | admin | Life | P13 | no damage; no mana cost or cooldown |
