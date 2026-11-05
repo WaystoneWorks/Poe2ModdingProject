@@ -13,7 +13,7 @@
 //! `releases.json` is a list in the shape of GitHub's release API (tag_name, name, body, assets
 //! with browser_download_url, size, digest), so the launcher's own parsers read it. Serve the
 //! folder with `python3 -m http.server`, or use `file:///<dir>` (everything but the launcher's
-//! self-update works from a folder). Spec: docs/guides/launcher.md.
+//! self-update works from a folder). Spec: docs/guides/launcher.md. Local tests only; published releases are built in CI.
 
 use std::{
     fs,

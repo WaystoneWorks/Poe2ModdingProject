@@ -25,7 +25,7 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 
 ## Public release
 - MIT licence only. All repos public. Private vulnerability reporting on. Official mode stays public and documented ([official-mode.md](guides/official-mode.md)), with a launcher entry "Official (read-only)".
-- Keep the commit email, `CLAUDE.md`, co-author trailers. Keep the HNC `key_xor` table as a documented constant behind a narrow gitleaks allowlist. Keep `terrain-matrix.tsv`.
+- Commits use the owner account's GitHub noreply address, set per repository. Keep `CLAUDE.md` and co-author trailers. Keep the HNC `key_xor` table as a documented constant behind a narrow gitleaks allowlist. Keep `terrain-matrix.tsv`.
 - Machine-hash Steam login removed. Test passwords are never real. Launcher app id `org.poe2modding.launcher`. The `ConnectEx` guard exists.
 - Findings: no credential, capture, GGG asset or game table in history. Exception (2026-11-04): the tracker's names-only `tracker/rows.json` (id, section, display name). Real `AddObject` test blobs hold only anonymised names. Official-capture fixtures are movement-only.
 
@@ -48,6 +48,7 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 ## New features (2026-11-04)
 Specs in [plans/](plans/backlog.md); each spec repeats its decisions in detail.
 - Sign-off for new features: agent tests are enough (unit, offline checks, agent game tests). Movement keeps the user's game tests.
+- Hosting: GitHub, pushed by hand one repository at a time with named refs only (`git push origin main`, never `--all` or `--mirror`). Release binaries are built only in CI, because a local build embeds the builder's home path; `cargo xtask release-mirror` output is for local tests and is never published. The launcher and server read a configurable release source.
 - Overlay: ImGui `StyleColorsDark` with the stock font; the sidebar stays; Features becomes Settings with one "Show slow hook popups" checkbox; settings in `logs/poe-hook/overlay.toml`; every page redesigned; one Debug entry with sub-tabs and a Console replaces the Commands page; non-admins do not see admin-only controls; no hotkeys.
 - Leagues: in the database, managed in the web admin; new servers have none; without a league login works and no league list is sent; the `[[leagues]]` config is dropped without migration; HC/SSF checkboxes create the official variants; banners are `LeagueFlag` rows; mechanics listed from game data and stored only; states active/hidden/ended with migration; start and end dates; a default league.
 - Terrain mismatch: tile and doodad hash at entry; everyone is always kicked to the previous instance, else the town, else character select; the DLL shows an alert with hashes and a copy button and exports its layout.
