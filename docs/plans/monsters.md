@@ -1,6 +1,6 @@
 # Plan: monsters, AI from game data, XP from kills
 
-Step P17 of [../PLAN.md](../PLAN.md). Needs the R4 object stage (spawn points and room data, [r4-world.md](r4-world.md)), the damage pipeline ([life-flasks.md](life-flasks.md)) and skills ([skills.md](skills.md)). The current plan's "monsters and spawns (`killzone`, `.arm` points of interest)" item is this step.
+Step P17 of [../PLAN.md](../PLAN.md). Needs the R4 object stage (spawn points and room data, [world-travel.md](../re/world-travel.md)), the damage pipeline ([life-flasks.md](life-flasks.md)) and skills ([skills.md](skills.md)). The current plan's "monsters and spawns (`killzone`, `.arm` points of interest)" item is this step.
 
 ## User decisions (2026-11-04)
 - First monsters: the **Act 1 opening zones**, The Riverbank (`G1_1`) and Clearfell (`G1_2`): their normal, magic and rare packs and the two areas' bosses (names from the data).

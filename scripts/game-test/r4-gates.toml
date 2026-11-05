@@ -1,6 +1,6 @@
 # P9: travel outside a town (G1_8 seed 1, `area_objects G1_8 1`): touching a checkpoint sets the
-# respawn point, a teleport gate (792,866) moves the player to its partner (817,732) in the
-# instance, a fog gate (311,314) leads to G1_7.
+# respawn point, the secret door's teleport gate (861,597, room tags
+# telepad2+teleport1disabled) moves the player to the secret chamber's gate (1184,184), a fog gate (311,314) leads to G1_7.
 description = "non-town travel: checkpoint touch, in-instance teleport gate, gate to another area"
 input_mode = "mouse_and_keyboard"
 
@@ -32,16 +32,20 @@ timeout_s = 10
 
 [[step]]
 name = "teleport near the teleport gate"
-cmd = "teleport 792 845"
+cmd = "teleport 885 600"
 
 [[step]]
 name = "near the teleport gate"
-expect_state = { near = [792, 845, 12] }
+expect_state = { near = [885, 600, 12] }
+
+[[step]]
+name = "screenshot before the teleport gate click"
+keys = "wait:1500 0x77 wait:500"
 
 [[step]]
 name = "click the teleport gate"
-click_cell = [792, 866]
-lift = 60
+click_cell = [861, 597]
+lift = 40
 
 [[step]]
 name = "server saw the click"
@@ -50,8 +54,8 @@ since = "action"
 timeout_s = 10
 
 [[step]]
-name = "at the partner gate (817,732)"
-expect_state = { near = [817, 732, 45] }
+name = "at the partner gate (1184,184)"
+expect_state = { near = [1184, 184, 45] }
 timeout_s = 10
 
 [[step]]

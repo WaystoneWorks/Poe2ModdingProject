@@ -69,7 +69,7 @@
 "proj:tracker" = { status = "implemented", note = "this site", link = "docs/guides/tracker.md" }
 "proj:trade" = { status = "not_implemented", link = "docs/plans/backlog.md" }
 "proj:time_scale" = { status = "implemented", note = "factors 1/33 to 1 only; run at 0.5", link = "docs/re/time-scale.md" }
-"proj:transitions" = { status = "partial", note = "P9: in game, see r4-world.md", link = "docs/plans/r4-world.md" }
+"proj:transitions" = { status = "implemented", note = "P9: gates, waypoints, checkpoints; wells not spawned", link = "docs/re/world-travel.md" }
 "proj:vendors" = { status = "not_implemented", note = "P19", link = "docs/plans/npcs-vendors.md" }
 "proj:web_accounts" = { status = "implemented", link = "docs/architecture/web-api.md" }
 "proj:web_api" = { status = "implemented", note = "no TLS in the server itself", link = "docs/architecture/web-api.md" }
@@ -77,4 +77,4 @@
 "proj:web_inventory" = { status = "not_implemented", note = "P10", link = "docs/architecture/web-api.md" }
 "proj:web_leagues" = { status = "implemented", link = "docs/architecture/web-api.md" }
 "proj:web_tree" = { status = "not_implemented", note = "P15", link = "docs/architecture/web-api.md" }
-"proj:world_map" = { status = "partial", note = "P9: in game, see r4-world.md", link = "docs/plans/r4-world.md" }
+"proj:world_map" = { status = "implemented", note = "P9: acts 1-4 and interludes, debug unlock", link = "docs/re/world-travel.md" }

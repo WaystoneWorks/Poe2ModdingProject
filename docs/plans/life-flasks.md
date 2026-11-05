@@ -1,6 +1,6 @@
 # Plan: life, mana, energy shield, damage, death, flasks and charms
 
-Steps P13 (pools, regeneration, damage taken, death) and P14 (flasks, charms, belt slots) of [../PLAN.md](../PLAN.md). Needs the stat calculator and items ([items-stats.md](items-stats.md)) and the checkpoints and wells of R4 ([r4-world.md](r4-world.md)).
+Steps P13 (pools, regeneration, damage taken, death) and P14 (flasks, charms, belt slots) of [../PLAN.md](../PLAN.md). Needs the stat calculator and items ([items-stats.md](items-stats.md)) and the checkpoints and wells of R4 ([world-travel.md](../re/world-travel.md)).
 
 ## User decisions (2026-11-04)
 - First pass: **pools, regeneration and recovery** (max life, mana and ES from the calculator, regeneration ticks, ES recharge), and **damage taken and death** (monster hits and a debug command, the mitigation order, death, the death screen, resurrect at checkpoint or town). Hardcore death moves the character to the league's parent ([leagues.md](../guides/server-admin.md#leagues)).

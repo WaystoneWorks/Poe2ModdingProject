@@ -1,6 +1,6 @@
 # Plan: NPCs and vendors
 
-Step P19 of [../PLAN.md](../PLAN.md). Needs the R4 object stage (NPC objects in towns, [r4-world.md](r4-world.md)), items and gold ([items-stats.md](items-stats.md)). Added by the user on 2026-11-04 next to experience from kills ([monsters.md](monsters.md)) and checkpoints and wells (R4).
+Step P19 of [../PLAN.md](../PLAN.md). Needs the R4 object stage (NPC objects in towns, [world-travel.md](../re/world-travel.md)), items and gold ([items-stats.md](items-stats.md)). Added by the user on 2026-11-04 next to experience from kills ([monsters.md](monsters.md)) and checkpoints and wells (R4).
 
 ## Steps
 1. **Data**: `NPCs`, `NPCTalk`, `NPCTextAudio`, `NPCShop`-style tables in 0.5.5e (found with `poe-data`), the town NPCs' object paths and placement from the area's object data.

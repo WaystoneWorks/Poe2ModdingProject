@@ -1,6 +1,6 @@
 # World travel: transitions, waypoints, checkpoints, world map
 
-Client facts for P9 ([plan](../plans/r4-world.md)), from the capture `2026-11-02_18-31-34_336` and static RE. Marked **inferred** or **untested** where no capture or game test proves it. Game tests of 2026-11-05 (`r4-objects`, `r4-click`, `r4-travel`, `r4-unlock`, [setup.md](../guides/setup.md#game-tests-cargo-xtask-game-test)) pass on a private server. Longer notes while P9 runs: `runtime/r4/world-panel-re.md`.
+Client facts for P9 (done), from the capture `2026-11-02_18-31-34_336` and static RE. Marked **inferred** or **untested** where no capture or game test proves it. Game tests of 2026-11-05 (`r4-objects`, `r4-click`, `r4-travel`, `r4-unlock`, `r4-areas`, `r4-ctrl`, `r4-gates`, [setup.md](../guides/setup.md#game-tests-cargo-xtask-game-test)) pass on a private server. Longer notes: `runtime/r4/world-panel-re.md`, `runtime/r4/areatransition-re.md`.
 
 ## Objects
 Official servers stream these by range with `AddObject`, not all at entry. Keys are `murmur2(path)`; `Metadata/MiscellaneousObjects/AreaTransition_Animate` is the fog gate (key `0x41012847`, murmur2 of that path, test in poe-data `hash.rs`), `Waypoint` `0x20e8d38a`, `Checkpoint` as listed in `dumps/<version>/client-tables/object_types.txt`.
@@ -25,7 +25,7 @@ The generator already places these objects: `G1_town` seed 1 gives gates at (324
 Client: `UseSkill` (`0x1a5`) skill `0x2000c266`, target flag 8, entity, the object's cell. Official reply: `StartAction` (flags `0x90`, target entity), `ActionEvent`, `UseSkillAck`, `SkillInputEndAck`, then:
 - **Far click:** official `StartAction` and ack at the click, no `0x64`, `ActionEvent` on arrival. A click from 41.4 cells acted 0.4 s later at (292,276), 26.0 cells from the waypoint. Clicks from up to 25.5 cells act at once. So the reach is about 26 cells.
 - **Ruled out:** range as the reason for the clicks at t 81.6 and 82.9 that did not transfer: t 90.5 transferred from the same cell. Their reason is unknown.
-- **Fog gate in range:** the client sends `ExitReport` (`0x355`) and goes to the area. Ctrl-click (`flags 0x0404`): `0xce` (instance list), client `0xcf` (`01 ff` new, **inferred**, **untested** in game), then the transfer. Game: a gate click in `G1_town` transfers to `G1_2`.
+- **Fog gate in range:** the client sends `ExitReport` (`0x355`) and goes to the area. Ctrl-click (`flags 0x0404`): the client shows its Instance Manager from `0xce`; NEW sends `0xcf` choice 255 (`0xff`) and the server transfers (game test `r4-ctrl`). Our rows show "Closed" and 1970 dates: the row's `u64` shows as the creation time (we send the instance id) and the `u32` as time left; row fields not decoded. Game: a gate click in `G1_town` transfers to `G1_2`.
 - **Waypoint in range:** `0x5a` then `0x98` (below); the client answers `0x5b`, then `0x2f1` and the transfer.
 
 Types: a gate has the `AreaTransition` component, a waypoint interaction `action_name=waypoint`, a checkpoint `ControlZone` (`.ot`). Only the fog gate, `Waypoint` and `Checkpoint` component sets have captured blobs; other sets are sent as those types with their own art (**untested**). No capture holds a healing well: both guessed blobs (the checkpoint tail; InteractionAction flags before Animated and an empty StateMachine) hang the area load, so wells are not spawned (`[travel] skip_objects = ["HealingWell"]`). `HealingWell*` are static, the others are not.
@@ -61,5 +61,18 @@ Minimal bytes (work in game: with `waypoint unlock all` the panel has tabs Act 1
 
 Warp from the panel needs panel `+0x340` != 0 (`0x140bb4a70`): a panel opened with M alone cannot warp, only one opened by `0x98` with a waypoint entity. The act tabs list only acts with unlocked waypoints. The panel key is `U` (`0x55`); `M` opens the shop. Flag changes after spawn go by the Player delta `0x0002` flag words (reader `0x141dd0b90`, near writer `0x141dd222e`).
 
+## AreaTransition kinds and clickability
+First byte `b` of the component: kind = `b & 0x7f` (`+0x30`; 0 area gate, clickable; 1 teleport, walked onto, not clicked; 3 special; 4 town), bit 7 disabled (`+0x33`; the delta reader `0x141daaaf0` reads a `u8` v and calls Enable(v == 0)). Client class vtable `0x1433a2388`, reader `0x1416e2dc0`. Destination tags 0 and 1 take a `u32` (meaning unknown; "set" when non-zero, `0x1416e3200`), tag 2 a `u16` HASH16. A gate is clickable only with kind 0 and a destination area row (`0x1416e3350` -> `0x1416e3640`); otherwise it is locked (Targetable `+0x69` via `0x1416e3720`) and a click walks. HASH16 0 locks the gate. The varuint index depends on town and kind 0, not on the tag.
+
+Server rule: in-instance gates (Telepad, Paired) are sent as kind 0 with the current area's HASH16, and the server teleports on the click (`r4-gates`: `G1_8` secret door gate (861,597) to (1184,184)). Room tags ending in `disabled` (e.g. `teleport3disabled-Arena`, `G1_8` boss gate (792,866)) are quest-gated officially; the server spawns them as plain gates and the client does not show (792,866) (not investigated).
+
+Sent type rule: a placed type is sent as itself only when it has the captured type's component names and the same StateMachine `define_shared*` keys (`AreaTransition_Animate_Toggleable` `define_shared_state = "unlocked"` and `AncientSeal*Portal` `define_shared_checkpoint_state`, sent as themselves with the fog gate bytes, threw `BufferUnderflow` in `G2_6`); otherwise the captured type with the object's own art. Art does not change the blob (`G1_8` `ExitTransition_Mausoleum` with `lachlann_portal.ao` loads).
+
+## Coverage
+- Offline `python3 scripts/travel-survey.py --seed N` over 106 areas of acts 1-4 and the interludes: seeds 1-3 pass (348-356 gates; every gate has a target inside its area's connections or an in-instance partner). 179 of 190 area links have a gate back; the 11 connections no gate leads to are town-to-town or quest links (e.g. `G1_town`->`G2_1`, `G4_town`->`G3_town`). The generator fails on 2-3 areas per seed (seed 1 `G2_10_1`, `G4_14`; seed 2 `G2_1`, `G2_10_1`, `G3_5`; seed 3 `G1_14`, `G3_8`): not covered.
+- Target rules: Entrance and NextConnection fit the capture; Telepad from tags; Paired, Repeat, FirstConnection have no evidence.
+- In game: `r4-areas` loads all 19 areas with special travel objects (seed 1: `G1_8 G1_4 G1_5 G1_15 G2_2 G2_4_3 G2_5_1 G2_6 G2_10_2 G3_town G3_3 G3_5 G3_6_1 G3_6_2 G3_9 G4_4_1 P1_1 P3_5 P3_6`). Gate clicks tested: `G1_town`->`G1_2` (`r4-click`), `G1_8`->`G1_7` and the `G1_8` in-instance teleport (`r4-gates`); waypoint and checkpoint travel (`r4-travel`); unlocks (`r4-unlock`).
+- A transfer sent while the loading screen is up makes the client `ExitProcess`; scenarios wait for the client's `[LOADING SCREEN]` line.
+
 ## Unknown
-The clicks that did not transfer in the capture; the exact gate arrival rule (server approximates); the `_vert` gate head; one clean client `ExitProcess(0)` while loading `G1_2` after a waypoint jump in one `r4-travel` run (not reproduced; same class as the open T item in [r4-world.md](../plans/r4-world.md)).
+The clicks that did not transfer in the capture; the exact gate arrival rule (server approximates); the `_vert` gate head. Backlog: [plans/backlog.md](../plans/backlog.md#world-travel-follow-ups-p9).
