@@ -1,0 +1,325 @@
+# P9: every area (seed 1) whose travel objects are not the plain captured types: gates, waypoints
+# and checkpoints sent as their own type, substituted types (G1_8's ExitTransition_Mausoleum, G2_6's
+# Toggleable and AncientSeal portals). List from `python3 scripts/travel-survey.py`. A client
+# BufferUnderflow keeps the area at "". Each loading screen ends before the next transfer: a
+# transfer during it closes the client.
+description = "areas with special travel objects load with their objects (seed 1)"
+input_mode = "wasd"
+
+[[step]]
+name = "transfer to G1_8 seed 1"
+cmd = "transfer G1_8 1"
+
+[[step]]
+name = "in G1_8"
+expect_state = { area = "G1_8" }
+timeout_s = 120
+
+[[step]]
+name = "G1_8 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G1_4 seed 1"
+cmd = "transfer G1_4 1"
+
+[[step]]
+name = "in G1_4"
+expect_state = { area = "G1_4" }
+timeout_s = 120
+
+[[step]]
+name = "G1_4 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G1_5 seed 1"
+cmd = "transfer G1_5 1"
+
+[[step]]
+name = "in G1_5"
+expect_state = { area = "G1_5" }
+timeout_s = 120
+
+[[step]]
+name = "G1_5 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G1_15 seed 1"
+cmd = "transfer G1_15 1"
+
+[[step]]
+name = "in G1_15"
+expect_state = { area = "G1_15" }
+timeout_s = 120
+
+[[step]]
+name = "G1_15 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G2_2 seed 1"
+cmd = "transfer G2_2 1"
+
+[[step]]
+name = "in G2_2"
+expect_state = { area = "G2_2" }
+timeout_s = 120
+
+[[step]]
+name = "G2_2 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G2_4_3 seed 1"
+cmd = "transfer G2_4_3 1"
+
+[[step]]
+name = "in G2_4_3"
+expect_state = { area = "G2_4_3" }
+timeout_s = 120
+
+[[step]]
+name = "G2_4_3 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G2_5_1 seed 1"
+cmd = "transfer G2_5_1 1"
+
+[[step]]
+name = "in G2_5_1"
+expect_state = { area = "G2_5_1" }
+timeout_s = 120
+
+[[step]]
+name = "G2_5_1 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G2_6 seed 1"
+cmd = "transfer G2_6 1"
+
+[[step]]
+name = "in G2_6"
+expect_state = { area = "G2_6" }
+timeout_s = 120
+
+[[step]]
+name = "G2_6 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G2_10_2 seed 1"
+cmd = "transfer G2_10_2 1"
+
+[[step]]
+name = "in G2_10_2"
+expect_state = { area = "G2_10_2" }
+timeout_s = 120
+
+[[step]]
+name = "G2_10_2 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G3_town seed 1"
+cmd = "transfer G3_town 1"
+
+[[step]]
+name = "in G3_town"
+expect_state = { area = "G3_town" }
+timeout_s = 120
+
+[[step]]
+name = "G3_town loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G3_3 seed 1"
+cmd = "transfer G3_3 1"
+
+[[step]]
+name = "in G3_3"
+expect_state = { area = "G3_3" }
+timeout_s = 120
+
+[[step]]
+name = "G3_3 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G3_5 seed 1"
+cmd = "transfer G3_5 1"
+
+[[step]]
+name = "in G3_5"
+expect_state = { area = "G3_5" }
+timeout_s = 120
+
+[[step]]
+name = "G3_5 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G3_6_1 seed 1"
+cmd = "transfer G3_6_1 1"
+
+[[step]]
+name = "in G3_6_1"
+expect_state = { area = "G3_6_1" }
+timeout_s = 120
+
+[[step]]
+name = "G3_6_1 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G3_6_2 seed 1"
+cmd = "transfer G3_6_2 1"
+
+[[step]]
+name = "in G3_6_2"
+expect_state = { area = "G3_6_2" }
+timeout_s = 120
+
+[[step]]
+name = "G3_6_2 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G3_9 seed 1"
+cmd = "transfer G3_9 1"
+
+[[step]]
+name = "in G3_9"
+expect_state = { area = "G3_9" }
+timeout_s = 120
+
+[[step]]
+name = "G3_9 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to G4_4_1 seed 1"
+cmd = "transfer G4_4_1 1"
+
+[[step]]
+name = "in G4_4_1"
+expect_state = { area = "G4_4_1" }
+timeout_s = 120
+
+[[step]]
+name = "G4_4_1 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to P1_1 seed 1"
+cmd = "transfer P1_1 1"
+
+[[step]]
+name = "in P1_1"
+expect_state = { area = "P1_1" }
+timeout_s = 120
+
+[[step]]
+name = "P1_1 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to P3_5 seed 1"
+cmd = "transfer P3_5 1"
+
+[[step]]
+name = "in P3_5"
+expect_state = { area = "P3_5" }
+timeout_s = 120
+
+[[step]]
+name = "P3_5 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "transfer to P3_6 seed 1"
+cmd = "transfer P3_6 1"
+
+[[step]]
+name = "in P3_6"
+expect_state = { area = "P3_6" }
+timeout_s = 120
+
+[[step]]
+name = "P3_6 loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "objects spawned"
+expect_log = "spawned the travel objects"
+since = "start"
+
+[[step]]
+name = "no client exception"
+reject_log = "BufferUnderflow"
+log = "hook"
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

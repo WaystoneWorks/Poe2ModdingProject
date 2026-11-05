@@ -1,0 +1,87 @@
+# P9: travel outside a town (G1_8 seed 1, `area_objects G1_8 1`): touching a checkpoint sets the
+# respawn point, a teleport gate (792,866) moves the player to its partner (817,732) in the
+# instance, a fog gate (311,314) leads to G1_7.
+description = "non-town travel: checkpoint touch, in-instance teleport gate, gate to another area"
+input_mode = "mouse_and_keyboard"
+
+[[step]]
+name = "transfer to G1_8 seed 1"
+cmd = "transfer G1_8 1"
+
+[[step]]
+name = "in G1_8"
+expect_state = { area = "G1_8" }
+timeout_s = 120
+
+[[step]]
+name = "loading screen over"
+expect_log = "\\[LOADING SCREEN\\]"
+log = "client"
+since = "action"
+timeout_s = 90
+
+[[step]]
+name = "teleport onto the checkpoint (272,378)"
+cmd = "teleport 276 372"
+
+[[step]]
+name = "touching it sets the respawn point"
+expect_log = "respawn point set"
+since = "action"
+timeout_s = 10
+
+[[step]]
+name = "teleport near the teleport gate"
+cmd = "teleport 792 845"
+
+[[step]]
+name = "near the teleport gate"
+expect_state = { near = [792, 845, 12] }
+
+[[step]]
+name = "click the teleport gate"
+click_cell = [792, 866]
+lift = 60
+
+[[step]]
+name = "server saw the click"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 10
+
+[[step]]
+name = "at the partner gate (817,732)"
+expect_state = { near = [817, 732, 45] }
+timeout_s = 10
+
+[[step]]
+name = "screenshot after the teleport"
+keys = "wait:1000 0x77 wait:500"
+
+[[step]]
+name = "teleport near the gate to G1_7"
+cmd = "teleport 311 338"
+
+[[step]]
+name = "near the gate"
+expect_state = { near = [311, 338, 12] }
+
+[[step]]
+name = "click the gate"
+click_cell = [311, 314]
+lift = 60
+
+[[step]]
+name = "server saw the gate click"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 10
+
+[[step]]
+name = "in G1_7 by the gate"
+expect_state = { area = "G1_7" }
+timeout_s = 120
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

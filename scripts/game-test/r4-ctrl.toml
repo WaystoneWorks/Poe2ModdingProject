@@ -1,0 +1,65 @@
+# P9: ctrl-click on a fog gate (G1_town seed 1, gate (324,189) to G1_2) asks for the instance list
+# (0xce); the client's choice (0xcf) hands the player over. An open G1_2 instance exists first.
+description = "ctrl-click a fog gate: instance list, then the choice transfers"
+input_mode = "mouse_and_keyboard"
+
+[[step]]
+name = "open a G1_2 instance"
+cmd = "transfer G1_2 1"
+
+[[step]]
+name = "in G1_2"
+expect_state = { area = "G1_2" }
+timeout_s = 60
+
+[[step]]
+name = "transfer to G1_town seed 1"
+cmd = "transfer G1_town 1"
+
+[[step]]
+name = "in G1_town"
+expect_state = { area = "G1_town" }
+timeout_s = 60
+
+[[step]]
+name = "teleport near a gate"
+cmd = "teleport 328 205"
+
+[[step]]
+name = "at the gate"
+expect_state = { near = [328, 205, 4] }
+
+[[step]]
+name = "ctrl-click the gate"
+click_cell = [324, 189]
+lift = 60
+click_key = "0x11"
+
+[[step]]
+name = "server sent the instance list"
+expect_log = "instance list sent"
+since = "action"
+timeout_s = 8
+
+[[step]]
+name = "screenshot the instance list"
+keys = "wait:1500 0x77 wait:500"
+
+[[step]]
+name = "click NEW in the Instance Manager"
+keys = "inmove:631,444 wait:400 inpress:631,444 wait:120 inrelease:631,444 wait:300"
+
+[[step]]
+name = "server got the choice"
+expect_log = "instance choice"
+since = "action"
+timeout_s = 8
+
+[[step]]
+name = "in G1_2 by the choice"
+expect_state = { area = "G1_2" }
+timeout_s = 60
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

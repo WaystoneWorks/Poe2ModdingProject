@@ -154,6 +154,8 @@ struct Step {
     /// pixels (an object's label stands above its cell). The cell must be on screen.
     click_cell: Option<Vec<f64>>,
     lift: Option<f64>,
+    /// `click_key = "0x11"`: holds that virtual key during the `click_cell` click (ctrl-click).
+    click_key: Option<String>,
     /// `max_drift = 5`: fails when a server `drift` line (scenario `"dev.drift_check" = true`)
     /// since the last action step started (keys, cmd, walk_to, roll; `since = "start"`: since
     /// the scenario started) shows
@@ -190,6 +192,8 @@ struct Run {
     action_log_at: u64,
     /// The same point in the hook log.
     action_hook_at: u64,
+    /// The same point in the client's log.
+    action_client_at: u64,
 }
 
 pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result<()> {
@@ -217,6 +221,7 @@ pub fn run(root: &Path, config_path: &Path, prefix: &Path, args: Args) -> Result
         grids: (None, None),
         action_log_at: 0,
         action_hook_at: 0,
+        action_client_at: 0,
     };
     println!("game-test {name}: {}", scenario.description);
     println!("logs: {}", dir.display());
@@ -634,6 +639,7 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         if s.keys.is_some() || s.cmd.is_some() || s.walk_to.is_some() || s.roll.is_some() || s.click_cell.is_some() {
             self.action_log_at = self.log_len("server");
             self.action_hook_at = self.log_len("hook");
+            self.action_client_at = self.log_len("client");
         }
         if let Some(max) = s.max_drift {
             // One more sample after the action (`[dev] drift_interval_ms`, 1000 by default).
@@ -651,7 +657,12 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
                 bail!("cell ({x},{y}) is off screen from ({},{}): {px},{py}", from.0, from.1);
             }
             let (px, py) = (px as i32, py as i32);
-            self.send_keys(&format!("inmove:{px},{py} wait:400 inpress:{px},{py} wait:120 inrelease:{px},{py} wait:300"))?;
+            let click = format!("inmove:{px},{py} wait:400 inpress:{px},{py} wait:120 inrelease:{px},{py} wait:300");
+            let click = match &s.click_key {
+                Some(k) => format!("indown:{k} wait:100 {click} inup:{k}"),
+                None => click,
+            };
+            self.send_keys(&click)?;
             return Ok(format!("clicked {px},{py} from ({},{})", from.0, from.1));
         }
         if let Some(k) = &s.keys {
@@ -701,6 +712,7 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
                 // A command's reply can land before the next step begins.
                 Some("action") if log == "server" => self.action_log_at,
                 Some("action") if log == "hook" => self.action_hook_at,
+                Some("action") if log == "client" => self.action_client_at,
                 _ => self.log_len(log),
             };
             let t = Duration::from_secs(s.timeout_s.unwrap_or(30));
