@@ -8,20 +8,20 @@ Official servers stream these by range with `AddObject`, not all at entry. Keys 
 Blob (flags, `n`=0, then Positioned): `i32 x, i32 y, f32 angle, u16 team, u8 flags[3]` with optional parts, then Animated `0x41`, `u32 len + UTF-16 .ao path`, `u8`, then the type's tail:
 | Type | Positioned flags (captured) | Tail after the Animated `u8` |
 |---|---|---|
-| Fog gate | zero, or `04 00 00` + `i32 height`, `u16`, `f32` for the `_vert` art | `02, u16 LE target HASH16, u8 index, 7 zero bytes, 01 08 00000000 01 000000` |
-| Waypoint | zero, or `04 00 00 ...` | `01 00` |
-| Checkpoint | `05 00 00` / `04 00 00`, then `00000000 000000c0 40` | `02 00 00 00 00 00 00` |
+| Fog gate | raw head after the angle: `0000 000000` (cylinder), `0000 040000 eeffffff 0000 1143` (`_vert`, `G1_2`), `0000 050000 fdffffff 0000 f041` (`_vert`, `G1_3`) | `02, u16 LE target HASH16, u8 index`, zeros, `01 08 00000000 01 000000`. Zeros: 6 bytes in `G1_town`, 5 in `G1_2` and `G1_3`, unexplained |
+| Waypoint | raw head: `0000 000000` or `0000 040000 00000000 0000 0000` | `01 00` |
+| Checkpoint | raw head: `0000 040000` or `0000 050000`, then `00000000 0000c040` | `02 00 00 00 00 00 00` |
 
-The tail fields are copied bytes, not decoded (`InteractionAction` reader `0x141d81480`; the fog gate's own reader was not found).
+These are captured bytes, not decoded (`InteractionAction` reader `0x141d81480`; the fog gate's own reader was not found: `0x141e01980`, slot `+0x98` of the vtable tried, reads a different layout, so that vtable is probably not the right one).
 
 ## Which area a transition leads to
-`WorldAreas.Connections[N-1]` for a transition in a room whose graph node has tag `entranceN` (`G1_2`: `town_N` `entrance1` -> `G1_town`, `mud_entrance` `entrance2` -> `G1_3`, `exit_woods` `entrance3` -> `G1_4`, all as the capture shows). The blob's `index` is the place among equal targets: `G1_town` Connections `[G1_1, G1_2, G1_2, G1_2, G1_16]` has three gates with target `G1_2` and index 0, 1, 2. Rule proved on these two areas only; the survey (`area_objects --survey`) must confirm it for the campaign.
+`WorldAreas.Connections[N-1]` for a transition in a room whose graph node has tag `entranceN` (**inferred**: `G1_2` Connections `[G1_town, G1_3, G1_4]`, its graph `felling_S_N_W` tags `town_N` `entrance1`, `mud_entrance` `entrance2`, `exit_woods` `entrance3`; the capture shows a cylinder gate to `G1_town` and a `_vert` gate to `G1_3`, and `mud_entrance` rooms use the `_vert` art, but the gate to `G1_4` was not seen). The blob's `index` looks like the place among equal targets (**inferred**): `G1_town` Connections are rows `[108, 109, 109, 109, 125]` (109 = `G1_2`) and it has three gates with target `G1_2`, index 0, 1, 2; which gate has which index, and how arrival cells are picked, are not worked out. The survey (`area_objects --survey`) must test the rule for the campaign.
 
-The generator already places these objects: `G1_town` seed 1 gives gates at (324,189), (453,284), (383,398), identical to the official cells. `Doodad::exists(Side::Server)` keeps them; `TileMap::tagged_rooms` gives the room's tags. `AreaTransition_Auto` markers (`marker3.ao`) stand next to the gates and were not seen in the capture.
+The generator already places these objects: `G1_town` seed 1 gives gates at (324,189), (453,284), (383,398), identical to the official cells. `G1_2` with the official seed `750761653` gives other cells than the capture (gate (1001,474) against (449,474)): `area::generate` did not reproduce the official layout there; the server forces its own layout, so its objects still follow from what it generates. `Doodad::exists(Side::Server)` keeps them; `TileMap::tagged_rooms` gives the room's tags. `AreaTransition_Auto` markers (`marker3.ao`) stand next to the gates and were not seen in the capture.
 
 ## Clicking an object
 Client: `UseSkill` (`0x1a5`) skill `0x2000c266`, target flag 8, entity, the object's cell. Official reply: `StartAction` (flags `0x90`, target entity), `ActionEvent`, `UseSkillAck`, `SkillInputEndAck`, then:
-- **Out of range:** nothing further; the capture's clicks from afar did not walk the player in the slice read (t 81.5-83 s). How far the official server walks is **open**.
+- **Out of range:** the replies above and no transfer (t 81.5-83 s). The interaction range and whether the server walks the player there are **open**; the port's handling of a skill with a target entity (`locomotion.rs`) was not read.
 - **Fog gate in range:** the client sends `ExitReport` (`0x355`) and goes to the area. Ctrl-click (`flags 0x0404`): `0xce` (instance list), client `0xcf` (`01 ff` new, **inferred**), then the transfer.
 - **Waypoint in range:** `0x5a` then `0x98` (below); the client answers `0x5b`, then `0x2f1` and the transfer.
 
