@@ -45,6 +45,12 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 - Web admin: Stop/Restart with countdown, live charts, Players with bans, config editor on for admins, scheduled restarts, MOTD. First admin is created on a loopback-only first-run page; `/register` is the public page; the game's Create account button opens it (`register_url`).
 - UI style: direction "Ash & Blood" with the rune seal logo (launcher, web admin, tracker site; not the DLL overlay). For redesigned screens, the user sees a mockup before building; for the overlay, the ASCII mockups in its plan are enough (2026-11-04).
 
+## Config (2026-11-05)
+- The server is the terrain authority: generation, its own grid and its forced layout are always on, not options. The client terrain upload and the mismatch log go.
+- Research and test switches go (seed sweep, known seeds, remote blob experiments, fake terrain hash, movement trace); drift check, position sync and debug link stay.
+- Account placeholders go: full access is always on, stash tabs and the account name prefix leave the config.
+- Game and protocol facts stay in the config. Plan: [plans/config-cleanup.md](plans/config-cleanup.md).
+
 ## New features (2026-11-04)
 Specs in [plans/](plans/backlog.md); each spec repeats its decisions in detail.
 - Sign-off for new features: agent tests are enough (unit, offline checks, agent game tests). Movement keeps the user's game tests.

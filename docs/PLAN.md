@@ -9,6 +9,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
+| C1 | Config cleanup: remove the options the user rejected (terrain switches, client terrain upload, dev research switches, account placeholders) with their code | O+S | [config-cleanup.md](plans/config-cleanup.md) | |
 | P10 | Items, inventory, equipment, weapon sets, stats pipeline, levels and XP, not-implemented chat lines, web admin inventory | O+S | [items-stats.md](plans/items-stats.md#p10-items-inventory-equipment-weapon-sets-levels-opus-for-the-re-sonnet-for-storage-and-web-admin) | C2 |
 | P11 | Currency: mod rolling engine, basic orbs, quality currency, gold | O+S | [items-stats.md](plans/items-stats.md#p11-currency-opus-for-the-rules-sonnet-for-tests) | P10 |
 | P12 | Item creator and spawner (overlay with art, commands, paste, templates, random, edit in place) | O+S | [item-creator.md](plans/item-creator.md) | P11 |
