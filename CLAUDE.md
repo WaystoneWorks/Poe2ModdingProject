@@ -12,7 +12,7 @@ A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.h
 - The Steam install's live `Client.txt` is a read-only reference: never modify or commit it (copy excerpts into `runtime/`).
 - No hardcoding: opcodes in `modules/protocol/opcodes/<version>/*.toml`; ports and start areas in `modules/server/config/server.toml`; client builds in `modules/protocol/versions/<version>.toml`; game data from `poe-data`; subsystems behind traits.
 - External tools in `third_party/`; generated data in git-ignored `dumps/<version>/`; local files in `runtime/`.
-- Commit each working step, submodules first, then the hub pointer. Push commits without asking: `git push origin main`, never `--all` or `--mirror`. Ask before release tags. `source runtime/local-env.sh` before builds. Releases build only in CI.
+- Commit each working step, submodules first, then the hub pointer. Push commits without asking: `git push origin main`, never `--all` or `--mirror`. Ask before release tags. Releases build only in CI.
 - Ghidra: `/0.5.5e.hotfix1/PathOfExileSteam.exe`. Every RE address in docs and comments is a Hotfix 1 address.
 - Allowed without asking: Steam, the server and the client for private-server tests; x64dbg on the `GameFiles/` client in private sessions. Ask for official captures.
 

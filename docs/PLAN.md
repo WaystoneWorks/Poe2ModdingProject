@@ -26,14 +26,12 @@ P8 can start any time (offline). The R4 capture is recorded, so P12 can also be 
 
 ## Now
 - **P1** to **P7** are done (P4: terrain check at area entry, kick to the previous instance, the act's town or character select, DLL popup with layout export; game test `terrain-mismatch` passes and `walk`, `cliffs`, `dungeon` never trigger it. P5: progress tracker site, `cargo xtask tracker gen|check|build|edit`, [guide](guides/tracker.md); the Pages workflow runs once the hub is on GitHub; 2026-11-04). **P6** (overlay layout overhaul: every page, merges, Debug shell; game test `overlay-pages` takes a screenshot per page) is done too (2026-11-04). **P7** (command framework v2: subcommands, aliases, flags, levels, searchable help, Console, `time scale`; game test `commands`) is done (2026-11-04). **P8** is next.
-- Hosting: the hub goes to GitHub first, the other repositories later, one at a time.
 
 ## Needs the user
 
 | What | When |
 |---|---|
 | Capture **C2** (gameplay, 30-40 minutes, [checklist](re/captures.md#planned-capture-c2-for-gameplay-items-stats-life-flasks-passives-skills-monsters-loot-npcs)); it also covers the movement gaps #6 and #7 | any time before P9 |
-| Pushes of the other repositories and their CI-built releases, after the hub | user-paced |
 | G-PARTY capture (a friend answers party invite and trade request) | before P18 |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |
 | Decide whether old batch run directories may be deleted (disk 481 GB free; `grid50` 24 MB, `grid50ex` 691 MB, `flags3` small) | any time |
