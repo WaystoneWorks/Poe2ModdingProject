@@ -15,15 +15,20 @@ Blob (flags, `n`=0, then Positioned): `i32 x, i32 y, f32 angle, u16 team, u8 fla
 These are captured bytes, not decoded (`InteractionAction` reader `0x141d81480`; the fog gate's own reader was not found: `0x141e01980`, slot `+0x98` of the vtable tried, reads a different layout, so that vtable is probably not the right one).
 
 ## Which area a transition leads to
-`WorldAreas.Connections[N-1]` for a transition in a room whose graph node has tag `entranceN` (**inferred**: `G1_2` Connections `[G1_town, G1_3, G1_4]`, its graph `felling_S_N_W` tags `town_N` `entrance1`, `mud_entrance` `entrance2`, `exit_woods` `entrance3`; the capture shows a cylinder gate to `G1_town` and a `_vert` gate to `G1_3`, and `mud_entrance` rooms use the `_vert` art, but the gate to `G1_4` was not seen). The blob's `index` looks like the place among equal targets (**inferred**): `G1_town` Connections are rows `[108, 109, 109, 109, 125]` (109 = `G1_2`) and it has three gates with target `G1_2`, index 0, 1, 2; which gate has which index, and how arrival cells are picked, are not worked out. The survey (`area_objects --survey`) must test the rule for the campaign.
+A room's gates in placement order take `entranceN` (`WorldAreas.Connections[N-1]`), then `teleportN` (the room tagged `telepadN`, inside the instance; tags only, **inferred**). A gate left over takes the next connection no tag names: `G1_town` has one room tagged `entrance1`, connections `[G1_1, G1_2, G1_2, G1_2, G2_1]` and gates `AreaTransition` (115,376), then (324,189), (453,284), (383,398), which the capture shows leading to `G1_2` with index 0, 1, 2 (proven for this area). `G1_2`'s `entranceN` gates fit the capture too; the gate to `G1_4` was not seen. Gates with nothing left repeat the room's last target, or pair up as teleports (**no evidence**). Code and coverage: `poe_world::objects`, `area_objects --survey`.
+
+Arrival: on a waypoint, its own cell (4 of 4). By a gate, 15 to 39 cells away across the gate's facing, on the open side: gate (449,474) angle 3.142 arrival (452,506); (976,1162) 3.142 (975,1123); (249,1207) 1.577 (279,1210); (383,398) 0 (380,383). `travel::gate_arrival` approximates it; the exact cell rule is unknown.
 
 The generator already places these objects: `G1_town` seed 1 gives gates at (324,189), (453,284), (383,398), identical to the official cells. `G1_2` with the official seed `750761653` gives other cells than the capture (gate (1001,474) against (449,474)): `area::generate` did not reproduce the official layout there; the server forces its own layout, so its objects still follow from what it generates. `Doodad::exists(Side::Server)` keeps them; `TileMap::tagged_rooms` gives the room's tags. `AreaTransition_Auto` markers (`marker3.ao`) stand next to the gates and were not seen in the capture.
 
 ## Clicking an object
 Client: `UseSkill` (`0x1a5`) skill `0x2000c266`, target flag 8, entity, the object's cell. Official reply: `StartAction` (flags `0x90`, target entity), `ActionEvent`, `UseSkillAck`, `SkillInputEndAck`, then:
-- **Out of range:** the replies above and no transfer (t 81.5-83 s). The interaction range and whether the server walks the player there are **open**; the port's handling of a skill with a target entity (`locomotion.rs`) was not read.
+- **Far click:** official `StartAction` and ack at the click, no `0x64`, `ActionEvent` on arrival. A click from 41.4 cells acted 0.4 s later at (292,276), 26.0 cells from the waypoint. Clicks from up to 25.5 cells act at once. So the reach is about 26 cells.
+- **Ruled out:** range as the reason for the clicks at t 81.6 and 82.9 that did not transfer: t 90.5 transferred from the same cell. Their reason is unknown.
 - **Fog gate in range:** the client sends `ExitReport` (`0x355`) and goes to the area. Ctrl-click (`flags 0x0404`): `0xce` (instance list), client `0xcf` (`01 ff` new, **inferred**), then the transfer.
 - **Waypoint in range:** `0x5a` then `0x98` (below); the client answers `0x5b`, then `0x2f1` and the transfer.
+
+Types: a gate has the `AreaTransition` component, a waypoint interaction `action_name=waypoint`, a checkpoint `ControlZone` (`.ot`). Only the fog gate, `Waypoint` and `Checkpoint` component sets have captured blobs; other sets are sent as those types with their own art (**untested**). No capture holds a healing well: its blob is a guess. `HealingWell*` are static, the others are not.
 
 Touching a waypoint or checkpoint: `0x6b` (`u8 local, u32be entity`; sets `checkpoint_state` old 1, new 2; `session+0x2274`), `0x196`, `0x2ff`, and for a checkpoint `0x2f9` `04 02 0001 000000` on the object. `006b 01 00000000` clears it.
 
@@ -54,4 +59,4 @@ Flags are the first `AddObject` Player list (Player `+0x248`, `u16 n + (u8 chunk
 
 Minimal bytes, **untested**: `005a 00 00000000 03 00*21`; Player list `0100 2d 000e000000004000`.
 
-Warp from the panel needs panel `+0x340` != 0 (`0x140bb4a70`): a panel opened with M alone cannot warp, only one opened by `0x98` with a waypoint entity. What makes an act's tab selectable is **unproven**; test it with the flags above. Which message changes a flag after spawn is unknown (writers `0x141dd222e`, `0x141e9483b`, `0x141eb4701`), so an unlock may need a re-entry.
+Warp from the panel needs panel `+0x340` != 0 (`0x140bb4a70`): a panel opened with M alone cannot warp, only one opened by `0x98` with a waypoint entity. What makes an act's tab selectable is **unproven**; test it with the flags above. Which message changes a flag after spawn is unproven: the server sends the Player delta `0x0002` flag words (reader `0x141dd0b90`, near writer `0x141dd222e`; **untested**); otherwise an unlock needs a re-entry.

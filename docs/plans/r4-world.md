@@ -5,7 +5,9 @@ Step P9 of [../PLAN.md](../PLAN.md) (unchanged scope from the earlier plan, plus
 ## State
 - RE: [../re/world-travel.md](../re/world-travel.md) has the capture's R4 parts and the client's messages. Step 1 is done.
 - The P5b drift recheck passes with the exact movement port (`teleport-sprint`, 2 runs, at most 2.26 cells, 2026-11-05), so teleports are safe to build on.
-- Code so far: `TileMap::tagged_rooms` (room rectangle and node tags), example `area_objects` (`--survey <seed> <out>` lists transitions, waypoints, checkpoints, wells and portals of every campaign area, not run yet). Nothing else of steps 2-5 exists.
+- Code (WIP, NOT GATED; nothing tested in game yet): `poe_world::objects::travel_objects` (classes by `.ot` components, target rules), `poe-proto` messages and `travel_object_blob`, `Player.quest_flags`, store tables (migration 0011), `[travel]` config, `MoveEvent::Interact` with the walk into reach (`locomotion.rs`), actor spawning, `instance-server/src/travel.rs` (touch, click, hand-off, mask, flags, warp list), commands `unlock`, `lock`, `waypoint unlock all`, `checkpoint unlock all`, `travel status`.
+- Batch: `area_objects --survey 1 <out>` over 106 areas: 356 gates. Rules: Entrance 208, NextConnection 12 (both fit the capture), Telepad 49 (tags only), Paired 54, Repeat 18, FirstConnection 15 (no evidence). 231 of 248 area links have a gate back. Generator fails at seed 1 on `G2_10_1` and `G4_14`; `G4_6` and `G4_8a` have no gate.
+- Not built: game-test click step, overlay and web admin buttons, doc tables in server-admin.md.
 - R2: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
 
 ## Steps
