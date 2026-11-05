@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Submodules: the docs link into modules/server/docs and others (anchors are checked).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           submodules: true
       - run: python3 scripts/check-links.py
@@ -35,13 +35,13 @@ jobs:
     steps:
       # xtask has path dependencies in the submodules: modules/server (Poe2Server, with its own
       # nested protocol, client-hook and web-admin) and modules/client-hook. All are public.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           submodules: recursive
       # The pinned nightly of rust-toolchain.toml (poe_data_tools needs nightly features).
       - name: Install the pinned Rust toolchain
         run: rustup toolchain install --profile minimal
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - run: cargo build --locked
       # Tests that read the game files skip themselves when GameFiles/ is absent. The server's own
       # build and tests run in the Poe2Server repository's CI.
@@ -55,7 +55,7 @@ jobs:
     name: Secret scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       # gitleaks over the checked-out files (the history is scanned before a repository goes
       # public, docs/plans/public-release-audit.md). Version and checksum are pinned; the
       # checksum file comes from the same release.

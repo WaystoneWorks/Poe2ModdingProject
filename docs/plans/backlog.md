@@ -17,7 +17,7 @@ Items kept from the earlier plan, word for word where possible. Ordered work is 
 - Rate limit on `GET /api/v1/mods/{id}/{version}.zip`.
 - Launcher's nested client-hook pin (harmless; bump with the next launcher change).
 - Client loose-file overrides and packet hooks for mods; launcher mod sync against a real server with mods.
-- Audit leftovers: S-09 widen instance tickets to `u64`; C-01 pin CI actions by commit; S-13 re-review the launcher's token handling.
+- Audit leftovers: S-09 widen instance tickets to `u64`; S-13 re-review the launcher's token handling.
 - Repo-wide `cargo fmt` in Poe2Server, then a CI check.
 - Server release after R2 (ask first).
 
