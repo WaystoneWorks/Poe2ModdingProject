@@ -3,8 +3,9 @@
 Step P9 of [../PLAN.md](../PLAN.md) (unchanged scope from the earlier plan, plus checkpoints and wells as the respawn and refill points that [life-flasks.md](life-flasks.md) needs, and the object data that [monsters.md](monsters.md) and [npcs-vendors.md](npcs-vendors.md) build on). R3 is done.
 
 ## State
-- The R4.1 official capture is recorded: `2026-11-02_18-31-34_336` (not analysed for R4 yet; its movement parts were used for the movement port).
-- Open: P5b game test fails 6-9 cells from drift before the sprint after a teleport (`runtime/game-test/p5-scenario-20261102-193003`, `-193626`); sprint-w, walk, cliffs, dungeon pass (2026-11-02). Recheck it with the exact movement port before R4 work.
+- RE: [../re/world-travel.md](../re/world-travel.md) has the capture's R4 parts and the client's messages. Step 1 is done.
+- The P5b drift recheck passes with the exact movement port (`teleport-sprint`, 2 runs, at most 2.26 cells, 2026-11-05), so teleports are safe to build on.
+- Code so far: `TileMap::tagged_rooms` (room rectangle and node tags), example `area_objects` (`--survey <seed> <out>` lists transitions, waypoints, checkpoints, wells and portals of every campaign area, not run yet). Nothing else of steps 2-5 exists.
 - R2: the `RoomOcclusion` link rests on offset arithmetic from `DisableDoors` and was not tested directly; the instance server builds the client-side grid until it sends the `server_only` objects.
 
 ## Steps
@@ -21,9 +22,9 @@ Step P9 of [../PLAN.md](../PLAN.md) (unchanged scope from the earlier plan, plus
 - **Checkpoints** spawn. Clicking one teleports you to any other unlocked checkpoint, in addition to setting the respawn point. A debug command (`checkpoint unlock all`) and an overlay button unlock all checkpoints of the instance you are in.
 - **Every fog gate area transition works**, sub-area transitions included.
 
-**Open RE question:** does the client's own UI offer teleport between checkpoints, or does our overlay have to pick the destination? Clicking a checkpoint should offer the other unlocked checkpoints. Answer from the recorded capture `2026-11-02_18-31-34_336` and the client before building it.
+**Answered:** the client's own area map offers checkpoint travel (`0x352` list, `0x353` request); the overlay does not pick destinations ([details](../re/world-travel.md#checkpoint-warp-the-client-has-the-ui)). How a checkpoint click opens it is inferred and needs a game test.
 
-**Open point (method):** how "every" fog gate and sub-area transition is checked: a game test or batch over the areas of acts 1-4 and the interludes. The implementer picks the method.
+**Method for "every" transition (not built yet):** an offline batch over the areas of acts 1-4 and the interludes checks that each transition object has a target and a matching arrival, plus game tests that click sample transitions. State the coverage plainly when done.
 
 **Done when:** a character unlocked by the debug command or the overlay button opens M in all 4 acts and the interludes (not the endgame), travels by waypoint, teleports between unlocked checkpoints, walks through every fog gate and sub-area transition (checked by the method above), and touching a checkpoint sets the respawn point.
 

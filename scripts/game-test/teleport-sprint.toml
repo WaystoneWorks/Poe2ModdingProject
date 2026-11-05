@@ -1,0 +1,68 @@
+# Rechecks drift after a teleport: the W-held roll with Space up while W is held, twice at the same spot.
+# Spot from `wall_probe G1_1 1 --runs`: (621, 1146) has 70+ free cells along every key direction.
+# Based on sprint-w.toml (case 1 and case 2 of the P5 / P5b drift problem).
+description = "rechecks drift after a teleport (G1_1 seed 1, generated grid, W held roll, twice)"
+input_mode = "wasd"
+# The stream rules on the DLL session's packets (movement.md "Sprint stream"), checked after the
+# client is closed; a local server answers in the next frame (the default slack of 1 frame).
+after = ["python3 scripts/re/sprint_check.py {session}"]
+
+# Per-frame client positions in poe-hook.log (what the client does after each sprint end).
+[client_env]
+POE_HOOK_MOVEMENT_LOG = "1"
+
+[server]
+"dev.drift_check" = true
+
+[[step]]
+name = "transfer to G1_1 seed 1"
+cmd = "transfer G1_1 1"
+
+[[step]]
+name = "in G1_1"
+expect_state = { area = "G1_1" }
+timeout_s = 60
+
+# Cursor to the right of the player (grid about (+38, -29) per 50 px): a cursor sprint goes
+# between D and WD, so W (+1, +1) is a real turn, not the cursor direction.
+[[step]]
+name = "cursor right"
+keys = "inmove:1000,300 wait:300 inmove:1700,590 wait:400"
+
+# Run 1 of 2: teleport, then W held before the roll with Space released while W is still held.
+[[step]]
+name = "teleport (case P5)"
+cmd = "teleport 621 1146"
+
+[[step]]
+name = "at the spot (case P5)"
+expect_state = { near = [621, 1146, 3] }
+
+[[step]]
+name = "W held before the roll, Space up with W held (problem 5)"
+keys = "indown:0x57 wait:300 indown:0x20 down:0x20 wait:700 up:0x20 inup:0x20 wait:1500 inup:0x57 wait:500"
+
+[[step]]
+name = "server and client agree (P5)"
+max_drift = 5
+
+# Run 2 of 2: the same case again after a second teleport to the same spot.
+[[step]]
+name = "teleport (case P5b)"
+cmd = "teleport 621 1146"
+
+[[step]]
+name = "at the spot (case P5b)"
+expect_state = { near = [621, 1146, 3] }
+
+[[step]]
+name = "W held before the roll, Space up with W held (problem 5, again)"
+keys = "indown:0x57 wait:300 indown:0x20 down:0x20 wait:700 up:0x20 inup:0x20 wait:1500 inup:0x57 wait:500"
+
+[[step]]
+name = "server and client agree (P5b)"
+max_drift = 5
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

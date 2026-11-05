@@ -60,6 +60,7 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | [re/movement-roll.md](re/movement-roll.md) | Exact port: dodge roll |
 | [re/movement-capture-index.md](re/movement-capture-index.md) | Movement capture indexes (2026-10-20, 2026-11-02 sessions) |
 | [re/movement-sprint.md](re/movement-sprint.md) | Exact port: sprint, end, coast |
+| [re/world-travel.md](re/world-travel.md) | Transitions, waypoints, checkpoints, world panel: client facts |
 | [re/time-scale.md](re/time-scale.md) | Slowing the simulation with `0x2f5` (`time scale`) |
 | [re/terrain/README.md](re/terrain/README.md) | Terrain generator overview |
 | [re/terrain/tgr.md](re/terrain/tgr.md) | `.tgr` areas |
