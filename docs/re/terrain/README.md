@@ -90,7 +90,7 @@ each covered record names the `.tdt` and its sub-tile index.
 
 ### Cell grids
 
-The terrain object holds four cell grids (the DLL minimap page draws them; see
+The terrain object holds four cell grids (the DLL reads them in `minimap.rs`; see
 [../../architecture/client-dll.md](../../architecture/client-dll.md)). On a cell the player stood
 on, grid 0 (`terrain+0xd0`) was 0 while grids 1-3 were 5, and grid 1 shows one connected open area
 around the player. The server's spawn code treats grid 0 non-zero as walkable; grid 1 is the
@@ -145,7 +145,7 @@ not sent by the server. The port's doodad pass and collision grid: [doodads.md](
   (hashes, size, the recomputed tile and doodad hashes with match/MISMATCH), `layout.tsv`,
   `doodads.tsv`, `grids.bin` (`PWG1` format), `entities.tsv`, `probe.tsv` (walkability probe: per
   visited cell, each grid layer's value; a walkability layer is never 0 under the player). "Export
-  area" in the Minimap tab rewrites entities (with the server's) and the probe.
+  area" on Debug > World rewrites entities (with the server's) and the probe.
 - **Generator trace** (`[features] generator_trace` or `POE_HOOK_GEN_TRACE=1`):
   `generator_trace.tsv` in the area export: every seed, raw MT draw, bounded draw (with the
   calling functions) and phase in order (~23,000 lines for a Riverbank layout). Diff it against the

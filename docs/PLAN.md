@@ -9,6 +9,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
+| P7b | League migrations in game: wire the client's League Migrations window to `migrate_character` (SSF to trade, hardcore to softcore) | O | [league-migrations.md](plans/league-migrations.md) | |
 | P8 | `poe-stats`: PoB2 calculation port, stat map, stat-description formatter, PoB2 cross-check | O+S | [items-stats.md](plans/items-stats.md#p8-poe-stats-crate-the-pob2-port-opus-design-sonnet-for-the-mapping-tables-and-tests) | |
 | P9 | Items, inventory, equipment, weapon sets, stats pipeline, levels and XP, not-implemented chat lines, web admin inventory | O+S | [items-stats.md](plans/items-stats.md#p9-items-inventory-equipment-weapon-sets-levels-opus-for-the-re-sonnet-for-storage-and-web-admin) | P8, C2 |
 | P10 | Currency: mod rolling engine, basic orbs, quality currency, gold | O+S | [items-stats.md](plans/items-stats.md#p10-currency-opus-for-the-rules-sonnet-for-tests) | P9 |
@@ -25,7 +26,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 P8 can start any time (offline). The R4 capture is recorded, so P12 can also be moved earlier when an Opus session is free.
 
 ## Now
-- **P1** to **P7** are done (P4: terrain check at area entry, kick to the previous instance, the act's town or character select, DLL popup with layout export; game test `terrain-mismatch` passes and `walk`, `cliffs`, `dungeon` never trigger it. P5: progress tracker site, `cargo xtask tracker gen|check|build|edit`, [guide](guides/tracker.md); the Pages workflow runs once the hub is on GitHub; 2026-11-04). **P6** (overlay layout overhaul: every page, merges, Debug shell; game test `overlay-pages` takes a screenshot per page) is done too (2026-11-04). **P7** (command framework v2: subcommands, aliases, flags, levels, searchable help, Console, `time scale`; game test `commands`) is done (2026-11-04). **P8** is next.
+- **P1** to **P7** are done (P4: terrain check at area entry, kick to the previous instance, the act's town or character select, DLL popup with layout export; game test `terrain-mismatch` passes and `walk`, `cliffs`, `dungeon` never trigger it. P5: progress tracker site, `cargo xtask tracker gen|check|build|edit`, [guide](guides/tracker.md); the Pages workflow runs once the hub is on GitHub; 2026-11-04). **P6** (overlay layout overhaul: every page, merges, Debug shell; game test `overlay-pages` takes a screenshot per page) is done too (2026-11-04). **P7** (command framework v2: subcommands, aliases, flags, levels, searchable help, Console, `time scale`; game test `commands`) is done (2026-11-04). League fixes (web admin form fits, DLL Minimap page removed, store and web admin moves, hardcore death rule) are done too; **P7b** (the in-game button) is next, then **P8**.
 
 ## Needs the user
 

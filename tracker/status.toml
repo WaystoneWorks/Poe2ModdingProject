@@ -43,7 +43,7 @@
 "proj:launcher_servers" = { status = "implemented", link = "docs/guides/launcher.md" }
 "proj:launcher_update" = { status = "partial", link = "docs/guides/launcher.md" }
 "proj:launcher_windows" = { status = "partial", note = "no Windows machine to test on", link = "docs/guides/launcher.md" }
-"proj:leagues" = { status = "implemented", note = "Standard, Hardcore, custom leagues; end league", link = "docs/guides/server-admin.md" }
+"proj:leagues" = { status = "implemented", note = "Standard, Hardcore, custom leagues; end league; admin moves; in-game migration button not done (P7b)", link = "docs/guides/server-admin.md" }
 "proj:life" = { status = "not_implemented", note = "P13", link = "docs/plans/life-flasks.md" }
 "proj:loader" = { status = "fully_functional", link = "docs/architecture/client-dll.md" }
 "proj:login" = { status = "fully_functional", note = "key exchange bypass and standalone login", link = "docs/protocol/login.md" }
