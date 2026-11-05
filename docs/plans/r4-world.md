@@ -3,6 +3,7 @@
 Step P9 of [../PLAN.md](../PLAN.md) (unchanged scope from the earlier plan, plus checkpoints and wells as the respawn and refill points that [life-flasks.md](life-flasks.md) needs, and the object data that [monsters.md](monsters.md) and [npcs-vendors.md](npcs-vendors.md) build on). R3 is done.
 
 ## State
+- **Open failures (2026-11-05):** `dungeon` (G1_8 seed 1) never finishes loading the area since objects spawn (client stuck like the town gate before its fix); G1_8 has a `generic_cylinder_45deg` gate and gates with in-instance targets (area hash 0). Isolate with `[server] "travel.skip_objects"` in a scenario. `cliffs` failed once on the AS roll (drift 7.39 > 5); rerun before blaming the interaction change. `walk` passes.
 - RE: [../re/world-travel.md](../re/world-travel.md) has the capture's R4 parts and the client's messages. Step 1 is done.
 - The P5b drift recheck passes with the exact movement port (`teleport-sprint`, 2 runs, at most 2.26 cells, 2026-11-05), so teleports are safe to build on.
 - Code (WIP, NOT GATED): `poe_world::objects::travel_objects` (classes by `.ot` components, target rules), `poe-proto` messages and `travel_object_blob`, `Player.quest_flags`, store tables (migration 0011), `[travel]` config, `MoveEvent::Interact` with the walk into reach (`locomotion.rs`), actor spawning, `instance-server/src/travel.rs` (touch, click, hand-off, mask, flags, warp list), commands `unlock`, `lock`, `waypoint unlock all`, `checkpoint unlock all`, `travel status`.
