@@ -14,7 +14,7 @@ login-server ──(ticket + instance address)──► client ──► instanc
 ## Where things are
 
 - Crates, servers, submodules: [crates.md](crates.md). Client DLLs: [client-dll.md](client-dll.md).
-- Accounts: [accounts.md](accounts.md). Instances and simulation: [instance-world.md](instance-world.md). Web administration: [web-api.md](web-api.md). Server mods and the client mod check: [mod-host.md](mod-host.md).
+- Accounts: [accounts.md](accounts.md). Instances and simulation: [instance-world.md](instance-world.md). Web administration: [web-api.md](web-api.md). Server mods and the client mod check: [mod-host.md](mod-host.md). Stat calculator: [stats.md](stats.md).
 - Wire formats: [../protocol/](../protocol/framing.md). RE notes: [../re/README.md](../re/README.md).
 - Commands, logs, tests: [../guides/setup.md](../guides/setup.md). Rules: [../../CLAUDE.md](../../CLAUDE.md).
 

@@ -29,6 +29,9 @@ git submodule update --init --recursive
 ```
 Submodule changes: commit inside the submodule (`modules/...`) first, then the new pointer here.
 
+## Stat calculator checks
+`cargo xtask stats-map`, `stats-check [--write] [--sweep]`, `stats-sent` and `scripts/pob/run.sh <driver.lua> </dev/null` (headless PoB2): [../architecture/stats.md](../architecture/stats.md#tools).
+
 ## Build and test
 ```sh
 cargo build                 # the hub's workspace: xtask only
@@ -201,14 +204,14 @@ Other keys:
 Steps: [steam-shortcut.md](../re/steam-shortcut.md).
 
 ## Official servers (read-only observation)
-**Read this first**; the full guide is [official-mode.md](official-mode.md). This mode lets you observe and log your own official sessions. The DLL sends, alters and injects nothing, but it still **patches game code in memory** to observe (inline detours, a Vulkan hook, the `version.dll` proxy), and the anti-cheat may detect any injected DLL as a violation. Do not use it on an account you care about. The launcher never does this (apart from its explicit Official (read-only) entry).
+**Read this first**; the full guide is [official-mode.md](official-mode.md). It observes and logs your own official sessions. The DLL sends, alters and injects nothing, but it still **patches game code in memory** to observe (inline detours, a Vulkan hook, the `version.dll` proxy), and the anti-cheat may detect any injected DLL as a violation. Do not use it on an account you care about. The launcher never does this (apart from its explicit Official (read-only) entry).
 
-1. `cargo xtask deploy-client --official`: the original gateway list goes back into `GameFiles/`, and `poe-hook.toml` gets `mode = "official"`, `login_mode = "steam"` (the client is not patched; the Steam login screen shows) and `trusted_servers = []`. The GameFiles copy must be the live game's build; after a patch, update GameFiles first.
+1. `cargo xtask deploy-client --official`: the original gateway list goes back into `GameFiles/`, and `poe-hook.toml` gets `mode = "official"`, `login_mode = "steam"` (the client is not patched; the Steam login screen shows) and `trusted_servers = []`. GameFiles must be the live build; update it after a patch.
 2. Start Steam, then `cargo xtask run-client` (the copy in its own Proton prefix).
-3. Play. The overlay shows `OFFICIAL: read-only`; packets, logs and snapshots go to the session folder ([Logs](#logs)). What the DLL does and does not do: [../architecture/client-dll.md](../architecture/client-dll.md#modes-and-the-read-only-latch).
+3. Play. The overlay shows `OFFICIAL: read-only`; packets, logs and snapshots go to the session folder ([Logs](#logs)). DLL behaviour: [../architecture/client-dll.md](../architecture/client-dll.md#modes-and-the-read-only-latch).
 4. `cargo xtask deploy-client` switches back to our server.
 
-Comparing a session with one from our server: [../re/captures.md](../re/captures.md).
+Comparing sessions: [../re/captures.md](../re/captures.md).
 
 ## Unattended client tests
 With Steam running (else the client logs `Unable to init Steam API` and exits with code 1) and the server, started with the [dev config](#developer-config), writing to `runtime/server-run.log` (`POE_CONFIG=runtime/server.dev.toml modules/server/target/debug/poe-server > runtime/server-run.log 2>&1`):

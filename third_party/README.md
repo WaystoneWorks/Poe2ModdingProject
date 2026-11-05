@@ -10,6 +10,8 @@
 | `cargo-xwin/bin/cargo-xwin` | 0.23.1 (`--locked`) | https://github.com/rust-cross/cargo-xwin | Cross-compiles the client DLL (`x86_64-pc-windows-msvc`) using clang/lld. Its MSVC CRT/SDK cache goes in `xwin-cache/` |
 | `gitleaks/gitleaks` | v8.30.1 | https://github.com/gitleaks/gitleaks | Local secret scanner for the public-release audit (`gitleaks git <repo> --log-opts=--all`); the release checksum is verified on download. Never run it with options that contact APIs |
 | `pyenv/` | capstone 5.0.9, numpy 2.5.4, pefile 2024.8.26, git-filter-repo 2.47.0 | PyPI | Python venv for the offline RE scripts in `scripts/re/` (`third_party/pyenv/bin/python scripts/re/<script>.py`). Venvs embed absolute paths, so recreate it (re-run the fetch script) after moving the repo |
+| `PathOfBuilding-PoE2/` | commit `bb52d6b3` | https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2 | MIT. Headless reference calculator for `poe-stats` ([stats.md](../docs/architecture/stats.md)); runs through `scripts/pob/run.sh`. Needs system luajit and gcc |
+| `lua-utf8/` | 0.1.6 | https://github.com/starwing/luautf8 | Built with gcc against the system luajit; PoB2 loads it |
 | `reference/poe_data_tools` | git HEAD | adamthedash/poe_data_tools | Source of the library `poe-data` builds on. FORMATS.md documents the file formats |
 | `reference/poeformats` | git HEAD | annalithic/poeformats | C# parsers for .tgr/.tdt/.arm/.tgt, used as reference for terrain generation (milestone 4) |
 | `reference/KiwiNet` | git HEAD | Crypto137/KiwiNet | Emulator for PoE1 0.8.8: login/instance flow and object serialization (AGPL, read only) |

@@ -22,6 +22,7 @@ mod release_mirror;
 mod server;
 mod stats_check;
 mod stats_map;
+mod stats_sent;
 mod terrain_matrix;
 mod tracker;
 mod versions;
@@ -189,6 +190,9 @@ enum Cmd {
     /// Render every game stat with the stat descriptions and feed it to PoB2's ModParser
     /// (dumps/<version>/stats/stat_map.tsv).
     StatsMap,
+    /// Which stats the official server sends for the local player, from the official captures
+    /// (dumps/<version>/stats/stats_sent.tsv).
+    StatsSent,
     /// Compare poe-stats with PoB2 headless on the fixture corpus.
     StatsCheck {
         /// Store the corpus and PoB2's numbers in poe-stats/tests/fixtures.json.
@@ -197,6 +201,10 @@ enum Cmd {
         /// Print every difference.
         #[arg(long)]
         verbose: bool,
+        /// Also check every row of the stat table alone, on every gear set (minutes). Run it when
+        /// map.rs changes.
+        #[arg(long)]
+        sweep: bool,
     },
     /// The server (modules/server) from the hub: build, run with the hub as working directory
     /// (rebuilding the web admin when its sources are newer than dist/build.json), test.
@@ -246,10 +254,13 @@ fn main() -> Result<()> {
         .or_else(|| std::env::var_os(poe_config::ENV_PATH).map(PathBuf::from))
         .unwrap_or_else(|| PathBuf::from(DEFAULT_CONFIG));
     if let Cmd::StatsMap = cli.cmd {
-        return stats_map::run(&root, "0.5.5e.hotfix1");
+        return stats_map::run(&root, &Config::load(&config_path)?.game.version);
     }
-    if let Cmd::StatsCheck { write, verbose } = cli.cmd {
-        return stats_check::run(&root, "0.5.5e.hotfix1", write, verbose);
+    if let Cmd::StatsSent = cli.cmd {
+        return stats_sent::run(&root, &Config::load(&config_path)?.game.version);
+    }
+    if let Cmd::StatsCheck { write, verbose, sweep } = cli.cmd {
+        return stats_check::run(&root, &Config::load(&config_path)?.game.version, write, verbose, sweep);
     }
     if let Cmd::Server { cmd } = cli.cmd {
         return server::run(&root, &config_path, cmd);
@@ -316,6 +327,7 @@ fn main() -> Result<()> {
         | Cmd::Server { .. }
         | Cmd::StatsMap
         | Cmd::StatsCheck { .. }
+        | Cmd::StatsSent
         | Cmd::LoginToken { .. }
         | Cmd::TerrainMatrix { .. }
         | Cmd::Tracker { .. }

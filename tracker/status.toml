@@ -62,7 +62,7 @@
 "proj:settings" = { status = "implemented", link = "docs/architecture/client-dll.md" }
 "proj:side_channel" = { status = "fully_functional", link = "docs/protocol/side-channel.md" }
 "proj:skills" = { status = "not_implemented", note = "P16", link = "docs/plans/skills.md" }
-"proj:stats" = { status = "not_implemented", note = "P8 and P9", link = "docs/plans/items-stats.md" }
+"proj:stats" = { status = "partial", note = "calculator and login stats done (P8); items and the geared list are P9", link = "docs/architecture/stats.md" }
 "proj:terrain" = { status = "partial", note = "remaining areas, see the terrain matrix", link = "docs/status/terrain.md" }
 "proj:terrain_batch" = { status = "fully_functional", link = "docs/re/terrain/batch.md" }
 "proj:terrain_check" = { status = "implemented", note = "always kicks on a mismatch", link = "docs/protocol/instance.md" }

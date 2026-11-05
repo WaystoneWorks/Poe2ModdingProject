@@ -21,7 +21,7 @@ local function quest_config()
 end
 
 if mode == "query" then
-  local q = { bases = {}, classes = {}, starts = {}, links = {} }
+  local q = { bases = {}, classes = {}, starts = {}, links = {}, sd = {}, switchable = {}, tree_version = build.spec.treeVersion }
   for name in pairs(build.data.itemBases) do q.bases[#q.bases + 1] = name end
   table.sort(q.bases)
   for id, c in pairs(build.spec.tree.classes) do
@@ -30,8 +30,10 @@ if mode == "query" then
   end
   for id, node in pairs(build.spec.tree.nodes) do
     local l = {}
-    for _, other in ipairs(node.linked or {}) do l[#l + 1] = other.id end
+    for _, other in ipairs(node.linkedId or {}) do l[#l + 1] = other end
     q.links[tostring(id)] = l
+    q.sd[tostring(id)] = node.sd
+    if node.isSwitchable then q.switchable[#q.switchable + 1] = id end
   end
   local f = assert(io.open(input, "w"))
   f:write(json.encode(q))
@@ -61,6 +63,7 @@ for line in io.lines(input) do
     end
     res.skill = sk.activeEffect.grantedEffect.name
     res.skill_multiplier = sk.activeEffect.grantedEffectLevel.baseMultiplier or sk.skillData.baseMultiplier or 1
+    res.skill_bolts = mh.BoltCount and mh.BoltCount - b.calcsTab.mainEnv.modDB:Sum("BASE", sk.skillCfg, "CrossbowBoltCount") or 1
     res.class = b.spec.curClassName
     res.nodes = 0
     for _ in pairs(b.spec.allocNodes) do res.nodes = res.nodes + 1 end

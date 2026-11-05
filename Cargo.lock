@@ -2988,6 +2988,7 @@ dependencies = [
  "poe-data",
  "poe-hook-deploy",
  "poe-hook-sig",
+ "poe-net",
  "poe-proto",
  "poe-stats",
  "poe-world",

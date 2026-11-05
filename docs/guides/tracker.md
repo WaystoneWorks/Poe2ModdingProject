@@ -35,5 +35,5 @@ Filters: free text, `is:<status>` (prefixes work: `is:fully`), `-is:<status>`, `
 A commit that implements or changes something with a tracker row updates `tracker/status.toml` in the same commit, like the docs. Add rows for new project features to `sections.toml` (`proj:` ids). `cargo xtask tracker check` catches ids that no longer exist.
 
 ## Not done
-- Stats rows get no automatic status yet: `poe-stats` (P8) will write `implemented` for mapped stats into `[auto]` in `gen`.
+- Stats rows get no automatic status yet: `poe-stats` will write `implemented` for mapped stats into `[auto]` in `gen`.
 - The page uses the web admin's font stacks without bundling the fonts.

@@ -31,6 +31,7 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | [architecture/instance-world.md](architecture/instance-world.md) | Instance actor, world, movement component |
 | [architecture/web-api.md](architecture/web-api.md) | Web API and web admin |
 | [architecture/mod-host.md](architecture/mod-host.md) | Server mod host |
+| [architecture/stats.md](architecture/stats.md) | Stat calculator `poe-stats`, PoB2 cross-check, stats the server sends |
 | [openapi.json](../modules/server/docs/openapi.json) | Generated OpenAPI document |
 
 ## Protocol
@@ -72,7 +73,7 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
 | [plans/overlay.md](plans/overlay.md) | Debug tab mockups still to build (feature steps) |
 | [plans/commands.md](plans/commands.md) | Commands still to add per step (registry v2 is current) |
-| [plans/items-stats.md](plans/items-stats.md) | Plan P8-P10: PoB2 stat port, items, currency |
+| [plans/items-stats.md](plans/items-stats.md) | Plan P9-P10: items, currency |
 | [plans/item-creator.md](plans/item-creator.md) | Plan P11: item creator |
 | [plans/r4-world.md](plans/r4-world.md) | Plan P12: R4 world objects, world map; T |
 | [plans/life-flasks.md](plans/life-flasks.md) | Plan P13, P14: life, damage, death, flasks, charms |

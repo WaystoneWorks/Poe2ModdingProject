@@ -32,6 +32,7 @@ poe-stats = { path = "modules/server/crates/poe-stats" }
 poe-world = { path = "modules/server/crates/poe-world" }
 # Poe2Protocol as the server's nested submodule (modules/server/modules/protocol): poe-world
 # and xtask must share ONE poe-proto, so xtask takes it from the same checkout as the server.
+poe-net = { path = "modules/server/modules/protocol/poe-net" }
 poe-proto = { path = "modules/server/modules/protocol/poe-proto" }
 # Poe2ClientHook submodule: host-side deploy library used by xtask.
 poe-hook-deploy = { path = "modules/client-hook/poe-hook-deploy" }

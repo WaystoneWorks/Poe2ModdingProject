@@ -36,37 +36,25 @@ const DECIMAL_OUTPUTS: &[(&str, f64)] = &[
     ("AilmentThreshold", 0.5),
 ];
 
-fn output_value(o: &poe_stats::Output, key: &str) -> f64 {
-    match key {
-        "Life" => o.life,
-        "Mana" => o.mana,
-        "Spirit" => o.spirit,
-        "EnergyShield" => o.energy_shield,
-        "Armour" => o.armour,
-        "Evasion" => o.evasion,
-        "Ward" => o.ward,
-        "FireResist" => o.fire_resist,
-        "ColdResist" => o.cold_resist,
-        "LightningResist" => o.lightning_resist,
-        "ChaosResist" => o.chaos_resist,
-        "BlockChance" => o.block_chance,
-        "Str" => o.str,
-        "Dex" => o.dex,
-        "Int" => o.int,
-        "Accuracy" => o.accuracy,
-        "LifeRegen" => o.life_regen,
-        "ManaRegen" => o.mana_regen,
-        "EnergyShieldRecharge" => o.es_recharge,
-        "AverageHit" => o.average_hit,
-        "Speed" => o.speed,
-        "CritChance" => o.crit_chance,
-        "CritMultiplier" => o.crit_multiplier,
-        "MovementSpeedMod" => o.movement_speed_mod,
-        "StunThreshold" => o.stun_threshold,
-        "AilmentThreshold" => o.ailment_threshold,
-        _ => f64::NAN,
-    }
-}
+/// The weapon item classes and what the calculator calls them.
+const WEAPON_CLASSES: &[(&str, WeaponType)] = &[
+    ("Bow", WeaponType::Bow),
+    ("Crossbow", WeaponType::Crossbow),
+    ("One Hand Mace", WeaponType::OneHandMace),
+    ("Two Hand Mace", WeaponType::TwoHandMace),
+    ("Spear", WeaponType::Spear),
+    ("Warstaff", WeaponType::Staff),
+    ("Claw", WeaponType::Claw),
+    ("Dagger", WeaponType::Dagger),
+    ("Flail", WeaponType::Flail),
+    ("One Hand Sword", WeaponType::OneHandSword),
+    ("One Hand Axe", WeaponType::OneHandAxe),
+    ("Two Hand Sword", WeaponType::TwoHandSword),
+    ("Two Hand Axe", WeaponType::TwoHandAxe),
+];
+
+/// The default attacks; on any other skill PoB2's numbers say nothing about the weapon hit.
+const DEFAULT_ATTACKS: &[&str] = &["Punch", "Bow Shot", "Crossbow Shot", "Mace Strike", "Spear Stab", "Quarterstaff Strike"];
 
 /// xorshift64, so the corpus is the same on every run.
 struct Rng(u64);
@@ -125,21 +113,6 @@ struct Base {
 
 /// The base table's numbers per class (`ArmourTypes`, `WeaponTypes`, `ShieldTypes`).
 fn load_bases(data: &GameData, ids: &[String], pob: &HashSet<String>, desc: &StatDescriptions) -> Result<Vec<Base>> {
-    let weapon_kinds: HashMap<&str, WeaponType> = HashMap::from([
-        ("Bow", WeaponType::Bow),
-        ("Crossbow", WeaponType::Crossbow),
-        ("One Hand Mace", WeaponType::OneHandMace),
-        ("Two Hand Mace", WeaponType::TwoHandMace),
-        ("Spear", WeaponType::Spear),
-        ("Warstaff", WeaponType::Staff),
-        ("Claw", WeaponType::Claw),
-        ("Dagger", WeaponType::Dagger),
-        ("Flail", WeaponType::Flail),
-        ("One Hand Sword", WeaponType::OneHandSword),
-        ("One Hand Axe", WeaponType::OneHandAxe),
-        ("Two Hand Sword", WeaponType::TwoHandSword),
-        ("Two Hand Axe", WeaponType::TwoHandAxe),
-    ]);
     let classes = data.table("ItemClasses")?;
     let mut armour = HashMap::new();
     for r in data.table("ArmourTypes")?.rows() {
@@ -180,16 +153,22 @@ fn load_bases(data: &GameData, ids: &[String], pob: &HashSet<String>, desc: &Sta
         candidates.push((stats, tags, weights));
     }
     let base_table = data.table("BaseItemTypes")?;
+    // Several rows can share a name with different numbers; PoB2 keys its bases by name and keeps
+    // only one of them, so those names cannot be compared.
+    let mut name_rows: HashMap<String, usize> = HashMap::new();
+    for r in base_table.rows() {
+        *name_rows.entry(r.str("Name")?).or_default() += 1;
+    }
     let mut out = Vec::new();
     for r in base_table.rows() {
         let name = r.str("Name")?;
-        if !pob.contains(&name) {
+        if !pob.contains(&name) || name_rows[&name] > 1 {
             continue;
         }
         let Some(class_row) = r.row_ref("ItemClass")?.and_then(|i| classes.row(i)) else { continue };
         let class = class_row.str("Id")?;
         let i = r.index();
-        let item = if let Some(&kind) = weapon_kinds.get(class.as_str()) {
+        let item = if let Some(&(_, kind)) = WEAPON_CLASSES.iter().find(|(c, _)| *c == class) {
             let Some(&(min, max, speed, crit, reload)) = weapons.get(&i) else { continue };
             ItemBase::Weapon(WeaponBase {
                 kind,
@@ -270,7 +249,7 @@ fn item_text(base: &Base, quality: f64, explicits: &[(String, i64)], desc: &Stat
     t
 }
 
-fn build_xml(fx: &Fixture, class_id: u64, penalty: f64, desc: &StatDescriptions) -> String {
+fn build_xml(fx: &Fixture, tree_version: &str, class_id: u64, penalty: f64, desc: &StatDescriptions) -> String {
     let mut items = String::new();
     let mut slots = String::new();
     for (i, (slot, base, explicits)) in fx.items.iter().enumerate() {
@@ -283,7 +262,7 @@ fn build_xml(fx: &Fixture, class_id: u64, penalty: f64, desc: &StatDescriptions)
     let e = &fx.enemy;
     format!(
         "<?xml version=\"1.0\"?><PathOfBuilding2><Build level=\"{}\" targetVersion=\"0_1\" className=\"{}\" ascendClassName=\"None\" mainSocketGroup=\"1\" viewMode=\"ITEMS\"/>\
-<Tree activeSpec=\"1\"><Spec treeVersion=\"0_5\" classId=\"{class_id}\" ascendClassId=\"0\" nodes=\"{}\"/></Tree>\
+<Tree activeSpec=\"1\"><Spec treeVersion=\"{tree_version}\" classId=\"{class_id}\" ascendClassId=\"0\" nodes=\"{}\"/></Tree>\
 <Items activeItemSet=\"1\">{items}<ItemSet id=\"1\">{slots}</ItemSet></Items><Skills activeSkillSet=\"1\"><SkillSet id=\"1\"/></Skills>\
 <Config><Input name=\"resistancePenalty\" number=\"{penalty}\"/><Input name=\"enemyIsBoss\" string=\"None\"/><Input name=\"enemyEvasion\" number=\"{}\"/><Input name=\"enemyArmour\" number=\"{}\"/><Input name=\"enemyPhysicalDamageReduction\" number=\"{}\"/><Input name=\"enemyLightningResist\" number=\"{}\"/><Input name=\"enemyColdResist\" number=\"{}\"/><Input name=\"enemyFireResist\" number=\"{}\"/><Input name=\"enemyChaosResist\" number=\"{}\"/><!--QUESTS--></Config></PathOfBuilding2>",
         fx.input.level,
@@ -297,6 +276,37 @@ fn build_xml(fx: &Fixture, class_id: u64, penalty: f64, desc: &StatDescriptions)
         e.resist[2],
         e.resist[3],
     )
+}
+
+/// The sample values of `stat_map.tsv`, by the comma-joined stat ids of a row.
+fn load_samples(path: &Path) -> Result<HashMap<String, Vec<i64>>> {
+    let text = std::fs::read_to_string(path).with_context(|| format!("{}: run `cargo xtask stats-map`", path.display()))?;
+    let mut out = HashMap::new();
+    for line in text.lines() {
+        let mut f = line.split('\t');
+        let (Some(ids), Some(values)) = (f.next(), f.next()) else { continue };
+        let values: Option<Vec<i64>> = values.split(',').map(|v| v.parse().ok()).collect();
+        if let Some(values) = values {
+            out.insert(ids.to_owned(), values);
+        }
+    }
+    Ok(out)
+}
+
+/// The item of a sweep gear set that carries a stat: a local stat only means something on the
+/// matching item, any other goes on the amulet.
+fn stat_target(stat: &str, set: &[(Slot, Base)]) -> Slot {
+    if !stat.starts_with("local_") {
+        return Slot::Amulet;
+    }
+    let has = |slot: Slot| set.iter().any(|(s, _)| *s == slot);
+    if stat.contains("block") && has(Slot::OffHand) {
+        Slot::OffHand
+    } else if ["armour", "evasion", "energy_shield", "ward", "block"].iter().any(|w| stat.contains(w)) || !has(Slot::MainHand) {
+        Slot::BodyArmour
+    } else {
+        Slot::MainHand
+    }
 }
 
 fn run_driver(root: &Path, args: &[&str]) -> Result<()> {
@@ -343,14 +353,16 @@ fn fixture_json(fx: &Fixture, pob: &Value) -> Value {
         "passives": fx.input.passives,
         "resist_penalty": fx.input.resist_penalty,
         "skill_multiplier": fx.input.skill.base_multiplier,
-        "enemy": [fx.enemy.evasion, fx.enemy.armour, fx.enemy.physical_reduction, fx.enemy.resist[0], fx.enemy.resist[1], fx.enemy.resist[2], fx.enemy.resist[3]],
+        "skill_bolts": fx.input.skill.base_bolts,
+        "enemy": [fx.enemy.evasion, fx.enemy.armour, fx.enemy.physical_reduction, fx.enemy.max_physical_reduction, fx.enemy.resist[0], fx.enemy.resist[1], fx.enemy.resist[2], fx.enemy.resist[3]],
         "expected": expected,
     })
 }
 
-pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()> {
+pub fn run(root: &Path, version: &str, write: bool, verbose: bool, sweep: bool) -> Result<()> {
     let data = GameData::open(&root.join("GameFiles"), &root.join("third_party/dat-schema/schema-poe2.min.json"))?;
-    let desc = StatDescriptions::load(data.files(), "data/statdescriptions/stat_descriptions.csd")?;
+    let mut desc = StatDescriptions::load(data.files(), "data/statdescriptions/passive_skill_stat_descriptions.csd")?;
+    desc.merge(StatDescriptions::load(data.files(), "data/statdescriptions/stat_descriptions.csd")?);
     let ids = stat_ids(&data)?;
     let dir = root.join("dumps").join(version).join("stats");
     std::fs::create_dir_all(&dir)?;
@@ -366,24 +378,12 @@ pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()>
     // Constants from the Character template.
     let template = ObjectTemplate::load(&data, "Metadata/Characters/Character")?;
     let t: HashMap<&str, f64> = template.component("Stats").iter().filter_map(|(k, v)| Some((k.as_str(), v.parse().ok()?))).collect();
-    let get = |k: &str| t.get(k).copied().with_context(|| format!("{k} not in Character.ot"));
-    let unarmed_crit = get("unarmed_base_critical_strike_chance")? / 100.0;
-    let constants = Constants {
-        life_per_level: get("life_per_level")?,
-        mana_per_level: get("mana_per_level")?,
-        accuracy_per_level: get("accuracy_rating_per_level")?,
-        base_evasion: get("base_evasion_rating")?,
-        base_crit_bonus: get("base_critical_hit_damage_bonus")?,
-        max_resistance: get("base_maximum_all_resistances_%")?,
-        max_block: get("object_inherent_base_maximum_block_%_from_ot")?,
-        mana_regen_per_minute: get("character_inherent_mana_regeneration_rate_per_minute_%")?,
-        es_recharge_per_minute: get("energy_shield_recharge_rate_per_minute_%")?,
-        base_life: 16.0,
-        base_mana: 30.0,
-    };
+    let unarmed_crit = t.get("unarmed_base_critical_strike_chance").copied().context("unarmed crit not in Character.ot")? / 100.0;
+    let characters = data.table("Characters")?;
+    let first = characters.row(0).context("Characters is empty")?;
+    let constants = Constants::from_template(|k| t.get(k).copied(), first.int("BaseMaxLife")? as f64, first.int("BaseMaxMana")? as f64);
 
     // Classes.
-    let characters = data.table("Characters")?;
     let mut classes = Vec::new();
     let class_ids = query["classes"].as_object().context("classes")?;
     for r in characters.rows() {
@@ -391,6 +391,9 @@ pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()>
         let Some(class_id) = class_ids.get(&name).and_then(Value::as_u64) else { continue };
         if classes.iter().any(|(n, _, _)| *n == name) {
             continue;
+        }
+        if r.int("BaseMaxLife")? as f64 != constants.base_life || r.int("BaseMaxMana")? as f64 != constants.base_mana {
+            bail!("{name}: base life and mana differ per class, the corpus needs them per class");
         }
         let speed = r.int("WeaponSpeed")? as f64;
         classes.push((
@@ -412,14 +415,16 @@ pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()>
         ));
     }
 
-    // Passive nodes whose stats are all implemented; attribute nodes only walk.
+    // Passive nodes whose stats are all implemented; attribute nodes only walk. A switchable node
+    // has other stats per class, which `PassiveSkills` alone does not say.
+    let switchable: HashSet<u32> = query["switchable"].as_array().context("switchable")?.iter().filter_map(|v| v.as_u64().map(|n| n as u32)).collect();
     let passive_table = data.table("PassiveSkills")?;
     let mut node_stats: HashMap<u32, Vec<(String, i64)>> = HashMap::new();
     let mut walkable: HashSet<u32> = HashSet::new();
     for r in passive_table.rows() {
         let id = r.int("PassiveSkillGraphId")? as u32;
         let excluded = r.bool("IsKeystone")? || r.bool("IsJewelSocket")? || r.row_ref("Ascendancy")?.is_some() || r.bool("IsMultipleChoice")? || r.bool("IsMultipleChoiceOption")?;
-        if excluded {
+        if excluded || switchable.contains(&id) {
             continue;
         }
         if r.bool("IsAttribute")? {
@@ -482,10 +487,18 @@ pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()>
     ];
     let levels = [1u32, 5, 12, 20, 33, 45, 60, 75, 90];
     let penalties = [0.0, -10.0, -20.0, -30.0, -40.0, -50.0, -60.0];
+    let monster = ObjectTemplate::load(&data, "Metadata/Monsters/Monster")?;
+    let max_physical_reduction = monster
+        .component("Stats")
+        .iter()
+        .find(|(k, _)| k == "maximum_physical_damage_reduction_%")
+        .and_then(|(_, v)| v.parse().ok())
+        .context("maximum_physical_damage_reduction_% not in Monster.ot")?;
+    let none = Enemy { max_physical_reduction, ..Enemy::default() };
     let enemies = [
-        Enemy::default(),
-        Enemy { evasion: 500.0, ..Enemy::default() },
-        Enemy { evasion: 2000.0, armour: 500.0, physical_reduction: 0.0, resist: [20.0, 20.0, 20.0, 10.0] },
+        none,
+        Enemy { evasion: 500.0, ..none },
+        Enemy { evasion: 2000.0, armour: 500.0, resist: [20.0, 20.0, 20.0, 10.0], ..none },
     ];
     let mut rng = Rng(0x9E37_79B9_7F4A_7C15);
     let mut fixtures = Vec::new();
@@ -493,7 +506,7 @@ pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()>
         let (class_name, _, class) = &classes[class_idx];
         let mut items = Vec::new();
         let mut inputs = Vec::new();
-        let mut add = |rng: &mut Rng, slot: Slot, pool: &[Base], items: &mut Vec<(Slot, Base, Vec<(String, i64)>)>, inputs: &mut Vec<ItemInput>| {
+        let add = |rng: &mut Rng, slot: Slot, pool: &[Base], items: &mut Vec<(Slot, Base, Vec<(String, i64)>)>, inputs: &mut Vec<ItemInput>| {
             if pool.is_empty() {
                 return;
             }
@@ -571,13 +584,151 @@ pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()>
         }
     }
 
+    let corpus_len = fixtures.len();
+    let mut sweep_rows: Vec<(String, Vec<String>)> = Vec::new();
+    if sweep {
+        // Every row of the stat table alone. A ring supplies what makes a row visible: attributes,
+        // capped resistances, regeneration, spirit, ward and every damage type.
+        let plain = |class: &str, wanted: &dyn Fn(&ItemBase) -> bool| -> Result<Base> {
+            let mut pool = bases.iter().filter(|b| b.class == class && wanted(&b.item));
+            pool.clone().find(|b| b.implicits.is_empty()).or_else(|| pool.next()).cloned().with_context(|| format!("no {class} base for the sweep"))
+        };
+        let armour_of = |a: bool, e: bool, s: bool| move |i: &ItemBase| matches!(i, ItemBase::Armour { armour, evasion, energy_shield, .. } if (*armour > 0.0) == a && (*evasion > 0.0) == e && (*energy_shield > 0.0) == s);
+        let anything = |_: &ItemBase| true;
+        let amulet = plain("Amulet", &anything)?;
+        let ring = plain("Ring", &anything)?;
+        let context: Vec<(String, i64)> = [
+            ("base_strength", 200),
+            ("base_dexterity", 200),
+            ("base_intelligence", 200),
+            ("base_resist_all_elements_%", 200),
+            ("base_chaos_damage_resistance_%", 200),
+            ("base_spirit", 30),
+            ("base_maximum_ward", 50),
+            ("life_regeneration_rate_per_minute_%", 60),
+            ("attack_minimum_added_physical_damage", 3),
+            ("attack_maximum_added_physical_damage", 7),
+            ("attack_minimum_added_fire_damage", 3),
+            ("attack_maximum_added_fire_damage", 7),
+            ("attack_minimum_added_cold_damage", 3),
+            ("attack_maximum_added_cold_damage", 7),
+            ("attack_minimum_added_lightning_damage", 3),
+            ("attack_maximum_added_lightning_damage", 7),
+            ("attack_minimum_added_chaos_damage", 3),
+            ("attack_maximum_added_chaos_damage", 7),
+        ]
+        .iter()
+        .map(|(s, v)| ((*s).to_owned(), *v))
+        .collect();
+        let body_ae = plain("Body Armour", &armour_of(true, true, false))?;
+        let body_es = plain("Body Armour", &armour_of(false, true, true))?;
+        let body_as = plain("Body Armour", &armour_of(true, false, true))?;
+        let weapon = |kind: WeaponType| -> Result<(Slot, Base)> {
+            let class = WEAPON_CLASSES.iter().find(|(_, k)| *k == kind).context("weapon class")?.0;
+            Ok((Slot::MainHand, plain(class, &move |i: &ItemBase| matches!(i, ItemBase::Weapon(w) if w.kind == kind))?))
+        };
+        // The first three sets run for every row, the weapon sets for rows with flags or tags.
+        let mut sets: Vec<Vec<(Slot, Base)>> = vec![
+            vec![weapon(WeaponType::OneHandMace)?, (Slot::OffHand, plain("Shield", &anything)?), (Slot::BodyArmour, body_ae.clone())],
+            vec![weapon(WeaponType::Bow)?, (Slot::BodyArmour, body_es)],
+            vec![(Slot::BodyArmour, body_as)],
+            vec![weapon(WeaponType::Dagger)?, (Slot::OffHand, plain("Focus", &anything)?), (Slot::BodyArmour, body_ae.clone())],
+        ];
+        for (class, kind) in WEAPON_CLASSES {
+            if matches!(kind, WeaponType::OneHandMace | WeaponType::Bow | WeaponType::Dagger) {
+                continue;
+            }
+            // Only bases whose implicit is in the table can be compared.
+            match weapon(*kind) {
+                Ok(w) => sets.push(vec![w, (Slot::BodyArmour, body_ae.clone())]),
+                Err(_) => println!("sweep: no comparable {class} base"),
+            }
+        }
+        for set in &mut sets {
+            set.push((Slot::Amulet, amulet.clone()));
+            set.push((Slot::Ring1, ring.clone()));
+        }
+        let samples = load_samples(&dir.join("stat_map.tsv"))?;
+        let (class_name, _, class) = &classes[0];
+        for row in std::iter::once(None).chain(map::STAT_MAP.iter().map(Some)) {
+            let stats: Vec<(String, i64)> = match row {
+                None => Vec::new(),
+                Some((row_ids, _)) => match samples.get(&row_ids.join(",")) {
+                    Some(values) => row_ids.iter().map(|s| (*s).to_owned()).zip(values.iter().copied()).collect(),
+                    None => bail!("{row_ids:?} is not in stat_map.tsv: run `cargo xtask stats-map`"),
+                },
+            };
+            let wide = row.is_none_or(|(_, mods)| mods.iter().any(|m| m.5 != 0 || !(m.7)().is_empty()));
+            let label = stats.first().map_or("base".to_owned(), |(s, _)| s.clone());
+            let mut names = Vec::new();
+            for (set_index, set) in sets.iter().enumerate().take(if wide { sets.len() } else { 3 }) {
+                let target = stat_target(stats.first().map_or("", |(s, _)| s), set);
+                let (mut items, mut inputs) = (Vec::new(), Vec::new());
+                let mut kind = WeaponType::Unarmed;
+                for (slot, base) in set {
+                    let explicits = if *slot == Slot::Ring1 {
+                        context.clone()
+                    } else if *slot == target {
+                        stats.clone()
+                    } else {
+                        Vec::new()
+                    };
+                    if let ItemBase::Weapon(w) = &base.item {
+                        kind = w.kind;
+                    }
+                    let mut all = base.implicits.clone();
+                    all.extend(explicits.iter().cloned());
+                    inputs.push(ItemInput { slot: *slot, base: base.item.clone(), quality: 0.0, stats: all });
+                    items.push((*slot, base.clone(), explicits));
+                }
+                let enemy = enemies[2];
+                let name = format!("sweep-{label}-{set_index}");
+                names.push(name.clone());
+                fixtures.push(Fixture {
+                    name,
+                    class_name: class_name.clone(),
+                    input: Input {
+                        constants,
+                        class: *class,
+                        level: 60,
+                        items: inputs,
+                        passives: Vec::new(),
+                        extra_mods: Vec::new(),
+                        resist_penalty: 0.0,
+                        skill: SkillProfile::default_attack(kind, 1.0),
+                        enemy,
+                        conditions: Vec::new(),
+                    },
+                    items,
+                    nodes: Vec::new(),
+                    enemy,
+                });
+            }
+            sweep_rows.push((label, names));
+        }
+    }
+
+    // PoB2 must read each allocated node as the same stats, or the comparison would mean nothing.
+    for n in fixtures.iter().flat_map(|f| &f.nodes) {
+        let Some(stats) = node_stats.get(n) else { continue };
+        let refs: Vec<(&str, i64)> = stats.iter().map(|(s, v)| (s.as_str(), *v)).collect();
+        let mut ours: Vec<String> = desc.format(&refs).into_iter().flat_map(|l| l.text.split('\n').map(str::to_owned).collect::<Vec<_>>()).collect();
+        let mut theirs: Vec<String> = query["sd"][n.to_string()].as_array().map_or(Vec::new(), |a| a.iter().filter_map(|v| v.as_str().map(str::to_owned)).collect());
+        ours.sort();
+        theirs.sort();
+        if ours != theirs {
+            bail!("passive node {n}: game data says {ours:?}, PoB2's tree says {theirs:?}");
+        }
+    }
+
     // PoB2.
     let eval_in = dir.join("stats_check_in.jsonl");
     let eval_out = dir.join("stats_check_out.jsonl");
+    let tree_version = query["tree_version"].as_str().context("tree_version")?;
     let class_id = |name: &str| classes.iter().find(|c| c.0 == name).map_or(0, |c| c.1);
     let mut text = String::new();
     for fx in &fixtures {
-        let xml = build_xml(fx, class_id(&fx.class_name), fx.input.resist_penalty, &desc);
+        let xml = build_xml(fx, tree_version, class_id(&fx.class_name), fx.input.resist_penalty, &desc);
         writeln!(text, "{}", json!({"name": fx.name, "xml": xml}))?;
     }
     std::fs::write(&eval_in, text)?;
@@ -597,12 +748,23 @@ pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()>
             bail!("{}: PoB2 error: {e}", fx.name);
         }
         fx.input.skill.base_multiplier = pob["skill_multiplier"].as_f64().unwrap_or(1.0);
+        fx.input.skill.base_bolts = pob["skill_bolts"].as_f64().unwrap_or(1.0);
+        let allocated = pob["nodes"].as_u64().unwrap_or(0) as usize;
+        if allocated != fx.nodes.len() + 1 {
+            bail!("{}: PoB2 allocated {allocated} nodes of {} and the class start", fx.name, fx.nodes.len());
+        }
+        // A row that grants a skill (Thorns) makes PoB2 select it.
+        let skill_name = pob["skill"].as_str().unwrap_or("");
+        let other_skill = fx.name.starts_with("sweep-") && !DEFAULT_ATTACKS.contains(&skill_name);
         let got = calculate(&fx.input);
         let mut bad = Vec::new();
         for (k, tol) in INTEGER_OUTPUTS.iter().map(|k| (*k, 0.0)).chain(DECIMAL_OUTPUTS.iter().copied()) {
             let Some(want) = pob.get(k).and_then(Value::as_f64) else { continue };
+            if other_skill && matches!(k, "AverageHit" | "Speed" | "CritChance" | "CritMultiplier" | "Accuracy") {
+                continue;
+            }
             checks += 1;
-            let have = output_value(&got, k);
+            let have = got.by_pob_name(k).unwrap_or(f64::NAN);
             if (have - want).abs() > tol + 1e-9 {
                 bad.push(format!("{k}: {have} vs PoB2 {want}"));
                 *per_output.entry(k.to_owned()).or_default() += 1;
@@ -612,11 +774,30 @@ pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()>
             failed += 1;
             writeln!(lines, "{} [{}]: {}", fx.name, pob["skill"], bad.join(", "))?;
         }
-        stored.push(fixture_json(fx, pob));
+        if stored.len() < corpus_len {
+            stored.push(fixture_json(fx, pob));
+        }
+    }
+    if sweep {
+        // Rows the sweep could not see: no compared output moved on any gear set.
+        let by_name: HashMap<&str, &Value> = fixtures.iter().zip(&results).map(|(f, r)| (f.name.as_str(), r)).collect();
+        let mut blind = String::new();
+        for (label, names) in sweep_rows.iter().skip(1) {
+            let moved = names.iter().any(|name| {
+                let set = name.rsplit('-').next().unwrap_or("0");
+                let (base, row) = (by_name[format!("sweep-base-{set}").as_str()], by_name[name.as_str()]);
+                INTEGER_OUTPUTS.iter().copied().chain(DECIMAL_OUTPUTS.iter().map(|d| d.0)).any(|k| base.get(k) != row.get(k))
+            });
+            if !moved {
+                writeln!(blind, "{label}")?;
+            }
+        }
+        std::fs::write(dir.join("stat_sweep_blind.txt"), &blind)?;
+        println!("sweep: {} rows, {} with no visible effect (stat_sweep_blind.txt)", sweep_rows.len() - 1, blind.lines().count());
     }
     let report = dir.join("stats_check.txt");
     std::fs::write(&report, &lines)?;
-    println!("{} fixtures, {checks} comparisons, {failed} fixtures differ; report {}", fixtures.len(), report.display());
+    println!("{} fixtures ({corpus_len} corpus), {checks} comparisons, {failed} fixtures differ; report {}", fixtures.len(), report.display());
     for (k, n) in &per_output {
         println!("  {k}: {n}");
     }
@@ -625,6 +806,7 @@ pub fn run(root: &Path, version: &str, write: bool, verbose: bool) -> Result<()>
     }
     if write {
         let path = root.join("modules/server/crates/poe-stats/tests/fixtures.json");
+        std::fs::create_dir_all(path.parent().context("path")?)?;
         std::fs::write(&path, serde_json::to_string_pretty(&stored)?)?;
         println!("wrote {}", path.display());
     }
