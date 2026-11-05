@@ -2,16 +2,21 @@
 # set; the client lists it next to Standard, a character is made through the creation screens
 # (Dawn banner, SSF and Hardcore ticked, Ranger, name, the Hardcore confirmation) and lands in
 # "HC SSF Dawn"; afterwards Dawn ends into Standard and the character moves to "Hardcore SSF".
+# Before that, the client's League Migrations window (the >> button) on seeded characters: Migrate
+# All on SSF Dawn, one character out of HC Dawn, the empty list (the client closes the window).
 # Dawn is made through POST /api/v1/admin/leagues with an admin web token, as the web admin does.
 # Clicks are client positions at 2560x1440 (gamescope default). Format: docs/guides/setup.md.
-description = "league list, creation in HC SSF Dawn through the UI, end into Standard"
+description = "league list, League Migrations window, creation in HC SSF Dawn through the UI, end into Standard"
 play = false
 setup = [
-  "db=$(sed -n 's/^path = \"\\(.*\\)\"/\\1/p' \"$CFG\" | head -1); sqlite3 \"$db\" \"DELETE FROM characters WHERE name = 'DawnHcSsf'\"",
+  "db=$(sed -n 's/^path = \"\\(.*\\)\"/\\1/p' \"$CFG\" | head -1); sqlite3 \"$db\" \"DELETE FROM characters WHERE name IN ('DawnHcSsf', 'DawnSsfA', 'DawnSsfB', 'DawnHcA')\"",
   "srv league delete Dawn >/dev/null 2>&1 || true",
   "t=$(printf '{\"username\":\"%s\",\"password\":\"%s\",\"kind\":\"web\"}' \"$ACCT\" \"$(cat runtime/test-accounts/$ACCT.pw)\" | curl -sf -X POST 127.0.0.1:$WEB/api/v1/login -H 'content-type: application/json' --data-binary @- | sed -n 's/.*\"token\":\"\\([0-9a-f]*\\)\".*/\\1/p'); test -n \"$t\"; curl -sf -X POST 127.0.0.1:$WEB/api/v1/admin/leagues -H @<(printf 'authorization: Bearer %s\\n' \"$t\") -H 'content-type: application/json' -d '{\"name\":\"Dawn\",\"hardcore\":true,\"ssf\":true,\"flag\":\"Expedition2Standard\",\"migrate_to\":\"Standard\"}'",
+  "db=$(sed -n 's/^path = \"\\(.*\\)\"/\\1/p' \"$CFG\" | head -1); for p in 'DawnSsfA:SSF Dawn' 'DawnSsfB:SSF Dawn' 'DawnHcA:HC Dawn'; do sqlite3 \"$db\" \"INSERT INTO characters (account_id,name,league,class_id,start_state,level,area) VALUES ((SELECT account_id FROM characters WHERE name = '${ACCT}Ranger'),'${p%%:*}','${p#*:}',2,'DexFourDefault',1,'G1_town')\"; done",
 ]
 after = [
+  "cp \"$(ls -t {session}/snapshots/*/*.png | head -1)\" {dir}/migration.png && echo snapshot {dir}/migration.png",
+  "db=$(sed -n 's/^path = \"\\(.*\\)\"/\\1/p' {dir}/server.toml | head -1); test \"$(sqlite3 $db \"SELECT group_concat(name || ':' || to_league || ':' || kind, ' ') FROM (SELECT * FROM league_moves WHERE name IN ('DawnSsfA', 'DawnSsfB', 'DawnHcA') ORDER BY id DESC LIMIT 3)\")\" = 'DawnHcA:Dawn:hardcore DawnSsfB:Dawn:ssf DawnSsfA:Dawn:ssf' && echo three league_moves lines",
   "db=$(sed -n 's/^path = \"\\(.*\\)\"/\\1/p' {dir}/server.toml | head -1); test \"$(sqlite3 $db \"SELECT league FROM characters WHERE name = 'DawnHcSsf'\")\" = 'HC SSF Dawn' && echo created in HC SSF Dawn",
   "POE_CONFIG={dir}/server.toml modules/server/target/debug/poe-server league end Dawn Standard 2>/dev/null | grep -P '^DawnHcSsf\\tHC SSF Dawn -> Hardcore SSF$'",
 ]
@@ -19,6 +24,43 @@ after = [
 [[select]]
 name = "league list (Standard and Dawn families)"
 expect_log = "league list sent leagues=8"
+since = "start"
+
+[[select]]
+name = "League Migrations: >> opens the window, two pairs"
+keys = "wait:4000 inclick:2502,268 wait:3000"
+
+[[select]]
+name = "the client asked for the list"
+expect_log = "leagues with progress sent pairs=2"
+since = "start"
+
+[[select]]
+name = "Migrate (All) on SSF Dawn, Migrate All in the warning"
+keys = "inclick:1527,612 wait:2500 inclick:1563,900 wait:3000"
+
+[[select]]
+name = "both SSF characters moved"
+expect_log = "league migration name=DawnSsfB from=SSF Dawn to=Dawn"
+since = "start"
+
+[[select]]
+name = "the window shows the remaining pair"
+expect_log = "leagues with progress sent pairs=1"
+since = "start"
+
+[[select]]
+name = "dropdown of HC Dawn, DawnHcA, Migrate, Migrate in the warning"
+keys = "inclick:1321,612 wait:1500 inclick:1321,690 wait:1500 inclick:1527,612 wait:2500 inclick:1562,964 wait:3000 0x24 wait:2500"
+
+[[select]]
+name = "hardcore to softcore moved"
+expect_log = "league migration name=DawnHcA from=HC Dawn to=Dawn"
+since = "start"
+
+[[select]]
+name = "the list is empty (the client closes the window and says nothing is left)"
+expect_log = "leagues with progress sent pairs=0"
 since = "start"
 
 [[select]]

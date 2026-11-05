@@ -224,6 +224,27 @@ Official flag bytes (+0xe0..+0xe2): base `a8 00 00`, HC `2a 02 00`, SSF `28 02 0
 - The **league label** under a character is grey (`0xff676767`) for every non-hardcore league and dark red for hardcore (`0x1406b95f0`). Grey is normal.
 - The **league banner** comes from CharacterEntry **+0x4d = `LeagueFlag.dat` row + 1** (`0x140c7e460`). 0 or 1 give the grey event banner. The row's IsHC/IsSSF pick red or blue and the green variant. The server stores the row id per league.
 
+## League migrations
+The **League Migrations** window (`LeaguesWithProgressWindow`, button `>>` above the character list, built in `SelectCharacterState::GetLeaguesWithProgressWindow` `0x140f0def0`). Read in Ghidra and run in game (`leagues`); no official capture exists.
+
+| Direction | Opcode | Message | Layout |
+|---|---|---|---|
+| C→S | `0x0019` | RequestLeaguesWithProgress (sender `0x140f0a2d0`, class `0x143506270`) | `u32 account_id`; captured `00 19 00 00 00 05` |
+| S→C | `0x001a` | LeaguesWithProgress (reader `0x14214ea40`, class `0x143509f38`, session signal +0x908, handler `0x140f0b660`) | `u16 result, u32 count, LeagueEntry[count]` (no flags byte, unlike `0x001b`) |
+| C→S | `0x003f` | MigrateCharacter (`0x1420eac10`, class `0x1435061f0`, serializer `0x1420e5800`) | `astring name, u32 account_id` |
+| C→S | `0x0040` | MigrateLeague, the Migrate All (`0x1420ead40`, same class) | `astring league, u32 account_id`; `league` = the id of the pair's first entry |
+| S→C | `0x0044` | MigrationResult (class `0x143509f18`, signal +0x788, handler `0x140f0b3e0`) | `u16 result, u32 account_id`, as DeleteCharacterResult |
+
+**Opening.** The button (`0x140745170`; `0x1406d2510` on the other layout) calls `0x140f0a2d0`: with no cached list (screen +0x398) or Ctrl held it sends `0x0019`, at most once per 3 s (screen +0x3a0); the reply fills the cache at screen +0x380 and calls it again. An empty list prints `LeaguesWithProgressNoneAvailableMessage` in the status lines at the lower left and shows no window (when the window is open, as after the last migration, the client also closes it). `result` non-zero closes the window and opens an error dialog titled `LeaguesWithProgressErrorTitle`.
+
+**What is listed comes from the server.** The entries are **pairs**, `[from, to, from, to, ...]` (`0x140e6f130` steps by 2; entry widget `0x140e6ddf0`): "League: {from id}", "Parent League: {to id}". The client does not check the pair against the SSF-of or HC-of fields or any flag, so **hardcore to softcore shows like SSF to trade** (seen in game). It fills each row's dropdown (`All` plus names) with the characters whose league string (+0x20) equals the from id (`0x140f0a2d0`).
+
+**Clicking.** The row's Migrate raises window signal +0x2f0 for `All` (dialog `0x140f0e330`) or +0x2f1 for a name (`0x140f0e8c0`, with `LastCharacterMigrationWarning` when it is the league's last character); the From and To texts are the pair's ids (`0x140e6c340`). Confirming sends `0x0040` (`0x140f1acc0`) or `0x003f` (`0x140f1ab50`) and clears the cache. **Neither message names a target:** two pairs with one from league could not be told apart, so a league has one move.
+
+**The reply.** `0x0044` non-zero shows `MigrationFailedTitle` with the code's text (`0x140f13a60`; not yet seen in game, the normal flow has no stale row to click). Zero does nothing: the client does not refresh by itself. So on success the server sends `0x0044`, the new `0x0015`, then an unasked new `0x001a` (the handler rebuilds an open window; order matters, the rows read the character list). `MigrateCharacterUnavailableError` is client text only (`0x1406c39d0`, `0x1406cc0e0`, `0x141b4bc00`).
+
+**Server** (`login-server/src/migration.rs`): lists each league of the account's characters that has a `League::player_leave` into a league that has not ended. SSF goes first: `HC SSF Dawn` to `HC Dawn`, then `HC Dawn` to `Dawn`. Refusals: a character in game `384` AccountIsOnline (any character in the league for Migrate All; nothing moves), no move or no such character there `526` LeagueDisallowsManualMigration, unknown league `26`, another account's name `17`, no such name `16`, store error `19`. Rules: [server-admin.md](../guides/server-admin.md#leagues).
+
 ## Deleting a character
 1. **C→S `0x000c` DeleteCharacter**, sent after the confirmation dialog (builder `0x140ed8149`): `astring name` (`u16` byte length + bytes), `u8 slot`, `u32 account_id`. Officially the byte is 0 and the `u32` is the account id. The byte is the low byte of a `u32` at screen +0x214 that the select screen stores when the delete screen opens (`0xffffffff` when unset; probably the list index or the local player); our server identifies the character by name and may ignore it.
 2. **S→C `0x000d` DeleteCharacterResult**: `u16 result, u32 account_id` (class `0x143509f18`, shared with 0x0b/0x0f/0x44; official: `00 00` + the account id). The handler signals event +0xb88. The delete screen's callback (`0x140ed8710`) closes on result 0; any other code is looked up in `BackendErrors.dat` and shown as an error text. Until the reply arrives the dialog shows "Waiting for response...".
