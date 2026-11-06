@@ -112,7 +112,7 @@ Status: [../../status/terrain.md](../../status/terrain.md). Tools (`area_trace`,
   fallback (all 8 orientations, weight 1). `GetExactRooms` compares door, height byte `+8` and
   chirality `+9` per side, but a door-less side matches a door-less exit of any height (`exact_sides`;
   `.arm` version 36 gives door-less exits the height values -1..-4; the exit parser is a visitor of
-  `0x1429441b0`, vtable `0x1434eb560`; setting height 0 for every door-less exit loses thousands of
+  `0x1429441b0`, vtable `0x143500a40`; setting height 0 for every door-less exit loses thousands of
   matches). Debug: `POE_DBG_THINGY` (every `.arm` exit), `POE_DBG_EXACT` (`(best)` candidates with
   their exits).
 - The size map (`0x141fa82c0`, called per room as the room set loads) adds a room's sizes once per

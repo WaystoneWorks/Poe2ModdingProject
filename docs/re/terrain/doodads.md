@@ -190,7 +190,7 @@ OR over the mask's bits of an 8 x 8 composition (`ORIENT_COMPOSE`). Height `+0x3
 variant (`0x141d148e0`, `0x141d1e680`; 111 files: foundry, act3church, marakethdesert, nosnow).
 
 **Binary `.tmd`** (805 of the game's 9,706; 742 version 5, 63 version 6; `doodads::tmd_binary`).
-Client parser `0x14292cd30` (entries go to the sink vtable `0x1434bfe70`, slot 0 `0x141d0e690`; the text
+Client parser `0x14292cd30` (entries go to the sink vtable `0x1434d3f18`, slot 0 `0x141d0e690`; the text
 line options go to `0x141d0dd40`). First byte = version: 2..6 binary, otherwise the text format
 starting `version`. Then a u32 entry count, the entries, then a UTF-16 string table (u32 length in
 chars, NUL-terminated strings addressed by char index; `0xffffffff` = none). Entries have no

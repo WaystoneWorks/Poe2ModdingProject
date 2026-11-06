@@ -282,7 +282,7 @@ What the server sends (`login-server/src/session.rs`): a name under 3 characters
 | Message | Layout |
 |---|---|
 | C→S `0x0e` PlayCharacter | `u8 flags, varuint count, (u32 character_index, u32 account_id)[count]` (one entry per local split-screen player) |
-| S→C `0x14` InstanceDetails | `astring host, u16 port (+0x38), u32 (+0x30), u16 area HASH16 (+0x3a, must exist in WorldAreas), u32 (+0x34), 64-byte key material (+0x3c), 8 bytes (+0x7c), u8 (+0x84)` |
+| S→C `0x14` InstanceDetails | `astring host (+0x10), u16 port (+0x38), u32 (+0x30), u16 area HASH16 (+0x3a, must exist in WorldAreas), astring (+0x40, new in 0.5.5f; we send it empty), u32 (+0x34), 64-byte key material (+0x60), 8 bytes (+0xa0), u8 (+0xa8)`. Deserializer `0x14215e240` |
 
 - **S→C `0x0017`** (`u16` reason): the client closes its login connection (handler case in `0x1420f7180`, `ClientLoginSession_ProcessPacket` to `0x1420f6190` to `0x1420f6220`: `shutdown()`). Official servers send `0x0017 0x0014` right after InstanceDetails; we do not (in-game transfers use the open connection, [server-admin.md](../guides/server-admin.md#transfers)).
 - InstanceDetails while the client is in an instance is received and ignored; at character selection it is followed even unasked.
@@ -297,7 +297,8 @@ Deserializer `0x14215e240`; handler `0x1420f7f58`; the instance connect (`0x1421
 | `0x0004` official flag values (the DLL redacts the auth packets) | an unredacted `0x0004` capture |
 | `CharacterList` +0x74, +0x76, +0x68, entry +0x4f (always 0 officially) | a capture of a Druid in a shapeshift form or with MTX portrait settings; the consumer `FUN_140ecf110` |
 | `CharacterList` +0x28 as "preview index" | a capture of a list with two characters (official lists seen have one) |
-| `InstanceDetails` `+0x30`, `+0x34`, `+0x7c`, `+0x84` (official `0x0014` is redacted) | unredacted capture, or the readers of session `+0x2184` |
+| `InstanceDetails` `+0x30`, `+0x34`, `+0xa0`, `+0xa8` (official `0x0014` is redacted) | unredacted capture, or the readers of session `+0x2184` |
+| `InstanceDetails` `+0x40` (0.5.5f): the connect `0x14212cde0` converts a non-empty value from UTF-8 and stores it as a wide string at `+0x670` of its object (`0x14212d8d4`); empty keeps the old value, so an empty string changes nothing. Meaning unread | an official capture, or the readers of that `+0x670` |
 | `CreateCharacter` the two zero `u32` and the trailing 32 bytes | decode the sender (not found by the opcode searches); official values are in `dumps/0.5.5f/captures/official/*/packets.jsonl` |
 | Create/delete failure codes at runtime | **gate G-LOGIN**: a read-only official capture of a failed create (taken or invalid name) and a delete of a missing character; expected codes `21`, `22`, `16`. Not needed to implement; ask the user |
 

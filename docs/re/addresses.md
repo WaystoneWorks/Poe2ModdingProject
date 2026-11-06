@@ -98,7 +98,7 @@ Imports: `VERSION.dll` (`GetFileVersionInfoW`, `GetFileVersionInfoSizeW`, `VerQu
 | `0x142695a70` / `0x142695790` | skill effect reference reader (GrantedEffectsPerLevel row) / stat-set reference (GrantedEffectStatSetsPerLevel row) |
 | `0x1419a25a0` / `0x141e33c80` | varuint / varint readers used in stat lists |
 | `0x141dda290` | Pathfinding component constructor (+0x550 base speed, +0x55c multiplier) |
-| `0x14213dd60` | world constructor (+0x661 frame mode; in-game world created with 2 by `0x141014066`; vfunc +0x1d8 returns 2 for lockstep); vtable `0x143508470`, vfunc `+0x1e0` is `HeadlessWorld_LoadArea` |
+| `0x14213dd60` | world constructor (+0x661 frame mode; in-game world created with 2 by `0x141014066`; vfunc +0x1d8 returns 2 for lockstep); vtable `0x14351d938`, vfunc `+0x1e0` is `HeadlessWorld_LoadArea` |
 | `0x141944fc0` | `[NETWORKING] networking_type` option reader |
 | `0x14212fe10` | game session update / instance session receive loop: frame reports, auto network-mode switch, world update |
 
@@ -159,7 +159,7 @@ Imports: `VERSION.dll` (`GetFileVersionInfoW`, `GetFileVersionInfoSizeW`, `VerQu
 ## Login hand-off, AreaInfo, terrain passes
 | Address | What |
 |---|---|
-| `0x1420f7180` | `ClientLoginSession_ProcessPacket`: login message switch (opcode - 2); case `0x14` InstanceDetails (+0x84 byte kept), case `0x17` -> `0x1420f6190` |
+| `0x1420f7180` | `ClientLoginSession_ProcessPacket`: login message switch (opcode - 2); case `0x14` InstanceDetails (+0xa8 kept, +0x40 string), case `0x17` -> `0x1420f6190` |
 | `0x1420f6190` / `0x1420f6220` | login disconnect with reason; `0x1420f6220` calls `shutdown()` on the login socket: login `0x0017 <u16>` makes the client close its login connection |
 | `0x14212c3f0` | AreaInfo reader: optional blocks by flags0/flags1 bits; flags0 bit 7: stat records `0x1423cab90` (varuint count, `u16` key, varint value via `0x141d08b90`) |
 | `0x1420b0f90` | dungeon exit wiggle (after the fill): sorted position set at tile pass +0xb0, filled by pass A (`0x1420a7b38`) and the fill listener `0x1420a92e0`; hashed exits `0x1421a69b0` |

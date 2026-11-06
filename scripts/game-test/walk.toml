@@ -12,6 +12,13 @@ input_mode = "wasd"
 name = "transfer to the town, seed 1"
 cmd = "transfer G1_town 1"
 
+# A character saved in the town already reports G1_town before the hand-off.
+[[step]]
+name = "entered the new instance"
+expect_log = 'instance_server: player entered the world'
+since = "action"
+timeout_s = 60
+
 [[step]]
 name = "in the town"
 expect_state = { area = "G1_town" }

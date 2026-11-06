@@ -18,7 +18,7 @@ Port status: [../../status/terrain.md](../../status/terrain.md).
 - `ClientWorld_LoadArea` `0x141683940` (the in-game world) builds a client generator (base
   constructor `TerrainGen_Construct` `0x141ffe1d0`, client vtable `0x14339a440`) and runs it
   through `0x1415aa3a0` → `TerrainGen_Run` `0x14200d1f0`.
-- `HeadlessWorld_LoadArea` `0x14213e730` (vtable data `0x143508650`) is a second world class that
+- `HeadlessWorld_LoadArea` `0x14213e730` (vtable data `0x14351db18`) is a second world class that
   runs the **base** generator (vtable `0x143503478`) without rendering. It is server-side code
   compiled into the client, and our server must reproduce it. The client subclass only overrides
   object creation and rendering slots (+0x20, +0x68, +0x78..+0xa8); every generation phase is shared.

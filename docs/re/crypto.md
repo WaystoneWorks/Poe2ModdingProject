@@ -34,9 +34,9 @@ The IV offset is `((is_client ^ 1) + 2) * 16` for the first instance and `(is_cl
 - The "HNC Protocol Violated" string (`0x1435288d8`) belongs to the HNC side channel below.
 
 ## HNC side channel
-The instance EnableEncryption handler (`0x1421312e0`) creates two cipher pairs from the 64-byte key material in `InstanceDetails` +0x38:
+The instance EnableEncryption handler (`0x1421312e0`) creates two cipher pairs from the 64-byte key material in `InstanceDetails` +0x60:
 1. The packet ciphers (`0x14212ac10` -> `0x1421af380`).
-2. The HNC bit queue at stream +0xd0 (`0x14212ac80` -> `0x1421d5170`). Its key material is the session material XORed with a 64-byte table (`0x142f23aa0`), then six byte pairs swapped; the Salsa20 key/IV split is the same as for the packets (is_client = 1). Table and swaps: `modules/protocol/opcodes/0.5.5f/hnc.toml` (`HncKeys::derive`).
+2. The HNC bit queue at stream +0xd0 (built in `0x1421312e0`, the builder is inlined since 0.5.5f, -> `0x1421d5170`). Its key material is the session material XORed with a 64-byte table (`0x142f23aa0`), then six byte pairs swapped; the Salsa20 key/IV split is the same as for the packets (is_client = 1). Table and swaps: `modules/protocol/opcodes/0.5.5f/hnc.toml` (`HncKeys::derive`).
 
 The client's outgoing HNC bytes ride in `0x1c` frame reports, the server's in `0x1d` ping replies (bit layouts in [../protocol/instance.md](../protocol/instance.md)). An idle stream is zero bytes; the server sends keystream bytes (encrypted zeros). The client accepts them for minutes; all-zero bits crash it.
 

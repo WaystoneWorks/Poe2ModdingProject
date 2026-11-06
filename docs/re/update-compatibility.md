@@ -8,7 +8,7 @@ What breaks when a game build changes. The signature table, `cargo xtask check-b
 - `symbols.tsv` per build (row 20); the opcode/layout drift report beyond the server-to-client deserializer fingerprints.
 - `cargo xtask sig-gen` (the generator stays `scripts/re/sig_gen.py`).
 - Renumbered opcodes and client-to-server layouts are not derived from the exe; the factory is not found by the `Unable to deserialise packet` string (its address and switch numbers come from Ghidra and `find_switches.py`).
-- Row 11's ids instead of rows in config and code; row 14's format-version checks (`.tgr` and others); a pinned schema download; the DLL selecting its opcode tables by the resolved build (it still uses `poe_proto::opcodes::v0_5_5e`); a side-channel hello carrying the DLL's resolved build (only the login channel is protected).
+- Row 11's ids instead of rows in config and code; row 14's format-version checks (`.tgr` and others); a pinned schema download; the DLL selecting its opcode tables by the resolved build (it uses `poe_proto::opcodes::latest()`); a side-channel hello carrying the DLL's resolved build (only the login channel is protected).
 - The `client_hash` is the exe's sha256 (confirmed with a real standalone login on 0.5.5e Hotfix 1; `hashes_confirmed = true`). The refusal (code 8 popup) and `allow_unknown_client` were checked in game too.
 
 ## The first real update: 0.5.5e Hotfix 1
@@ -20,6 +20,14 @@ GGG's first build after the signature tooling was **0.5.5e Hotfix 1** ("Fixed a 
 - **Work needed:** a new signature table (the old spec with every address moved by the map: patterns identical, `sig_gen.py` output differs only in `[build]` and addresses), a new version file sharing the 0.5.5e opcode folder, the server's `[game] version`, and test fixtures that named the newest version. The name is `0.5.5e.hotfix1` (not `0.5.5e-hotfix1`): release file names allow only letters, digits, dots. Procedure: [../guides/new-game-version.md](../guides/new-game-version.md).
 - **In-game check:** `scripts/test-run.sh` on the hotfix copy: the DLL logged `table 0.5.5e.hotfix1: timestamp ok, size ok, revision 326410` and every feature `ok`; standalone login screen, token login, hand-off, G1_1 (client tile hash 1866332366) and click-to-move worked. The login server logged no `client_hash cannot be checked yet` line, so `hashes_confirmed = true`, `status = "supported"`. Not repeated for this build: the refusal of another build and an official read-only session (the user's).
 - **Ghidra:** the hotfix exe is `/0.5.5e.hotfix1/PathOfExileSteam.exe` with the old program's names, signatures, comments and data types ported by the address map (`scripts/re/ghidra/PortFromAddrMap.java`; Version Tracking failed, [README.md](README.md#a-new-build-in-the-ghidra-project)).
+
+## The second update: 0.5.5f
+GGG's next build, revision `328049`, is not the supporter-pack-only patch it looked like. What the tools found:
+- **Identity:** exe 78,440,792 bytes, sha256 `7e0d3665...7c834e`. Steam manifests: content `5662192306551403401`, exe `3411296386151915616`.
+- **Protocol:** instance opcodes from `0x2ef` up moved +3, from `0x35d` up +4; the client-to-server ones were derived the same way and confirmed by the game tests. `InstanceDetails` has a new string ([login.md](../protocol/login.md)); the class of `SocialEntry` grew with an unchanged deserializer; unnamed classes `0x29`, `0x238`, `0x1f1` changed. Old tables stay in Poe2Protocol `capture-opcodes/0.5.5e.hotfix1/` to replay old captures.
+- **Client:** the image moved, `instance_ciphers` was inlined (now a site with `session.key_material`, `+0x58`), and `World` grew (`+0x98..0x665` +8, `0x666` +0x2a, `0x668..0x680` +0x2c, `0x690` up +0x28).
+- **Data** (`dumps/0.5.5f/bundlediff.tsv`): 699 `.datc64` changed (171 English tables), 2 `.ot`, 2 `.arm` (`past_town_01`, `kalguur_dock_town`), 64,272 files added; 1,040,488 shader cache files are `unread` (their bundle is not on one side).
+- **Addresses not carried over:** these in the docs predate Hotfix 1 or sit in code the address map cannot place, so they are not 0.5.5f addresses; read them again before use: `0x14019ad14`, `0x14020ad50`, `0x14020ad94`, `0x14025613c`, `0x1416d5080` (movement-click.md), `0x140286850`, `0x140c75310`, the `Player_SimulationHandler` cases `0x14171ce50`..`0x14171d462`, `0x1433a7d20`, `0x1420e9a64` (addresses.md), `0x141cc9a30` (washed-up.md), `0x1420e8c40`, `0x143509e78` (login.md), `0x142125446` (world-travel.md), `0x142f08770` (tgr.md), `0x1431c9e10` (movement-sprint.md).
 
 ## How to read the table
 Patch kinds:
