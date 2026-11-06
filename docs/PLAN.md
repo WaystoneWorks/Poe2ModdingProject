@@ -9,7 +9,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
-| U3 | DLL overlay UI review loop, as U1 | O | [pre-p10.md](plans/pre-p10.md#u1-u2-u3-ui-review-loops) | |
+| U3 | DLL overlay UI review loop, as U1 (in progress: 8.5/10 after four rounds, WIP not gated) | O | [pre-p10.md](plans/pre-p10.md#u1-u2-u3-ui-review-loops) | |
 | B1 | New Riverbank character: wrong spawn facing, first move teleports to the zombie intro spot | O | [pre-p10.md](plans/pre-p10.md#b1-riverbank-spawn-facing-and-first-move-teleport) | U3 |
 | S1 | Suggestions for work before P10, chosen by the user | O | [pre-p10.md](plans/pre-p10.md#s1-suggestions-before-p10) | B1 |
 | P10 | Items, inventory, equipment, weapon sets, stats pipeline, levels and XP, not-implemented chat lines, web admin inventory | O+S | [items-stats.md](plans/items-stats.md#p10-items-inventory-equipment-weapon-sets-levels-opus-for-the-re-sonnet-for-storage-and-web-admin) | C2 |

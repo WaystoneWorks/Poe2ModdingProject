@@ -13,7 +13,7 @@ Seeing the UI: read the source; screenshots only headless (no visible window, ne
 
 Done when: a reviewer scores 9/10, the UI's checks pass (launcher `cargo test` + `cargo fmt --check` + frontend build; web admin build and `poe-web-api` tests, `cargo xtask openapi --check`; client-hook `cargo xtask build-dll`, `cargo test -p poe-hook-shared`, `cargo fmt --check`, game test `overlay-pages`), docs describe the result. No release unless the user asks.
 
-Scores: U1 9/10 (rounds 7, 8, 8.5, 8.5, 8.5, 8.5, 9; launcher 1466f55..a67c392 and the final commit), U2 9/10 (rounds 6.5, 7.5, 8.5, 9; web-admin eb9efe1..2e9bfdf, server fec98ee: `class_name` and `GET /admin/data/areas`), U3 -.
+Scores: U1 9/10 (rounds 7, 8, 8.5, 8.5, 8.5, 8.5, 9; launcher 1466f55..a67c392 and the final commit), U2 9/10 (rounds 6.5, 7.5, 8.5, 9; web-admin eb9efe1..2e9bfdf, server fec98ee: `class_name` and `GET /admin/data/areas`), U3 in progress (rounds 7, 7.5, 8, 8.5).
 
 ## B1: Riverbank spawn facing and first-move teleport
 A new character on the Riverbank (`G1_1`, washed-up intro, `[spawn.start_tiles.G1_1]`) can spawn facing the wrong direction, and on its first move it teleports to the zombie intro position instead of walking from where it stands. Find why (Opus RE where needed: the client's intro sequence, the facing the server sends in the player blob/`Positioned`, the washed-up flag, the first movement reply and the cell the server simulates from), fix it in the server, add a test (unit or replay) and a hidden game test of a fresh character's first move on the Riverbank.
