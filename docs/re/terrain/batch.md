@@ -29,7 +29,7 @@ formats), `scripts/re/terrain_batch.py` (plan, run, status).
 
 `HeadlessWorld_LoadArea` `0x14213e730` is the **base world**'s vfunc `+0x1e0` (vtable
 `0x14351d938`, constructor `0x14213dd60`). The in-game world, `ClientWorld` (constructor
-`0x1416859c0`, `new(0x17e8)`, vtable `0x1433b15d8`), overrides it with `ClientWorld_LoadArea`
+`0x1416859c0`, `new(0x1810)`, vtable `0x1433b15d8`), overrides it with `ClientWorld_LoadArea`
 `0x141683940`. The base world has no terrain (its vfuncs `+0x1a0/+0x1a8` raise an "unimplemented"
 exception), so a world that can generate has to be a `ClientWorld`: its vfunc `+0x1a8` returns the
 terrain object embedded at world `+0x8f8`, `+0x1c8` the generation state at world `+0x4b8`.
@@ -173,7 +173,7 @@ collected for the jobs of `export.txt`. Only layouts are compared: the server-on
 
 | Address | What |
 |---|---|
-| `0x1416859c0` | `ClientWorld` constructor `(this, frame mode u8, flag u8)`, size `0x17e8`; vtable `0x1433b15d8` (`+0x1a8` terrain at `+0x8d0`, `+0x1c8` state at `+0x4b0`, `+0x1e0` LoadArea, `+0x20` deleting destructor) |
+| `0x1416859c0` | `ClientWorld` constructor `(this, frame mode u8, flag u8)`, size `0x1810`; vtable `0x1433b15d8` (`+0x1a8` terrain at `+0x8f8`, `+0x1c8` state at `+0x4b8`, `+0x1e0` LoadArea, `+0x20` deleting destructor) |
 | `0x14213dd60` | base world constructor (only caller: the ClientWorld constructor); vtable `0x14351d938` |
 | `0x14213e730` | `HeadlessWorld_LoadArea` (base vfunc `+0x1e0`): `(world, u32 p2, u32 seed, vector<u8>* p4, vector<u64>* p5)` |
 | `0x141ffe1d0` / `0x141ffe5f0` | `TerrainGen_Construct(generator, world)` / generator destructor |
@@ -189,7 +189,7 @@ collected for the jobs of `export.txt`. Only layouts are compared: the server-on
 | `0x142c26748` | `__vcrt_getptd`: the thread's C++ exception state |
 | `0x142c25ec0` | `_IsExceptionObjectToBeDestroyed` (walks the frame info chain at ptd `+0x58`) |
 | `0x141f0d4f0` | Incursion temple room object constructor (reads `world +0xa8`, throws "[INCURSION2] Present-day temple contains Past-only room") |
-| `0x141013960` | creates the in-game world (`new(0x17e8)`, constructor `(2, multi)`) and destroys the old one |
+| `0x141013960` | creates the in-game world (`new(0x1810)`, constructor `(2, multi)`) and destroys the old one |
 
 ## Data-path rules the batch exposed
 

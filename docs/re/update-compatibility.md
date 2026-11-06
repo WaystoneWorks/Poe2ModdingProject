@@ -3,6 +3,7 @@
 What breaks when a game build changes. The signature table, `cargo xtask check-build` and the version files are in [client-dll.md](../architecture/client-dll.md) and [new-game-version.md](../guides/new-game-version.md).
 
 ## Still open
+- `gen_batch.rs` `WORLD_SIZE`, the `ClientWorld` allocation size, is a literal; a build that grows the world overflows the heap in batch runs (0.5.5f: `0x17e8` to `0x1810`, crashes in `0x1416859c0`). Read it at `0x141014047` on every build.
 - Struct offsets listed as literal in client-dll.md (terrain cell grids, tile record internals, generator-trace object layouts, diagnostic reads, component indices 0 and 9).
 - Runtime sanity checks after resolution (position inside the terrain; the side-channel key against the server's first report); a failed tile-hash check flagging the export (row 15).
 - `symbols.tsv` per build (row 20); the opcode/layout drift report beyond the server-to-client deserializer fingerprints.
@@ -27,7 +28,7 @@ GGG's next build, revision `328049`, is not the supporter-pack-only patch it loo
 - **Protocol:** instance opcodes from `0x2ef` up moved +3, from `0x35d` up +4; the client-to-server ones were derived the same way and confirmed by the game tests. `InstanceDetails` has a new string ([login.md](../protocol/login.md)); the class of `SocialEntry` grew with an unchanged deserializer; unnamed classes `0x29`, `0x238`, `0x1f1` changed. Old tables stay in Poe2Protocol `capture-opcodes/0.5.5e.hotfix1/` to replay old captures.
 - **Client:** the image moved, `instance_ciphers` was inlined (now a site with `session.key_material`, `+0x58`), and `World` grew (`+0x98..0x665` +8, `0x666` +0x2a, `0x668..0x680` +0x2c, `0x690` up +0x28).
 - **Data** (`dumps/0.5.5f/bundlediff.tsv`): 699 `.datc64` changed (171 English tables), 2 `.ot`, 2 `.arm` (`past_town_01`, `kalguur_dock_town`), 64,272 files added; 1,040,488 shader cache files are `unread` (their bundle is not on one side).
-- **Addresses not carried over:** these in the docs predate Hotfix 1 or sit in code the address map cannot place, so they are not 0.5.5f addresses; read them again before use: `0x14019ad14`, `0x14020ad50`, `0x14020ad94`, `0x14025613c`, `0x1416d5080` (movement-click.md), `0x140286850`, `0x140c75310`, the `Player_SimulationHandler` cases `0x14171ce50`..`0x14171d462`, `0x1433a7d20`, `0x1420e9a64` (addresses.md), `0x141cc9a30` (washed-up.md), `0x1420e8c40`, `0x143509e78` (login.md), `0x142125446` (world-travel.md), `0x142f08770` (tgr.md), `0x1431c9e10` (movement-sprint.md).
+- **Addresses not carried over:** these in the docs predate Hotfix 1 or sit in code the address map cannot place, so they are not 0.5.5f addresses; read them again before use: `0x14019ad14`, `0x14020ad50`, `0x14020ad94`, `0x14025613c`, `0x1416d5080` (movement-click.md), `0x140286850`, `0x140c75310`, `0x1420e9a64` (addresses.md), `0x141cc9a30` (washed-up.md), `0x1420e8c40`, `0x143509e78` (login.md), `0x142125446` (world-travel.md), `0x142f08770` (tgr.md), `0x1431c9e10` (movement-sprint.md).
 
 ## How to read the table
 Patch kinds:

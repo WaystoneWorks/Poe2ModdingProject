@@ -127,7 +127,7 @@ If the entity id equals a local player's id (+0x184, set by `0x24`), `0x14211ab5
 ## Skill messages and their acknowledgements
 Opcode notes only; layouts, sequences and timing are in [movement.md](movement.md), structs in `modules/protocol/poe-proto/src/skill.rs`, addresses in [../re/addresses.md](../re/addresses.md#skill-acknowledgements-buffs-sprint).
 
-| C→S | S→C reply (Player component, `0x14172ddc0`) |
+| C→S | S→C reply (Player component, `0x1416fc930`) |
 |---|---|
 | `0x1a5` UseSkill | `0x1ae` UseSkillAck (absolute target, target flags `\| 0x04`) |
 | `0x1a8` UpdateSkillTarget | `0x1af` UpdateSkillTargetAck |
