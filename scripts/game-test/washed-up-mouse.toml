@@ -1,0 +1,58 @@
+# B1, the Mouse choice of the dialog (washed-up.toml has WASD): a new character washes up on the Riverbank (G1_1, first visit), wakes when the player picks a
+# movement type in the client's dialog and then walks from its spawn cell. The setup makes the test character new again, so every run plays
+# the intro on a fresh layout. The official cells and facings per placement: (238, 1164) 1.89 and
+# (284, 1141) 5.96 (docs/re/washed-up.md). Format: docs/guides/setup.md, "Game tests".
+description = "fresh Riverbank character: official spawn and facing, choosing Mouse wakes it, then it walks from there"
+account = "washedup"
+area = "G1_1"
+input_mode = "mouse_and_keyboard"
+setup = [
+  "db=$(sed -n 's/^path = \"\\(.*\\)\"/\\1/p' \"$CFG\" | head -1); sqlite3 \"$db\" \"UPDATE characters SET area = 'G1_1', intro_done = 0, seed = NULL, pos_x = NULL, pos_y = NULL WHERE name = '${ACCT}Ranger'\"",
+]
+
+[server]
+"dev.drift_check" = true
+
+[[step]]
+name = "in G1_1"
+expect_state = { area = "G1_1" }
+timeout_s = 60
+
+[[step]]
+name = "lies on the shore"
+wait_ms = 3000
+
+[[step]]
+name = "choose Mouse in the client's movement type dialog"
+keys = "inmove:1180,1244 wait:400 inpress:1180,1244 wait:120 inrelease:1180,1244"
+
+[[step]]
+name = "the wake-up was sent"
+expect_log = "wake-up"
+since = "action"
+timeout_s = 5
+
+[[step]]
+name = "a click during the wake-up"
+keys = "inmove:1500,500 wait:400 inpress:1500,500 wait:120 inrelease:1500,500"
+
+[[step]]
+name = "wakes on the spot, no walk and no teleport"
+expect_state = { moved_max = 2 }
+
+[[step]]
+name = "stands up"
+wait_ms = 6000
+
+[[step]]
+name = "first move: a click walks from where it stands"
+keys = "inmove:1500,500 wait:400 inpress:1500,500 wait:120 inrelease:1500,500 wait:1000"
+
+[[step]]
+name = "walked, no teleport"
+expect_state = { moved = 5, moved_max = 60 }
+
+[[step]]
+name = "server and client agree"
+max_drift = 5
+since = "start"
