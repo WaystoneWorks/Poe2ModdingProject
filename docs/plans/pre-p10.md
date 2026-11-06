@@ -1,17 +1,6 @@
-# Plan: before P10 (V1, B4, U4, U5, CT, B2, B3, A1, A2, P10a)
+# Plan: before P10 (B4, U4, U5, CT, B2, B3, A1, A2, P10a)
 
-Steps the user asked for on 2026-11-06 (V1 to CT) and chose in S1 on 2026-11-05 (B2 to P10a); order and status are in [../PLAN.md](../PLAN.md). Delete each section when its step is done, and this file with the last one. Suggestions not chosen: [backlog.md](backlog.md#suggested-in-s1-not-chosen).
-
-## V1: game update 0.5.5f
-The user reports 0.5.5f adds only supporter packs, so no breaking change is expected; `check-build` proves or disproves that, nothing is assumed. Everything moves to the new build, which becomes the only supported one (as with Hotfix 1, [decisions.md](../decisions.md#scope-and-order)). Read the exact version name from the build.
-
-Follow [new-game-version.md](../guides/new-game-version.md) in order: `revert-client`, replace `GameFiles/` from the updated Steam install (read-only copy; the guide's step is the one allowed change outside the deploy commands), keep the old exe, `bundlediff`, `check-build`, signatures, version file, opcode folder, launcher copy, tests, in-game check. Then the rest of the project: Ghidra import ([re/README.md](../re/README.md#a-new-build-in-the-ghidra-project)), CLAUDE.md's build and Ghidra path, `docs/re/addresses`, and every RE address in docs and comments if the image moved (script it from `addr_map`; say in the docs which case holds). About 295 tracked files name `0.5.5e`: script the change, and separate names of the build from history that must stay. `dumps/<new>/`: regenerate what depends on the exe; move terrain vectors and game data unchanged only if `bundlediff` shows no data or terrain file changed, otherwise rerun the batches.
-
-Done when: `check-build` is clean, unit tests of every module and the guide's in-game check pass, the game tests `smoke`, `walk`, `cliffs`, `dungeon`, `r4-travel`, `washed-up`, `commands`, `overlay-pages` pass, `client_hash` is confirmed, `status = "supported"`. The official comparison (guide step 6.4) waits for the user's next official session. Ask before release tags; players on the launcher need the releases, so raise it at the end.
-
-**State (WIP, NOT GATED).** The patch is more than supporter packs; findings are in [update-compatibility.md](../re/update-compatibility.md#the-second-update-055f). Done: `check-build`, unit tests of every module, launcher `cargo test`, game tests `smoke`, `walk`, `cliffs`, `dungeon`, `r4-travel`, `washed-up`, `commands`, `overlay-pages` (2026-11-06), `client_hash` confirmed, `status = "supported"`, docs and addresses (those not placed are listed there).
-
-Left: terrain batch `f55f` (the jobs of `grid50`) and `forced_verify` on it; Ghidra: analysis saved, `PortFromAddrMap.java` needs Ghidra started with `GHIDRA_MCP_ALLOW_SCRIPTS=1` (the user starts it); then clear `dumps/0.5.5e.hotfix1/` except the exe, and `GameFiles-0.5.5e.hotfix1/`.
+Steps the user asked for on 2026-11-06 (B4 to CT) and chose in S1 on 2026-11-05 (B2 to P10a); order and status are in [../PLAN.md](../PLAN.md). Delete each section when its step is done, and this file with the last one. Suggestions not chosen: [backlog.md](backlog.md#suggested-in-s1-not-chosen).
 
 ## B4: snaps at checkpoints and waypoints
 The user sees slight teleports when interacting with checkpoints and waypoints. Their guess: an interaction range issue, the server not agreeing with what the client does. This is movement, so the [exact port principle](../decisions.md#movement-and-world) applies: no DLL snap patch, no fitting.
@@ -62,7 +51,7 @@ Done when: unit tests, a hidden private-server game test (bindings by `auto_keys
 ## B2: bad seeds
 The client throws `TerrainGenerationException` on about 3% of generation jobs ([terrain.md](../status/terrain.md#results): 6,695 of 225,400, mostly `G2_10_1`, `MapBackwash`, `G2_1`, `MapUniqueVault`, `G1_12`), and the docs say the game retries with another seed. Our server keeps the seed, so the player waits 30 s and is kicked (`terrain_check::Reason::NoHashes`, `servers/instance-server/src/lib.rs` near line 250). Seen in the game test once in about 10 runs: `client_terrain_generation_failed (no hashes in 30 s)`, `G1_1` seed 3227977988.
 
-1. Reproduce offline: run seed 3227977988 through the client batch ([batch.md](../re/terrain/batch.md)) and the server generator (`area_probe`). Record whether the generator fails on the seeds the client fails on: compare the error rows of `dumps/0.5.5e.hotfix1/terrain/batch/full/batch-results.tsv` with `forced_verify`.
+1. Reproduce offline: run seed 3227977988 through the client batch ([batch.md](../re/terrain/batch.md)) and the server generator (`area_probe`). Record whether the generator fails on the seeds the client fails on: compare the error rows of `dumps/0.5.5f/terrain/batch/f55f/batch-results.tsv` with `forced_verify`.
 2. Find how the client and the official server handle the throw (who picks the next seed, which message carries it), from Ghidra and the existing captures. Do not guess: an official retry may be invisible in the captures.
 3. Fix: a new instance only gets a seed the client accepts. If the generator fails on exactly those seeds, retry seeds server-side at instance creation (attempt limit in `server.toml`); otherwise port the missing throw conditions into `poe-world`. Never special-case an area. The backlog's generator failures (`G2_10_1`, `G4_14`, `G2_1`, `G3_5`, `G1_14`, `G3_8`) go through the same path: an area that fails on every attempt keeps today's "runs without a server grid".
 

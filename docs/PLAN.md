@@ -9,11 +9,10 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
-| V1 | Game update 0.5.5f: the whole project moves to the new build (in progress, NOT GATED, state in the spec) | O | [pre-p10.md](plans/pre-p10.md#v1-game-update-055f) | updated Steam install |
-| B4 | Slight snaps when interacting with checkpoints and waypoints | O | [pre-p10.md](plans/pre-p10.md#b4-snaps-at-checkpoints-and-waypoints) | V1 |
+| B4 | Slight snaps when interacting with checkpoints and waypoints | O | [pre-p10.md](plans/pre-p10.md#b4-snaps-at-checkpoints-and-waypoints) | |
 | U4 | Launcher and web admin layout: reviewer loop to 9.5/10 with a consistency score, News "Read more" bug, version label on the left | O | [pre-p10.md](plans/pre-p10.md#u4-launcher-and-web-admin-layout) | |
-| U5 | DLL overlay layout: reviewer loop to 9.5/10 | O | [pre-p10.md](plans/pre-p10.md#u5-dll-overlay-layout) | V1 |
-| CT | Capture checklist tool with user-set keybindings | O+S | [pre-p10.md](plans/pre-p10.md#ct-capture-checklist-tool) | V1 |
+| U5 | DLL overlay layout: reviewer loop to 9.5/10 | O | [pre-p10.md](plans/pre-p10.md#u5-dll-overlay-layout) | |
+| CT | Capture checklist tool with user-set keybindings | O+S | [pre-p10.md](plans/pre-p10.md#ct-capture-checklist-tool) | |
 | B2 | Bad seeds: a new instance only gets a seed the client accepts, no 30 s wait and kick | O | [pre-p10.md](plans/pre-p10.md#b2-bad-seeds) | |
 | B3 | Intro flag set when the wake-up ends, not at entry | O | [pre-p10.md](plans/pre-p10.md#b3-intro-flag) | |
 | A1 | `player ban`, `unban`, `ban ip` in chat, overlay and CLI | S | [pre-p10.md](plans/pre-p10.md#a1-ban-commands) | |
@@ -37,6 +36,9 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | What | When |
 |---|---|
+| Decide on releases for 0.5.5f: launcher players need them (ask before tags) | now |
+| Official comparison on 0.5.5f ([new-game-version.md](guides/new-game-version.md), step 6.4) | next official session |
+| Decide whether `GameFiles-0.5.5e.hotfix1/` (141 GB) and `dumps/0.5.5e.hotfix1/ghidra/` may be deleted (the old exe stays) | any time |
 | Capture **C2** (gameplay, 30-40 minutes, [checklist](re/captures.md#planned-capture-c2-for-gameplay-items-stats-life-flasks-passives-skills-monsters-loot-npcs)); it also covers the movement gaps #6 and #7 | after CT, before P10 |
 | G-PARTY capture (a friend answers party invite and trade request) | before P18 |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |

@@ -11,6 +11,7 @@ Items kept from the earlier plan, word for word where possible. Ordered work is 
 - Still missing from captures for movement: swap and input-mode toggle while walking, rolling or attacking (gap #7), attacks with attack-speed gear (gap #6). Both are in capture C2.
 
 ## Small server and tooling items
+- Client crash on an instance transfer, about 1 in 15 test runs since before 0.5.5f (`walk` 2026-11-06, `r4-areas` and `r4-travel` 2026-11-05): an access violation in a Wine DLL about 0.7 s after the old instance disconnects, then the crash helper runs and the client exits 10 s later. `exit_trace` then shows the helper's `ExitProcess(0)`, not the cause: look for `crash] exception` in `poe-hook.log`.
 - Data mods: `config_defaults` layering and server `opcodes` overlays ([../architecture/mod-host.md](../architecture/mod-host.md)).
 - Web admin Players page shows class names.
 - Rate limit on `GET /api/v1/mods/{id}/{version}.zip`.
