@@ -1,25 +1,32 @@
-# Plan: before P10 (U1-U3, B1, S1)
+# Plan: before P10 (B2, B3, A1, A2, P10a)
 
-Steps U1, U2, U3, B1 and S1 of [../PLAN.md](../PLAN.md), asked by the user on 2026-11-05. Each step is one Opus thread; at its end the thread commits, updates PLAN.md and this file, and launches the next step's thread (`t3_thread_launch`, workspace root, Opus 5.5) with the chain instruction below.
+Steps the user chose in S1 on 2026-11-05 from a list of 30 suggestions; order and status are in [../PLAN.md](../PLAN.md). Delete each section when its step is done, and this file with the last one. Suggestions not chosen: [backlog.md](backlog.md#suggested-in-s1-not-chosen).
 
-## U1, U2, U3: UI review loops
-One loop per UI: U1 the launcher (`modules/launcher`, Svelte frontend `src/` and the Tauri commands it calls), U2 the web admin (`modules/web-admin`, served by `poe-web-api`), U3 the DLL overlay (`modules/client-hook`, `poe-hook-core` overlay pages).
+## B2: bad seeds
+The client throws `TerrainGenerationException` on about 3% of generation jobs ([terrain.md](../status/terrain.md#results): 6,695 of 225,400, mostly `G2_10_1`, `MapBackwash`, `G2_1`, `MapUniqueVault`, `G1_12`), and the docs say the game retries with another seed. Our server keeps the seed, so the player waits 30 s and is kicked (`terrain_check::Reason::NoHashes`, `servers/instance-server/src/lib.rs` near line 250). Seen in the game test once in about 10 runs: `client_terrain_generation_failed (no hashes in 30 s)`, `G1_1` seed 3227977988.
 
-1. The thread's main agent (Opus) starts a reviewer sub-agent: `Agent`, `model: "opus"`, `run_in_background: false`. Its brief: review the whole UI (every page and dialog: layout, consistency, wording, empty/error/loading states, accessibility, keyboard use, responsiveness, obvious bugs), give a score out of 10 with the reasons, and a prioritised list of concrete fixes (file and component). It reports only; it does not edit.
-2. The main agent makes the fixes, builds and runs the UI's tests.
-3. A fresh reviewer sub-agent (same brief, plus the previous score and list) reviews again. Repeat until a reviewer scores **9/10 or higher**. Record each round's score in this file.
+1. Reproduce offline: run seed 3227977988 through the client batch ([batch.md](../re/terrain/batch.md)) and the server generator (`area_probe`). Record whether the generator fails on the seeds the client fails on: compare the error rows of `dumps/0.5.5e.hotfix1/terrain/batch/full/batch-results.tsv` with `forced_verify`.
+2. Find how the client and the official server handle the throw (who picks the next seed, which message carries it), from Ghidra and the existing captures. Do not guess: an official retry may be invisible in the captures.
+3. Fix: a new instance only gets a seed the client accepts. If the generator fails on exactly those seeds, retry seeds server-side at instance creation (attempt limit in `server.toml`); otherwise port the missing throw conditions into `poe-world`. Never special-case an area. The backlog's generator failures (`G2_10_1`, `G4_14`, `G2_1`, `G3_5`, `G1_14`, `G3_8`) go through the same path: an area that fails on every attempt keeps today's "runs without a server grid".
 
-Seeing the UI: read the source; screenshots only headless (no visible window, never the user's browser, Spectacle or SendInput). U1/U2: a headless browser render of the built frontend (web admin against a dev server; launcher frontend with its Tauri calls mocked) is fine if it runs invisibly. U3: in-game screenshots through the hidden game test `overlay-pages` (one screenshot per page, `runtime/game-test/`). Game tests run hidden (`cargo xtask game-test <scenario>`, no `--display desktop`).
+Done when: unit tests over the failing seeds of the batch results, a game test entering `G1_1` on seed 3227977988 succeeds on another seed without a kick, and the backlog and [instance.md](../protocol/instance.md#terrain-check) are updated.
 
-Done when: a reviewer scores 9/10, the UI's checks pass (launcher `cargo test` + `cargo fmt --check` + frontend build; web admin build and `poe-web-api` tests, `cargo xtask openapi --check`; client-hook `cargo xtask build-dll`, `cargo test -p poe-hook-shared`, `cargo fmt --check`, game test `overlay-pages`), docs describe the result. No release unless the user asks.
+## B3: intro flag
+`set_intro_done` runs at entry (`servers/instance-server/src/lib.rs` near line 369), so a player who leaves before the wake-up (or crashes) loses the intro. Set it when the wake-up ends (`waking_until` in `poe-game/src/locomotion.rs`), or on the first of the client's clearing signals ([washed-up.md](../re/washed-up.md#client-behaviour)). A player who leaves during the wake-up washes up again on the next entry: check the spawn too, since `saved character location` runs on leaving.
 
-Scores: U1 9/10 (rounds 7, 8, 8.5, 8.5, 8.5, 8.5, 9; launcher 1466f55..a67c392 and the final commit), U2 9/10 (rounds 6.5, 7.5, 8.5, 9; web-admin eb9efe1..2e9bfdf, server fec98ee: `class_name` and `GET /admin/data/areas`), U3 9/10 (rounds 7, 7.5, 8, 8.5, 8.5, 8.5, 8.5, 9; client-hook 40712f4..c7cbbc9).
+Done when: rules or unit test, and a game test (variant of `washed-up`) that leaves before the wake-up, re-enters and washes up again, then finishes and does not on a third entry.
 
-## B1: Riverbank spawn facing and first-move teleport
-Done 2026-11-05: the first `0x1a5` is the answer to the movement-type dialog, not a walk; the server spawns on the official cell and facing and does not walk in the wake-up. Details: [washed-up.md](../re/washed-up.md); game tests `washed-up`, `washed-up-mouse`.
+## A1: ban commands
+`player ban <name> [--duration] [--reason]`, `player unban <name>`, `ban ip <addr>` in the registry (`servers/instance-server/src/commands.rs`, next to `player kick`; admin level; overlay Players tab), and the same in the CLI next to `poe-server account ...`. They use the existing store calls (`ban_account`, `ban_ip`, `lift_ban`, `poe-accounts/src/lib.rs`), so web admin bans and these are one list. A ban kicks an online player, with the text of `bans::banned_text`.
 
-## S1: suggestions before P10
-An Opus agent reads the project (PLAN.md, backlog, docs/status, code layout, tests, tools) and writes a long, concrete list of what could be done before P10 (missing features that need no C2 capture, debug and admin tools, test coverage, tooling, docs, robustness, hosting), each with value, size and model. The list goes to the user through AskUserQuestion (recommended first); the chosen items become PLAN.md steps with specs. S1 is the end of this chain: it launches no further thread.
+Done when: command unit tests, a `commands` game test line, the overlay control, [server-admin.md](../guides/server-admin.md#commands) and the backlog line removed.
 
-## Chain instruction (copy into every launch message)
-Read CLAUDE.md first, then docs/PLAN.md and docs/plans/pre-p10.md. Do the next open step of the chain (U1, U2, U3, B1, S1 in that order) and only that. Model: Opus 5.5. At the end: commit (submodules first, then the hub; push), record the result in pre-p10.md and PLAN.md, then launch the next step's thread with `t3_thread_launch` (workspace root, Opus 5.5) whose message is this chain instruction plus the state, tell the user its link and stop. At 300k context with the step unfinished: commit WIP marked NOT GATED, launch a thread for the same step with the state. S1 launches nothing.
+## A2: automatic database backups
+A new scheduled task kind `backup` (`poe-web-api/src/scheduler/kind.rs`, next to `restart`; Schedule page in `modules/web-admin`) with `keep` (retention) and a target directory (`[server]` config, default `runtime/backups/`). Uses SQLite's online backup so it runs while the server is up; no shutdown, no countdown. New hosted servers get no task unless the host adds one. Failures show on the Schedule page and in the log. No restore tool: restoring stays a stopped-server file copy, documented.
+
+Done when: `poe-web-api` tests (backup opens and holds the data, retention deletes the oldest, a write during backup is fine), web admin build and `cargo xtask openapi --check`, [hosting.md](../../modules/server/docs/hosting.md#backups-updates-and-maintenance) and [server-admin.md](../guides/server-admin.md#scheduled-tasks).
+
+## P10a: static RE of items before C2
+Part 1 of [P10](items-stats.md#p10-items-inventory-equipment-weapon-sets-levels-opus-for-the-re-sonnet-for-storage-and-web-admin), from Ghidra only: the item blob (reader `0x1425aa790`, serializer `0x1425aa4d0`), and the client's inventory messages and the server's replies from the opcode table and handlers. Results go to a new `docs/protocol/items.md`, each field marked static (unconfirmed until C2). Then check [capture C2's checklist](../re/captures.md#planned-capture-c2-for-gameplay-items-stats-life-flasks-passives-skills-monsters-loot-npcs) against it and add any case the code shows and the checklist misses (rare item, corrupted, socketed, stack split, and so on).
+
+Done when: every byte of the blob's reader has a field or a named unknown, the `poe-proto` decoder sketch parses the serializer's layout in a unit test only if it can be done without captures, and P10's spec lists what is still only C2's to answer.

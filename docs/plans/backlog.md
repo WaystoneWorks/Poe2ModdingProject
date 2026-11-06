@@ -13,7 +13,6 @@ Items kept from the earlier plan, word for word where possible. Ordered work is 
 ## Small server and tooling items
 - Data mods: `config_defaults` layering and server `opcodes` overlays ([../architecture/mod-host.md](../architecture/mod-host.md)).
 - Web admin Players page shows class names.
-- Ban commands in chat and the server CLI (only the web admin today). Fits the command overhaul ([commands.md](commands.md)): `player ban|unban`.
 - Rate limit on `GET /api/v1/mods/{id}/{version}.zip`.
 - Launcher's nested client-hook pin (harmless; bump with the next launcher change).
 - Client loose-file overrides and packet hooks for mods; launcher mod sync against a real server with mods.
@@ -36,6 +35,14 @@ Facts: [world-travel.md](../re/world-travel.md).
 - Paths no tested job uses: listed in [../status/terrain.md](../status/terrain.md#not-ported-yet).
 - The 39 combinations where the client errors on every seed; Sanctum_1-4, IncursionTemple(Present) and HideoutPietyArena have no comparable client result.
 - Whether official servers make the world-map seed non-zero (needs a traced official town load).
+
+## Suggested in S1, not chosen
+The user passed on these on 2026-11-05; offer them again only with a new reason.
+- Panic handling (no `catch_unwind` in the server, 131 `unwrap`/`expect`/`panic!` in non-test instance-server code); fuzzing the decoders; a reconnect game test.
+- A headless `poe-bot` client, a game test of the real client with a second player (remote blob, late join, `summon`, `tp <player>`, none run in game), a load test.
+- C2 helper (overlay checklist with local markers); the game-data half of P10; the P11 rolling engine and P15 tree rules ahead of their steps.
+- `cargo xtask game-test all`; golden entry diff; non-admin and Console game tests.
+- Log rotation; a server, hook and launcher release (server 4, hook 10, launcher 5 commits past `server-v0.6.1`, `hook-v0.5.3`, `v0.7.1`).
 
 ## Unconfirmed in game
 Create/delete refusal texts, stale-login 0x0f and rate-limit messages; CharacterList unknown fields (+0x4f, +0x68, +0x74, +0x76; need a capture of a shapeshifted or supporter character); remote play from a second physical machine; a live client-hash update flow with renumbered opcodes (not derived automatically).
