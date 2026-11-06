@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.hotfix1`, the only supported build), for personal and educational modding. This repo is the hub (docs, RE notes, scripts, `xtask`); the code is in submodules under `modules/` ([docs/overview.md](docs/overview.md)).
+A Rust private server for **Path of Exile 2, client 0.5.5f** (`0.5.5f`, the only supported build), for personal and educational modding. This repo is the hub (docs, RE notes, scripts, `xtask`); the code is in submodules under `modules/` ([docs/overview.md](docs/overview.md)).
 
 **Start here:** [docs/PLAN.md](docs/PLAN.md) is the ordered plan and status; each step's spec is in `docs/plans/`. Read only what your task needs: [docs/index.md](docs/index.md) maps the rest, [agent-workflow.md](docs/guides/agent-workflow.md) has working rules, [decisions.md](docs/decisions.md) has settled choices.
 
@@ -13,7 +13,7 @@ A Rust private server for **Path of Exile 2, client 0.5.5e Hotfix 1** (`0.5.5e.h
 - No hardcoding: opcodes in `modules/protocol/opcodes/<version>/*.toml`; ports and start areas in `modules/server/config/server.toml`; client builds in `modules/protocol/versions/<version>.toml`; game data from `poe-data`; subsystems behind traits.
 - External tools in `third_party/`; generated data in git-ignored `dumps/<version>/`; local files in `runtime/`.
 - Commit each working step, submodules first, then the hub pointer. Push commits without asking: `git push origin main`, never `--all` or `--mirror`. Ask before release tags. Releases build only in CI.
-- Ghidra: `/0.5.5e.hotfix1/PathOfExileSteam.exe`. Every RE address in docs and comments is a Hotfix 1 address.
+- Ghidra: `/0.5.5f/PathOfExileSteam.exe`. Every RE address in docs and comments is a 0.5.5f address.
 - Allowed without asking: Steam, the server and the client for private-server tests; x64dbg on the `GameFiles/` client in private sessions. Ask for official captures.
 
 ## Session rules

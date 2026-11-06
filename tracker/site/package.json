@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "description": "Progress tracker site of the PoE2 0.5.5e.hotfix1 private server (docs/guides/tracker.md)",
+  "description": "Progress tracker site of the PoE2 0.5.5f private server (docs/guides/tracker.md)",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

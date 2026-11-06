@@ -9,7 +9,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
-| V1 | Game update 0.5.5f: the whole project moves to the new build | O | [pre-p10.md](plans/pre-p10.md#v1-game-update-055f) | updated Steam install |
+| V1 | Game update 0.5.5f: the whole project moves to the new build (in progress, NOT GATED, state in the spec) | O | [pre-p10.md](plans/pre-p10.md#v1-game-update-055f) | updated Steam install |
 | B4 | Slight snaps when interacting with checkpoints and waypoints | O | [pre-p10.md](plans/pre-p10.md#b4-snaps-at-checkpoints-and-waypoints) | V1 |
 | U4 | Launcher and web admin layout: reviewer loop to 9.5/10 with a consistency score, News "Read more" bug, version label on the left | O | [pre-p10.md](plans/pre-p10.md#u4-launcher-and-web-admin-layout) | |
 | U5 | DLL overlay layout: reviewer loop to 9.5/10 | O | [pre-p10.md](plans/pre-p10.md#u5-dll-overlay-layout) | V1 |
@@ -37,7 +37,6 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | What | When |
 |---|---|
-| Let Steam update to 0.5.5f (V1 copies from it; Claude never touches the install) | before V1 |
 | Capture **C2** (gameplay, 30-40 minutes, [checklist](re/captures.md#planned-capture-c2-for-gameplay-items-stats-life-flasks-passives-skills-monsters-loot-npcs)); it also covers the movement gaps #6 and #7 | after CT, before P10 |
 | G-PARTY capture (a friend answers party invite and trade request) | before P18 |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |

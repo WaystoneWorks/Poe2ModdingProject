@@ -3,7 +3,7 @@
 
 Usage: pathplans.py <poe-hook.log> <out.json>. Each plan has start, goal, params, level (from the
 Positioned dump), path, prev/cur client positions (cells) and, with the +0x1e0..+0x290 dump, the
-line state: active, current cell, point p (FUN_141ec83d0) and flag (FUN_141b87580). Runs: a
+line state: active, current cell, point p (FUN_141ed6400) and flag (FUN_141b95790). Runs: a
 game-test scenario with [client_env] POE_HOOK_PATH_LOG = "1" and POE_HOOK_MOVEMENT_LOG = "1".
 The tile hash in the output is the cliffs run (G1_1 seed 1); change it for another area."""
 import json,re,sys

@@ -71,7 +71,7 @@ tile	client 0x1a2b3c4d  server 0x5e6f7081
 doodad	client 0x11111111  server 0x11111111
 reason	tile hash differs
 dest	previous instance 7 (G1_1 Riverbank)
-report	terrain-mismatch build=0.5.5e.hotfix1 server=<git describe> area=G1_2 seed=123456789 topo=3 orient=1 tile=1a2b3c4d/5e6f7081 doodad=11111111/11111111 reason=tile_hash_differs
+report	terrain-mismatch build=0.5.5f server=<git describe> area=G1_2 seed=123456789 topo=3 orient=1 tile=1a2b3c4d/5e6f7081 doodad=11111111/11111111 reason=tile_hash_differs
 end
 ```
 `none` stands for hashes the client never sent. The DLL (`poe_hook_shared::alert::parse_terrain_mismatch`, `devlink.rs`) exports the client's layout, answers with a Command `ack export <folder>` (or `ack export failed <why>`) and shows the popup ([client-dll.md](../architecture/client-dll.md#alert-popups)). The server waits 3 s for the ack. Alerts are sent once; a lost datagram means no popup (the kick still happens).

@@ -16,7 +16,7 @@ Steps P10 (items, inventory, equipment, levels) and P11 (currency) of [../PLAN.m
 
 ## P10: items, inventory, equipment, weapon sets, levels (Opus for the RE, Sonnet for storage and web admin)
 1. **RE (Opus, re-tracer) before code**, from capture C2 ([../re/captures.md](../re/captures.md)) and the client:
-   - The item blob inside AddInventory's item list (reader `0x1425aa790`, serializer `0x1425aa4d0`) and in any separate item messages: base item (BaseItemTypes key or hash), rarity, item level, quality, name words, mods (Mods row and values), implicits, enchants, socketables, corruption, identified, stack size, flags, unique id.
+   - The item blob inside AddInventory's item list (reader `0x1425bab20`, serializer `0x1425ba860`) and in any separate item messages: base item (BaseItemTypes key or hash), rarity, item level, quality, name words, mods (Mods row and values), implicits, enchants, socketables, corruption, identified, stack size, flags, unique id.
    - Client to server messages: pick up to cursor, place, swap with cursor, equip and unequip, split a stack, weapon set swap, destroy, drop on the ground; and the server's replies (add, remove, move, inventory update).
    - Where the player's equipment appears in the player's AddObject blob (other players' visuals; the "remote equipment visuals" item of the old plan).
    - Results go to `docs/protocol/items.md` (new protocol doc, one owner).

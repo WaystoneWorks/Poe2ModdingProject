@@ -2,7 +2,7 @@
 """Official 0x2f4 tick timing: body sizes, rate, spacing, 0x2f5 count and stall catch-up.
 
 Usage: python3 scripts/re/tick_timing.py [packets.jsonl ...]
-Default: every dumps/0.5.5e.hotfix1/captures/official/*/packets.jsonl.
+Default: every dumps/0.5.5f/captures/official/*/packets.jsonl.
 Times are the DLL's receive times (ms). Lag = (t - t0) - 33 * i within one area
 (segments split at gaps > 2 s). A stall line is (gap ms, ticks in the burst right after,
 lag before, lag 40 ticks later): equal lags mean the server sent every missed frame.
@@ -35,7 +35,7 @@ def ticks(path):
 
 
 def main():
-    paths = sys.argv[1:] or sorted(glob.glob("dumps/0.5.5e.hotfix1/captures/official/*/packets.jsonl"))
+    paths = sys.argv[1:] or sorted(glob.glob("dumps/0.5.5f/captures/official/*/packets.jsonl"))
     for path in paths:
         name = path.split("/")[-2]
         ts, lens, f5 = ticks(path)

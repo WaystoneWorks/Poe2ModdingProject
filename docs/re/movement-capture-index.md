@@ -3,7 +3,7 @@
 Frame indexes of official captures used for the movement port; the protocol facts are in [movement.md](../protocol/movement.md).
 
 ## Capture index: 2026-10-20 session
-`dumps/0.5.5e.hotfix1/captures/official/2026-10-20_18-41-14_336/` (13 299 instance messages, 4 765 frames, 33 min; `check_capture`: every movement message decodes with 0 errors and 0 leftover bytes; only `AddInventory` items mismatch). Frame = capture frame, `T` = tap, `H` = hold, the number is the frames Space was down:
+`dumps/0.5.5f/captures/official/2026-10-20_18-41-14_336/` (13 299 instance messages, 4 765 frames, 33 min; `check_capture`: every movement message decodes with 0 errors and 0 leftover bytes; only `AddInventory` items mismatch). Frame = capture frame, `T` = tap, `H` = hold, the number is the frames Space was down:
 
 | Item | What is there |
 |---|---|
@@ -18,7 +18,7 @@ Frame indexes of official captures used for the movement port; the protocol fact
 | 10 held click + Space | inside holds: f3607 H20 (sprint cut short, ends f3643), f3742 H155 (sprint 3759-3897), f4105 H52, f4178 T14, f4216 H64, f4484 H100 |
 
 ## Capture index: 2026-11-02 session
-`dumps/0.5.5e.hotfix1/captures/official/2026-11-02_18-31-34_336/`: 27 episodes. Frame = capture frame.
+`dumps/0.5.5f/captures/official/2026-11-02_18-31-34_336/`: 27 episodes. Frame = capture frame.
 
 | Item | What is there |
 |---|---|

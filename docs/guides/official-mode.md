@@ -24,7 +24,7 @@ In official mode the DLL sets its **read-only latch** at start; it never turns o
 - **It can be detected.** Anti-cheat and the terms of service can treat any injected DLL as a violation, even a passive one. The game can also load server-delivered code modules that inspect the process.
 - **Your account is at risk**: a warning, temporary or permanent ban is possible. Do not use official mode on an account you care about or with purchases. A throw-away account is safer, although the terms apply to it too.
 - **Captures contain your play**: your character's data, inventory, chat and names of nearby players. Only the login messages are redacted. Never post a capture or log without reading it, and never attach one to a public issue.
-- **The hook is built for one client build.** With an unverified build only the pure observers start. Use the build named in `modules/protocol/versions/0.5.5e.hotfix1.toml` and update your `GameFiles/` copy when the game is patched.
+- **The hook is built for one client build.** With an unverified build only the pure observers start. Use the build named in `modules/protocol/versions/0.5.5f.toml` and update your `GameFiles/` copy when the game is patched.
 - The launcher offers this mode only as the explicit **Official (read-only)** entry of its game version dropdown, after the warning is accepted ([From the launcher](#from-the-launcher)); it never uses it by itself.
 
 If that is not acceptable, stop here: playing through Steam's own untouched install is unaffected by this project.
@@ -76,6 +76,6 @@ The [launcher](launcher.md#official-read-only) offers the same mode: choose **Of
 |---|---|
 | The client exits at once, log says `Unable to init Steam API` | Steam is not running |
 | The login screen shows the private server's realm or the account-name screen | `GameFiles/` was last deployed for the private server: run `deploy-client --official` again |
-| Overlay missing or features off, `NOT verified` in the log | The game build differs from the one the hook knows: update `GameFiles/` to the build in `modules/protocol/versions/0.5.5e.hotfix1.toml`, or wait for a hook release ([new-game-version.md](new-game-version.md)) |
+| Overlay missing or features off, `NOT verified` in the log | The game build differs from the one the hook knows: update `GameFiles/` to the build in `modules/protocol/versions/0.5.5f.toml`, or wait for a hook release ([new-game-version.md](new-game-version.md)) |
 | The game freezes for seconds when monsters appear | `entity_trace` from an earlier private session is on; set it to `false` in `poe-hook.toml` |
 | You were disconnected or warned | Stop using the mode; see the risk section |

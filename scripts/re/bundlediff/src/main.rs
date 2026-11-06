@@ -1,6 +1,8 @@
 //! Content diff of two client installs' Bundles2 folders (two game builds): prints one line per
-//! virtual file that was added, removed or changed (`changed<TAB>path<TAB>old size<TAB>new size`),
-//! a summary on stderr. Only files whose index record (bundle, offset, size) or bundle file size
+//! virtual file that was added, removed or changed (`changed<TAB>path<TAB>old size<TAB>new size`;
+//! `unread<TAB>path` when its bundle is not installed on one side), a summary on stderr. Only files
+//! whose index record (bundle, offset, size) or bundle file size
+//!
 //! differ are read and compared by SHA-256, so a hotfix takes minutes, not a 150 GB read.
 //!
 //! Usage (docs/guides/new-game-version.md):
@@ -52,22 +54,33 @@ fn main() {
     let mut old_by_bundle: HashMap<u32, Vec<(u64, usize)>> = HashMap::new();
     for v in cand.values() { for &(h, oi, _) in v { old_by_bundle.entry(o.idx.files[oi].bundle_index).or_default().push((h, oi)); } }
     let mut old_hash: HashMap<u64, [u8; 32]> = HashMap::new();
+    let mut unread = vec![]; // the bundle is not on disk on one side (optional content not installed)
     for (bi, v) in &old_by_bundle {
-        let b = BundleParser.parse(&fs::read(o.dir.join(format!("Bundles2/{}.bundle.bin", o.idx.bundles[*bi as usize].name))).unwrap()).unwrap();
+        let Ok(raw) = fs::read(o.dir.join(format!("Bundles2/{}.bundle.bin", o.idx.bundles[*bi as usize].name))) else {
+            for &(h, _) in v { unread.push(n.paths.get(&h).cloned().unwrap_or(format!("{h:016x}"))); }
+            continue;
+        };
+        let b = BundleParser.parse(&raw).unwrap();
         for &(h, oi) in v { let f = &o.idx.files[oi]; old_hash.insert(h, Sha256::digest(b.read_range(f.offset as usize, f.size as usize).unwrap()).into()); }
     }
     let mut changed = vec![];
     for (bi, v) in &cand {
-        let b = BundleParser.parse(&fs::read(n.dir.join(format!("Bundles2/{}.bundle.bin", n.idx.bundles[*bi as usize].name))).unwrap()).unwrap();
+        let Ok(raw) = fs::read(n.dir.join(format!("Bundles2/{}.bundle.bin", n.idx.bundles[*bi as usize].name))) else {
+            for &(h, _, _) in v { if old_hash.contains_key(&h) { unread.push(n.paths.get(&h).cloned().unwrap_or(format!("{h:016x}"))); } }
+            continue;
+        };
+        let b = BundleParser.parse(&raw).unwrap();
         for &(h, oi, ni) in v {
+            if !old_hash.contains_key(&h) { continue; }
             let f = &n.idx.files[ni];
             let nh: [u8; 32] = Sha256::digest(b.read_range(f.offset as usize, f.size as usize).unwrap()).into();
             if old_hash[&h] != nh { changed.push(format!("{}\t{}\t{}", n.paths.get(&h).cloned().unwrap_or(format!("{h:016x}")), o.idx.files[oi].size, f.size)); }
         }
     }
-    added.sort(); removed.sort(); changed.sort();
+    added.sort(); removed.sort(); changed.sort(); unread.sort();
     for p in &added { println!("added\t{p}"); }
     for p in &removed { println!("removed\t{p}"); }
     for p in &changed { println!("changed\t{p}"); }
-    eprintln!("added {} removed {} changed {}", added.len(), removed.len(), changed.len());
+    for p in &unread { println!("unread\t{p}"); }
+    eprintln!("added {} removed {} changed {} unread {}", added.len(), removed.len(), changed.len(), unread.len());
 }

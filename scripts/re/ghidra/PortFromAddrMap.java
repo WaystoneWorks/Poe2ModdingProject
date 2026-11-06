@@ -3,7 +3,7 @@
 // function, their signatures and plate/repeatable comments, and the comments inside functions.
 // Run it on the NEW program (the MCP's run_script_inline or the Script Manager), then save.
 // Arguments: <addr_map.tsv> <old program path in the project>, for example
-//   dumps/0.5.5e.hotfix1/addr_map.tsv /PathOfExileSteam.exe
+//   dumps/0.5.5f/addr_map.tsv /PathOfExileSteam.exe
 // Functions outside .pdata (leaf functions, thunks) are placed with a neighbour's delta and
 // accepted only when their first bytes are equal; what cannot be placed is listed. Comments
 // outside functions are not ported: in the old program they were all analysis output (RTTI,

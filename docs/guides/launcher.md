@@ -107,14 +107,14 @@ The Steam download for the official build is the Library (Game) page; *Download 
 
 ### Install in detail
 
-The version file is `modules/protocol/versions/<version>.toml` of Poe2Protocol (the launcher embeds a byte-identical copy kept by `cargo xtask versions`). For 0.5.5e Hotfix 1: app 2694490, depot 2694491 manifest 4712263798014036045 (content), depot 2694492 manifest 4973272861086296374 (Windows exe), in that order into one directory (exe over content).
+The version file is `modules/protocol/versions/<version>.toml` of Poe2Protocol (the launcher embeds a byte-identical copy kept by `cargo xtask versions`). For 0.5.5f: app 2694490, depot 2694491 manifest 4712263798014036045 (content), depot 2694492 manifest 4973272861086296374 (Windows exe), in that order into one directory (exe over content).
 
 - **DepotDownloader 3.4.0**, the self-contained release (no .NET), is fetched from its GitHub release into the launcher's data directory, pinned by version and SHA-256 (`versions/depotdownloader.toml`); a mismatch deletes the download.
 - It runs **once for both depots** (`-app 2694490 -depot 2694491 -manifest ... -depot 2694492 -manifest ... -username U -dir DIR`), so the Steam login and Guard code are asked once. `-no-mobile` is added by default so a typed code is requested instead of the mobile-app confirmation (Settings). `-remember-password` is added only if you tick the box (DepotDownloader then keeps its own login token; the launcher never stores the password).
 - **The Steam password** is typed in the launcher, written once to the downloader's standard input when it asks, then wiped from memory. Not on a command line, not logged, not saved. Steam Guard prompts are detected in the output (they have no line end) and shown as a code box.
 - **Never the Steam install.** The launcher does not read or write `~/.local/share/Steam/steamapps/common/Path of Exile 2` or `compatdata/2694490`; an install directory inside any Steam library is refused. The default is `<data>/poe2-launcher/game/<version>` (`~/.local/share/poe2-launcher/...`).
 - **Pause and resume.** *Pause* kills DepotDownloader (written files stay); *Resume* reruns the same command with `-validate`, fetching what is missing, then verifies. The password is never kept (Resume asks again unless the Steam login is remembered). Pause survives leaving the page, not closing the launcher.
-- **Disk space.** Before every install or repair the launcher compares the install disk's free space with what is missing (the version file's `[verify] min_bytes` plus 16 %, about 174 GB for 0.5.5e Hotfix 1); not enough disables the buttons and says how much to free.
+- **Disk space.** Before every install or repair the launcher compares the install disk's free space with what is missing (the version file's `[verify] min_bytes` plus 16 %, about 174 GB for 0.5.5f); not enough disables the buttons and says how much to free.
 - **Verification** afterwards (and on *Verify files*): file count and total size floors, key files with exact sizes, SHA-256 of `PathOfExileSteam.exe`. **The reference values were measured on the `GameFiles/` copy in this repository, not on a launcher download**, so the executable checksum is a warning (not a failure) until `exe_sha256_enforce = true` is set after a real install matched. *Repair* re-runs the download with `-validate`.
 
 ## Host a server

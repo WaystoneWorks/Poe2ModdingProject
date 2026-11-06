@@ -4,7 +4,7 @@ Items kept from the earlier plan, word for word where possible. Ordered work is 
 
 ## Movement follow-ups (not blocking; movement is gated by user test 6)
 - Rule tests for: blocked step stops steering, clip keeps rate, early unlimited roll turn, sprint-off key without a 0x64, no turn-around at the sprint switch, no Bonk when the blocked re-aim finds no path.
-- Read why the early unlimited roll turn is 0.15 s (clientsim `roll_turn_to_target`: act `+0x244`, 0x1419746f5..0x141974808, 0x141d380a0) and which path listener turns off waypoint facing for key walks (`0x141dcc110` `FUN_140ec6320`).
+- Read why the early unlimited roll turn is 0.15 s (clientsim `roll_turn_to_target`: act `+0x244`, 0x14197fa55..0x14197fb68, 0x141d44b20) and which path listener turns off waypoint facing for key walks (`0x141dd9200` `FUN_140ecedc0`).
 - A second crazy-keys seed with held clicks.
 - `runtime/replay/ckruns.py`/`ckscore.sh` compare one frame off and linediv mixes areas (the hook frame counter restarts per area: split the hook log first).
 - Open items of the port (d): seg1 f3576 clipped coast one cell; f3669-3724 punch `0x80410041` root motion (taken by P16 [skills.md](skills.md)); f3786-3915 one cell from a cursor roll during a held click (first heading source unread, [../re/movement-roll.md](../re/movement-roll.md#facing-event-first-heading-checked-by-replay)); stat 15916 omission and conditional speed stats: the calculator ([stats.md](../architecture/stats.md)) now supplies increased and final movement speed; `movement_velocity_+%_when_X` conditions need buff state (P10/P13); the omission pattern of 15916 is still unexplained and not tied to speed; `own_replay`/`sim_replay` take travel 46.0 and level 4 by hand (tools only; the server reads game data).
@@ -30,7 +30,7 @@ Facts: [world-travel.md](../re/world-travel.md).
 - `r4-areas` failed once (client exited during `G3_6_1`'s load, "client disconnected during terrain generation" about 4 s after forcing the layout) and passed on rerun: unexplained, timing suspected, not caused by C1.
 
 ## Generator inputs the batches hold fixed (needed for "any seed" in real play)
-- Area level: G3_10's level 75+ path, the trial's rooms (UltimatumPlugin `0x141f101e0`).
+- Area level: G3_10's level 75+ path, the trial's rooms (UltimatumPlugin `0x141f1e2c0`).
 - League and session state: roll outcomes, Incursion and extra-feature rooms, `unique<N>` lettered tags.
 - Paths no tested job uses: listed in [../status/terrain.md](../status/terrain.md#not-ported-yet).
 - The 39 combinations where the client errors on every seed; Sanctum_1-4, IncursionTemple(Present) and HideoutPietyArena have no comparable client result.

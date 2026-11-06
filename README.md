@@ -1,6 +1,6 @@
 # Poe2ModdingProject
 
-A private server for **Path of Exile 2 (client 0.5.5e Hotfix 1)**, written in Rust and built for client and server modding. It is a personal, educational project in early development: login, accounts, multiplayer towns, server-generated areas, a launcher and a web admin work; combat, monsters and items do not exist yet.
+A private server for **Path of Exile 2 (client 0.5.5f)**, written in Rust and built for client and server modding. It is a personal, educational project in early development: login, accounts, multiplayer towns, server-generated areas, a launcher and a web admin work; combat, monsters and items do not exist yet.
 
 This repository is the hub: docs, reverse-engineering notes and dev tooling. The code lives in submodules under `modules/`.
 

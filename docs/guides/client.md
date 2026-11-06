@@ -2,13 +2,13 @@
 
 How a player gets the game client onto a private server of this project: through the launcher, or by hand with `cargo xtask` on Linux (Proton) or Windows. Running a server for others: [hosting.md](../../modules/server/docs/hosting.md). Developer commands: [setup.md](setup.md).
 
-**Unofficial.** This project is not affiliated with or endorsed by Grinding Gear Games. No game files are distributed: you need your own legal copy of Path of Exile 2 on the supported build (**0.5.5e Hotfix 1**; build and executable checksum in `modules/protocol/versions/0.5.5e.hotfix1.toml`). The client hook is a DLL loaded into the game; the anti-cheat may detect it. Use it only for the private server and never on an account you care about; to observe an official session read [official-mode.md](official-mode.md) first ([overview](#going-back-to-the-official-game)). See the [disclaimer](../../README.md#disclaimer).
+**Unofficial.** This project is not affiliated with or endorsed by Grinding Gear Games. No game files are distributed: you need your own legal copy of Path of Exile 2 on the supported build (**0.5.5f**; build and executable checksum in `modules/protocol/versions/0.5.5f.toml`). The client hook is a DLL loaded into the game; the anti-cheat may detect it. Use it only for the private server and never on an account you care about; to observe an official session read [official-mode.md](official-mode.md) first ([overview](#going-back-to-the-official-game)). See the [disclaimer](../../README.md#disclaimer).
 
 ## What gets installed
 
 | Piece | What it is | Where |
 |---|---|---|
-| The game (0.5.5e Hotfix 1) | Your own copy of the client files | a folder you choose, never Steam's own install folder |
+| The game (0.5.5f) | Your own copy of the client files | a folder you choose, never Steam's own install folder |
 | `version.dll` | The hook loader (our `poe_hook.dll`), plus `poe_hook_core.dll` (features and overlay) | next to `PathOfExileSteam.exe` |
 | `poe-hook.toml` | Hook config: mode, login mode, trusted servers | next to the exe |
 | `gateway_list.txt` | Realm list, replaced by one entry pointing at your server (original kept as `gateway_list.txt.orig`) | next to the exe |
@@ -19,7 +19,7 @@ Everything the deploy changes is inside the game copy; `cargo xtask revert-clien
 
 ## Option 1: through the launcher (recommended)
 
-The launcher downloads client 0.5.5e Hotfix 1 from Steam with your own Steam login into its own folder, installs the hook, writes the config for the server you pick and starts the game at its login screen. Launcher install, update, one-time set-up (Linux keyring, Proton) and the flow: [launcher.md](launcher.md).
+The launcher downloads client 0.5.5f from Steam with your own Steam login into its own folder, installs the hook, writes the config for the server you pick and starts the game at its login screen. Launcher install, update, one-time set-up (Linux keyring, Proton) and the flow: [launcher.md](launcher.md).
 
 1. Get the launcher: Linux AppImage or Windows installer from the Poe2Launcher releases ([launcher.md](launcher.md#download-install-and-update)).
 2. **Servers**: add your server's web API address (from the server owner, for example `https://play.example.org`) and select it.
@@ -34,7 +34,7 @@ For developers. You need a hub checkout with submodules ([setup.md](setup.md#clo
 
 ### The game files
 
-Copy a complete 0.5.5e Hotfix 1 install into `GameFiles/` (the folder with `PathOfExileSteam.exe` and `Bundles2`). Copy it, never point the tooling at Steam's folder: the deploy replaces `gateway_list.txt` and adds DLLs, which would change your real install. The copy must match the server's `[game] version`. Git ignores `GameFiles/`.
+Copy a complete 0.5.5f install into `GameFiles/` (the folder with `PathOfExileSteam.exe` and `Bundles2`). Copy it, never point the tooling at Steam's folder: the deploy replaces `gateway_list.txt` and adds DLLs, which would change your real install. The copy must match the server's `[game] version`. Git ignores `GameFiles/`.
 
 ### Linux (Proton)
 

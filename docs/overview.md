@@ -1,6 +1,6 @@
 # Project overview
 
-The Path of Exile 2 (client 0.5.5e Hotfix 1) private server project spans nine repositories under one GitHub owner ([`WaystoneWorks`](https://github.com/WaystoneWorks)). Rules for all of them: [../CLAUDE.md](../CLAUDE.md).
+The Path of Exile 2 (client 0.5.5f) private server project spans nine repositories under one GitHub owner ([`WaystoneWorks`](https://github.com/WaystoneWorks)). Rules for all of them: [../CLAUDE.md](../CLAUDE.md).
 
 ## The repositories
 

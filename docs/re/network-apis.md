@@ -1,4 +1,4 @@
-# Winsock APIs of the 0.5.5e Hotfix 1 client
+# Winsock APIs of the 0.5.5f client
 
 Which calls `PathOfExileSteam.exe` (image base `0x140000000`) uses to open network connections; this decides what the DLL's network guard hooks ([../architecture/client-dll.md](../architecture/client-dll.md#network-guard-connect-apis), audit S-10).
 
@@ -10,24 +10,24 @@ Which calls `PathOfExileSteam.exe` (image base `0x140000000`) uses to open netwo
 - The `ConnectEx` GUID {25a207b9-ddf3-4660-8ee9-76e58c74063e}, the `AcceptEx` and `GetAcceptExSockaddrs` GUIDs and the strings `ConnectEx`, `WSAConnect*`, `mswsock` do not occur in the file (searched as bytes and as code immediates).
 - Runtime (`scripts/test-run.sh` on our private server, guard hooking all of these APIs): every connection in `GameFiles/poe-hook.log` has `api=connect`, the guard never logged `ConnectEx ... hooked`, and blocked official-service attempts (shop and telemetry hosts, also the IPv6 family as `0.0.0.0:0`) are `blocked connect`.
 
-## `connect` (`ws2_32!connect`, import slot `0x142e89f08`)
-Five call sites: `0x142198e43`, `0x142715e08`, `0x142b58076`, `0x142b74684`, `0x142b74b40`.
+## `connect` (`ws2_32!connect`, import slot `0x142e9cf08`)
+Five call sites: `0x1421a8cc3`, `0x142727f88`, `0x142b6a2f6`, `0x142b86904`, `0x142b86dc0`.
 
 | Site | Used for |
 |---|---|
-| `0x142715e08` | the game's login and instance TCP connections (`127.0.0.1:20481`, `127.0.0.1:6112`) |
-| `0x142b58076` | local helper connections (loopback ephemeral ports) |
-| `0x142b74b40` | connection attempts to external hosts (refused in private mode: `23.220.x.x:443`, non-IPv4 families); purpose not analysed |
+| `0x142727f88` | the game's login and instance TCP connections (`127.0.0.1:20481`, `127.0.0.1:6112`) |
+| `0x142b6a2f6` | local helper connections (loopback ephemeral ports) |
+| `0x142b86dc0` | connection attempts to external hosts (refused in private mode: `23.220.x.x:443`, non-IPv4 families); purpose not analysed |
 
-`0x142198e43` and `0x142b74684` did not run in the test session.
+`0x1421a8cc3` and `0x142b86904` did not run in the test session.
 
-## `WSAIoctl` (import slot `0x142e89f58`)
+## `WSAIoctl` (import slot `0x142e9cf58`)
 Two call sites, neither asks for an extension function:
 
 | Site | Control code | Meaning |
 |---|---|---|
-| `0x142b4b377` | `0x4004747b` (then `setsockopt(SOL_SOCKET, 0x1001)` on success) | not identified; not `SIO_GET_EXTENSION_FUNCTION_POINTER` (`0xC8000006`), no GUID passed |
-| `0x142b7609b` | `0x98000004` | `SIO_KEEPALIVE_VALS` (12-byte struct) |
+| `0x142b5d5f7` | `0x4004747b` (then `setsockopt(SOL_SOCKET, 0x1001)` on success) | not identified; not `SIO_GET_EXTENSION_FUNCTION_POINTER` (`0xC8000006`), no GUID passed |
+| `0x142b8831b` | `0x98000004` | `SIO_KEEPALIVE_VALS` (12-byte struct) |
 
 ## Other ways a socket could be opened
 `GetProcAddress` and `LoadLibrary` are imported, so code could resolve any API at run time; the guard therefore also hooks `WSAConnectByName*`, `WSAConnectByList` and `ConnectEx` (through `WSAIoctl`). Not covered: raw `NtDeviceIoControlFile`/AFD sockets. Under Proton `ws2_32` does not export `WSAConnectByList` (the guard logs a warning and skips it).

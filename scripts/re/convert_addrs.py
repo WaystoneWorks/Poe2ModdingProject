@@ -13,7 +13,7 @@ deltas):
   same instruction in the moved function is read in the new exe, and its target is the new
   address (all references must agree); else a unique match of the old bytes near the address.
 Addresses it cannot place are left as they are and listed (`--skip` keeps line ranges that are
-already in the new build's addresses). Used for 0.5.5e -> 0.5.5e Hotfix 1 (2026-10-29).
+already in the new build's addresses). Used for 0.5.5e -> 0.5.5f (2026-10-29).
 """
 import argparse
 import bisect

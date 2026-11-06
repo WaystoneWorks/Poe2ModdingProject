@@ -1,6 +1,6 @@
 # Documentation index
 
-Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules: [../CLAUDE.md](../CLAUDE.md). Repositories: [overview.md](overview.md). Start with [guides/setup.md](guides/setup.md), then [architecture/overview.md](architecture/overview.md). Contributing, security, legal: [../CONTRIBUTING.md](../CONTRIBUTING.md), [../SECURITY.md](../SECURITY.md), [disclaimer](../README.md#disclaimer).
+Private server for Path of Exile 2 (client **0.5.5f**), in Rust. Rules: [../CLAUDE.md](../CLAUDE.md). Repositories: [overview.md](overview.md). Start with [guides/setup.md](guides/setup.md), then [architecture/overview.md](architecture/overview.md). Contributing, security, legal: [../CONTRIBUTING.md](../CONTRIBUTING.md), [../SECURITY.md](../SECURITY.md), [disclaimer](../README.md#disclaimer).
 
 ## Guides
 | Document | Contents |
@@ -62,7 +62,7 @@ Private server for Path of Exile 2 (client **0.5.5e Hotfix 1**), in Rust. Rules:
 | [re/movement-capture-index.md](re/movement-capture-index.md) | Movement capture indexes (2026-10-20, 2026-11-02 sessions) |
 | [re/movement-sprint.md](re/movement-sprint.md) | Exact port: sprint, end, coast |
 | [re/world-travel.md](re/world-travel.md) | Transitions, waypoints, checkpoints, world panel: client facts |
-| [re/time-scale.md](re/time-scale.md) | Slowing the simulation with `0x2f5` (`time scale`) |
+| [re/time-scale.md](re/time-scale.md) | Slowing the simulation with `0x2f8` (`time scale`) |
 | [re/terrain/README.md](re/terrain/README.md) | Terrain generator overview |
 | [re/terrain/tgr.md](re/terrain/tgr.md) | `.tgr` areas |
 | [re/terrain/dungeon.md](re/terrain/dungeon.md) | `.dgr` areas |
