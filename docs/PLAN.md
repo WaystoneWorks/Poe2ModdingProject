@@ -36,7 +36,6 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | What | When |
 |---|---|
-| Decide on releases for 0.5.5f: launcher players need them (ask before tags) | now |
 | Official comparison on 0.5.5f ([new-game-version.md](guides/new-game-version.md), step 6.4) | next official session |
 | Decide whether `GameFiles-0.5.5e.hotfix1/` (141 GB) and `dumps/0.5.5e.hotfix1/ghidra/` may be deleted (the old exe stays) | any time |
 | Capture **C2** (gameplay, 30-40 minutes, [checklist](re/captures.md#planned-capture-c2-for-gameplay-items-stats-life-flasks-passives-skills-monsters-loot-npcs)); it also covers the movement gaps #6 and #7 | after CT, before P10 |
