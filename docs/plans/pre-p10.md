@@ -1,6 +1,59 @@
-# Plan: before P10 (B2, B3, A1, A2, P10a)
+# Plan: before P10 (V1, B4, U4, U5, CT, B2, B3, A1, A2, P10a)
 
-Steps the user chose in S1 on 2026-11-05 from a list of 30 suggestions; order and status are in [../PLAN.md](../PLAN.md). Delete each section when its step is done, and this file with the last one. Suggestions not chosen: [backlog.md](backlog.md#suggested-in-s1-not-chosen).
+Steps the user asked for on 2026-11-06 (V1 to CT) and chose in S1 on 2026-11-05 (B2 to P10a); order and status are in [../PLAN.md](../PLAN.md). Delete each section when its step is done, and this file with the last one. Suggestions not chosen: [backlog.md](backlog.md#suggested-in-s1-not-chosen).
+
+## V1: game update 0.5.5f
+The user reports 0.5.5f adds only supporter packs, so no breaking change is expected; `check-build` proves or disproves that, nothing is assumed. Everything moves to the new build, which becomes the only supported one (as with Hotfix 1, [decisions.md](../decisions.md#scope-and-order)). Read the exact version name from the build.
+
+Follow [new-game-version.md](../guides/new-game-version.md) in order: `revert-client`, replace `GameFiles/` from the updated Steam install (read-only copy; the guide's step is the one allowed change outside the deploy commands), keep the old exe, `bundlediff`, `check-build`, signatures, version file, opcode folder, launcher copy, tests, in-game check. Then the rest of the project: Ghidra import ([re/README.md](../re/README.md#a-new-build-in-the-ghidra-project)), CLAUDE.md's build and Ghidra path, `docs/re/addresses`, and every RE address in docs and comments if the image moved (script it from `addr_map`; say in the docs which case holds). About 295 tracked files name `0.5.5e`: script the change, and separate names of the build from history that must stay. `dumps/<new>/`: regenerate what depends on the exe; move terrain vectors and game data unchanged only if `bundlediff` shows no data or terrain file changed, otherwise rerun the batches.
+
+Done when: `check-build` is clean, unit tests of every module and the guide's in-game check pass, the game tests `smoke`, `walk`, `cliffs`, `dungeon`, `r4-travel`, `washed-up`, `commands`, `overlay-pages` pass, `client_hash` is confirmed, `status = "supported"`. The official comparison (guide step 6.4) waits for the user's next official session. Ask before release tags; players on the launcher need the releases, so raise it at the end.
+
+## B4: snaps at checkpoints and waypoints
+The user sees slight teleports when interacting with checkpoints and waypoints. Their guess: an interaction range issue, the server not agreeing with what the client does. This is movement, so the [exact port principle](../decisions.md#movement-and-world) applies: no DLL snap patch, no fitting.
+
+Facts ([world-travel.md](../re/world-travel.md)): a far click gets official `StartAction` and ack at the click, no `0x64`, `ActionEvent` on arrival; a click from 41.4 cells acted 0.4 s later at 26.0 cells; clicks from up to 25.5 cells act at once.
+
+1. Reproduce and measure: hidden game test with `"dev.drift_check" = true`, click and walk into both object kinds, from near, far and moving, in WASD and mouse mode. Log every `0x64` the server sends and the client's own position per frame (movement log), so each snap has a frame, a distance and a cause. A snap also comes from the checkpoint touch or the interaction's walk, not only range: test each.
+2. Compare with the official sequence in `2026-11-02_18-31-34_336` (parts 1-5 of its checklist), and read the client's interaction walk in Ghidra: stop distance, how it ends, what it sends.
+3. Port the client's rule into `poe-game`, with rules tests from the capture.
+
+Done when: new game tests with `max_drift` show no correction in every case above, and the user's game test confirms (movement keeps user sign-off). Add the facts to world-travel.md.
+
+## U4: launcher and web admin layout
+The user finds the two inconsistent in layout and cluttered, with some things in the wrong order, after several attempts. U1 and U2 scored 9/10 and did not solve it: each reviewed one UI alone and mostly patched what was there. So this step changes the method. The style (Ash & Blood) is fine and stays; this is about layout.
+
+Two fixes first, launcher:
+- News, "Read more" (`modules/launcher/src/pages/News.svelte`): opening a post shrinks the UI, then expands it, and it looks different afterwards. Find the cause and test it.
+- The launcher version in the bottom right goes on the left.
+
+Method:
+1. **Reviewer:** the thread's main agent (Opus 5.5, medium) starts a fresh sub-agent each round (`Agent`, `model: "opus"`, `effort: "medium"`, `run_in_background: false`). It reports only. Its brief: score the whole layout of the launcher and the whole web admin out of 10, every page and dialog, from headless screenshots at several window sizes as well as the source. Separate scores: launcher, web admin, consistency between them (same kind of page has the same skeleton: title, primary action, filters, content, in the same places; same order of information). Name for each page what comes first and whether it should; clutter; suggestions including restructuring, not only patches. Calibration: the user rejected a result scored 9/10, so every score above 8 cites screenshot evidence, and a reviewer does not reward an earlier round's work for being better than before.
+2. **Layout rules first:** before page work, the main agent writes one page in the docs (`docs/architecture/ui-layout.md`): the page skeletons and ordering rules both apps follow. Later fixes apply the rules rather than one page's complaint.
+3. **Replace, do not add:** if a layout could be better another way, change it; do not keep a poor layout and add to it.
+4. **Drastic changes ask first:** navigation structure, merging or splitting pages, moving a page's main content. Show the user a mockup through AskUserQuestion with options and previews, recommended first; build after the answer ([decisions.md](../decisions.md#launcher-and-web-admin)).
+5. Repeat until all three scores reach **9.5/10**. Record each round here.
+
+Seeing the UI: headless only (web admin against a dev server, launcher frontend with its Tauri calls mocked); never the user's browser. Done when: 9.5/10 on all three, launcher `cargo test`, `cargo fmt --check`, frontend tests and build; web admin build and tests, `poe-web-api` tests, `cargo xtask openapi --check`; docs updated. No release unless the user asks.
+
+Scores: none yet.
+
+## U5: DLL overlay layout
+The user finds the overlay a cluttered mess and wants the layout changed; U3's 9/10 did not solve it. Same method as U4, target **9.5/10**: reviewer sub-agent (Opus 5.5, medium) scoring every page from the hidden `overlay-pages` screenshots (`runtime/game-test/overlay-pages/`), layout rules added to `ui-layout.md`, replace rather than add, drastic changes asked first with ASCII mockups. The look (ImGui `StyleColorsDark`, stock font) stays; earlier layout decisions such as "the sidebar stays" may be proposed for change this way, not changed silently. Code: `modules/client-hook/poe-hook-core/src/ui/`.
+
+Done when: 9.5/10, `cargo xtask build-dll`, `cargo test -p poe-hook-shared`, `cargo fmt --check`, `overlay-pages` passes, docs updated.
+
+Scores: none yet.
+
+## CT: capture checklist tool
+For official captures the user records, C2 first: an overlay page showing the checklist with the current step, and keybindings the user sets in the overlay. **Official servers are read-only:** this tool only reads keys and writes local files; nothing is sent, altered or injected, and it works under the read-only latch.
+
+- Actions, each bindable: next step, previous step, add a marker, show or hide the checklist. Bindings live in `logs/poe-hook/overlay.toml`, warn on a conflict, have an unbound state, and must not swallow the key from the game. They are the one exception to "no hotkeys" (that decision covers commands).
+- Each step or marker writes a line to `markers.jsonl` in the session folder: time, capture frame, packet index, step id, step text. The current step survives a client restart in the same session.
+- Checklists are data files, one per capture, starting with C2; [captures.md](../re/captures.md) links to the file so the steps have one owner. Selecting one is a page control.
+- `scripts/re/capture_steps.py <session>`: splits `packets.jsonl` by step, prints a per-step summary and flags steps with no marker.
+
+Done when: unit tests, a hidden private-server game test (bindings by `auto_keys`, markers checked by the script), `official-mode.md` and client-dll.md updated, C2's "note the clock time" wording replaced. Official use is the user's.
 
 ## B2: bad seeds
 The client throws `TerrainGenerationException` on about 3% of generation jobs ([terrain.md](../status/terrain.md#results): 6,695 of 225,400, mostly `G2_10_1`, `MapBackwash`, `G2_1`, `MapUniqueVault`, `G1_12`), and the docs say the game retries with another seed. Our server keeps the seed, so the player waits 30 s and is kicked (`terrain_check::Reason::NoHashes`, `servers/instance-server/src/lib.rs` near line 250). Seen in the game test once in about 10 runs: `client_terrain_generation_failed (no hashes in 30 s)`, `G1_1` seed 3227977988.

@@ -7,6 +7,8 @@ Lasting choices the user made, so nobody asks again. Keep one line per decision 
 - Order (2026-11-04): the step table in [PLAN.md](PLAN.md); R4 goes where it fits best (before life and monsters). Items, stats and the rest no longer wait for R4.
 - PLAN.md is the ordered index; each step's detailed spec is a file in [plans/](plans/backlog.md), deleted when done (2026-11-04). No handoff files (2026-10-31). Agents at 300k hand off to a new T3 thread themselves; Opus delegates routine work to Sonnet (2026-10-31).
 
+- UI layout (2026-11-06): launcher, web admin and overlay reach 9.5/10 from a fresh Opus reviewer, with consistency between launcher and web admin scored; poor layouts are replaced, not added to; drastic overhauls ask the user first. The U1-U3 scores of 9/10 did not satisfy the user.
+
 ## Terrain
 - Goal: 1:1 tile hash, doodad hash and collision grid for every area, topology and orientation in the default league mode (4,508 combinations). The 84 league-mode topologies and the client's server-only spawn scatter in the doodad pass are out of scope.
 - Acceptance: client batches with 50 random seeds; a combination counts when every seed matches or has a documented reason (39 combinations error in the client on every seed). Out of scope: the 10 fixed areas, Incursion temples, effects of successful league rolls. Never special-case an area.

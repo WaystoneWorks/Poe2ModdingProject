@@ -40,7 +40,7 @@ Facts: [world-travel.md](../re/world-travel.md).
 The user passed on these on 2026-11-05; offer them again only with a new reason.
 - Panic handling (no `catch_unwind` in the server, 131 `unwrap`/`expect`/`panic!` in non-test instance-server code); fuzzing the decoders; a reconnect game test.
 - A headless `poe-bot` client, a game test of the real client with a second player (remote blob, late join, `summon`, `tp <player>`, none run in game), a load test.
-- C2 helper (overlay checklist with local markers); the game-data half of P10; the P11 rolling engine and P15 tree rules ahead of their steps.
+- The game-data half of P10; the P11 rolling engine and P15 tree rules ahead of their steps.
 - `cargo xtask game-test all`; golden entry diff; non-admin and Console game tests.
 - Log rotation; a server, hook and launcher release (server 4, hook 10, launcher 5 commits past `server-v0.6.1`, `hook-v0.5.3`, `v0.7.1`).
 
