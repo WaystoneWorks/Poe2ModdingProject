@@ -13,6 +13,11 @@ Facts ([world-travel.md](../re/world-travel.md)): a far click gets official `Sta
 
 Done when: new game tests with `max_drift` show no correction in every case above, and the user's game test confirms (movement keeps user sign-off). Add the facts to world-travel.md.
 
+State (NOT GATED): the arrival rule is ported ([world-travel.md](../re/world-travel.md#clicking-an-object)); `rules.rs` passes 24 of 24. `scripts/game-test/b4-interact.toml` passes for the waypoint (near, far, moving far, moving near: at most 0.71 cells at rest) and checkpoint near. Open:
+- **Checkpoint far fails by one cell:** the client rests on (644,1374), the first cell inside the ring; the server runs one more stop step to (643,1375) (`stop_next_tick` from `end_path`). Theory, unread: the `Interaction` starting in slot 0 on arrival (`Actor_OnPathArrived` `0x141e5c610` -> `0x141e5cbb0`) stops the line at once. Read that, port it, and keep the rule test's end cell exact.
+- **Not run yet:** checkpoint moving far, walking through a checkpoint (`blocking = true`; the server's grid has no object blocking, the client's may: `0x141d1c720`), and WASD mode (scenario variant, also with a key held).
+- Then the official comparison of step 2 and the user's game test.
+
 ## U4: launcher and web admin layout
 The user finds the two inconsistent in layout and cluttered, with some things in the wrong order, after several attempts. U1 and U2 scored 9/10 and did not solve it: each reviewed one UI alone and mostly patched what was there. So this step changes the method. The style (Ash & Blood) is fine and stays; this is about layout.
 
