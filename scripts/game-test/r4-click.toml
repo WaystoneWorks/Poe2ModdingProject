@@ -74,6 +74,13 @@ timeout_s = 60
 name = "transfer to G1_2 seed 1"
 cmd = "transfer G1_2 1"
 
+# Already in G1_2 (the gate): the area check alone passes before the new instance loads.
+[[step]]
+name = "in the new instance"
+expect_log = "player entered the world"
+since = "action"
+timeout_s = 60
+
 [[step]]
 name = "in G1_2"
 expect_state = { area = "G1_2" }

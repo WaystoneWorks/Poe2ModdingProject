@@ -2,7 +2,10 @@
 # click in reach reached from a WASD walk is covered. Cells as in `b4-interact.toml`. After a key walk the client's
 # world position rests off its grid (up to about 1.7 cells), so those checks compare the grid: `same_cell`.
 # With a key held and the object out of reach the client starts no `Interaction` and walks on: only the
-# agreement at rest is checked there.
+# agreement at rest is checked there. "Key kept held": W stays down through a checkpoint click in reach
+# (the checkpoint's area map does not take the keys, the waypoint's World panel does): the client waits
+# for the `Interaction`'s 0.1 s and walks on. The walk passes 10 cells beside the checkpoint: it blocks
+# (`blocking = true`), which the server's grid does not port yet.
 description = "object clicks in WASD mode, also with a key held: no position correction"
 input_mode = "wasd"
 
@@ -385,8 +388,56 @@ keys = "wait:1500"
 name = "checkpoint far, key held: no correction at rest"
 same_cell = true
 
+# No panel to close: the client walked on and acted on nothing (an Escape here pauses the game).
+
 [[step]]
-name = "checkpoint far, key held: close the panel"
+name = "checkpoint near, key kept held: teleport"
+cmd = "teleport 612 1384"
+
+[[step]]
+name = "checkpoint near, key kept held: there"
+expect_state = { near = [612, 1384, 4] }
+
+[[step]]
+name = "checkpoint near, key kept held: settle"
+wait_ms = 800
+
+[[step]]
+name = "checkpoint near, key kept held: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "checkpoint near, key kept held: hold the key"
+keys = "indown:0x57 wait:100"
+
+[[step]]
+name = "checkpoint near, key kept held: click"
+click_cell = [630, 1388]
+
+[[step]]
+name = "checkpoint near, key kept held: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 20
+
+[[step]]
+name = "checkpoint near, key kept held: hold on"
+keys = "wait:3000"
+
+[[step]]
+name = "checkpoint near, key kept held: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "checkpoint near, key kept held: keep holding, release"
+keys = "wait:600 inup:0x57 wait:1500"
+
+[[step]]
+name = "checkpoint near, key kept held: no correction at rest"
+same_cell = true
+
+[[step]]
+name = "checkpoint near, key kept held: close the panel"
 keys = "0x1b wait:800"
 
 [[step]]
