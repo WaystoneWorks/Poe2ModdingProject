@@ -161,6 +161,9 @@ struct Step {
     /// the scenario started) shows
     /// more than this many cells between the server's and the client's position.
     max_drift: Option<f64>,
+    /// `same_cell = true`: fails unless the client's grid cell equals the server's at rest. For a
+    /// WASD stop, where the client's world position rests off its grid and `max_drift` misreads it.
+    same_cell: Option<bool>,
     /// `server` (default), `hook` (GameFiles/poe-hook.log) or `client` (Client.txt).
     log: Option<String>,
     since: Option<String>,
@@ -647,6 +650,10 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
             let from = if s.since.as_deref() == Some("start") { 0 } else { self.action_log_at };
             return self.check_drift(max, from);
         }
+        if s.same_cell == Some(true) {
+            std::thread::sleep(Duration::from_millis(1500));
+            return self.check_same_cell();
+        }
         if let Some(c) = &s.click_cell {
             let [x, y] = c[..] else { bail!("click_cell needs [x, y]") };
             let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as u64;
@@ -777,6 +784,22 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
             bail!("drift {worst:.2} cells > {max}: {}", short(&line));
         }
         Ok(format!("max {worst:.2} cells over {n} samples"))
+    }
+
+    /// `same_cell`: the last `drift` line's server cell against a fresh state file's grid.
+    fn check_same_cell(&mut self) -> Result<String> {
+        let bytes = fs::read(self.log_path("server")).unwrap_or_default();
+        let text = String::from_utf8_lossy(&bytes);
+        let Some(server) = last_drift_server_cell(&text) else {
+            bail!("no drift lines (scenario [server] \"dev.drift_check\" = true?)");
+        };
+        let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as u64;
+        let client = self.player_cell(now.saturating_sub(500))?;
+        let client = (client.0.floor() as i64, client.1.floor() as i64);
+        if client != server {
+            bail!("client grid {client:?} != server cell {server:?}");
+        }
+        Ok(format!("both on {client:?}"))
     }
 
     /// The player's cell in a fresh state file, at least `after` (unix ms) new.
@@ -1191,8 +1214,23 @@ fn client_pids(game: &Path) -> Vec<u32> {
     pids
 }
 
+/// The server cell of the last `drift` line in a log.
+fn last_drift_server_cell(log: &str) -> Option<(i64, i64)> {
+    let line = log.lines().rev().find(|l| l.contains(": drift server="))?;
+    let v = line.split(": drift server=").nth(1)?.split_whitespace().next()?;
+    let (x, y) = v.split_once(',')?;
+    Some((x.parse::<f64>().ok()?.floor() as i64, y.parse::<f64>().ok()?.floor() as i64))
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn last_drift_server_cell_reads_the_last_line() {
+        let log = "x: drift server=1.50,2.00 client=None\ny\nz: drift server=293.61,265.00 client=None\n";
+        assert_eq!(super::last_drift_server_cell(log), Some((293, 265)));
+        assert_eq!(super::last_drift_server_cell("nothing"), None);
+    }
+
     use super::*;
 
     #[test]

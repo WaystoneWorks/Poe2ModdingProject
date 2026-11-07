@@ -85,7 +85,7 @@ if A+0x3bc.x != INT_MIN:
     predictive (mode 1): snap iff |start-grid|^2 >= 0x844
     snap = 0x141de88a0(P, &start, world((start+0.5)*10.869565))   // stops a running line
 *slot = A+0x248; A+0x248 = 0; A+0x920 = 0; delete old *slot
-A+0x2b2 = M+0x122; listeners A+0x18 <- 0x14020ad50(A, M); A.vf348()
+A+0x2b2 = M+0x122; listeners A+0x18 <- 0x14019fbfc(A, M); A.vf348()
 if M+0x148: M+0x150 = ent.P+0x444 (notify)
 A+0x2b0 = (A+0x2b0 + 1) & 0x7fff, 0 -> 1                 // move counter
 if M.vf340 and !0x141e6a1e0: Player+0x260 = stat 0x46dc / 1000
@@ -121,7 +121,7 @@ s = Pathfinding_GetSpeed(pf, .., 1)
 stop = (P+0x480 > 0 and s <= P+0x484) or pf+0x560 bit1 or s <= 0 or P+0x49a bit4;  if stop: req[0] = 0
 if Pathfinding_IsArrived(pf, *goal, req, arg):
     if pf+0x560 bit0: Pathfinding_EndPath(pf, 0); return 1
-    pf+0x560 &= ~8; pf+0x540 = 0; pf+0x18 listeners <- 0x14020ad50 (arrived); P+0x18 <- 0x140eced70; return 1
+    pf+0x560 &= ~8; pf+0x540 = 0; pf+0x18 listeners <- 0x14019fbfc (arrived); P+0x18 <- 0x140eced70; return 1
 if stop: pf+0x560 &= ~8; Pathfinding_EndPath(pf, 0); return 0
 return Pathfinding_Plan(pf)
 ```
@@ -134,9 +134,9 @@ if pf+0x52c > 1: pf+0x52c = 1; arrival re-check (same as FollowPath arrived bran
 if count (pf+0x518) != 0:
     search flag -> P+0x1e4 |= 4
     pf+0x570 = count - 1; pf+0x568 = *goal       // goal at plan time
-    if !(pf+0x560 bit0): pf+0x18 listeners <- 0x14025613c (started); P+0x18 <- 0x14019ad14(&pf+0x568); bit0 = 1
+    if !(pf+0x560 bit0): pf+0x18 listeners <- 0x14025bfe0 (started); P+0x18 <- 0x14019fc0c(&pf+0x568); bit0 = 1
     bit2 set; Pathfinding_StepAlongPath(pf, pf+0x570); bit2 clear; return found
-else: bit0 ? Pathfinding_EndPath(pf,0) : (pf+0x540 = 0; listeners <- 0x14020ad94 (ended); P+0x18 <- 0x140eced9c); return 0
+else: bit0 ? Pathfinding_EndPath(pf,0) : (pf+0x540 = 0; listeners <- 0x14019fc04 (ended); P+0x18 <- 0x140eced9c); return 0
 ```
 Path array `pf+0xd4` (`[0]` = goal end, `[count-1]` = start); `Pathfinding_StepAlongPath(pf, i)` reads `pf+0xcc + i*8` = path `[i-1]`.
 
@@ -170,8 +170,8 @@ if !(pf+0x560 bit0): return
 if !keep_line: bit2 set; entity+0x8c bit3 ? 0x141df1e90 : 0x141df2040(P) (stop: smoother, 0x141df31b0 if a line runs); bit2 clear
 arrived = goal ptr and Pathfinding_IsArrived(...)
 pf+0x560 &= ~9; pf+0x518 = 0; pf+0x540 = 0
-arrived ? (pf+0x18 <- 0x14020ad50 (slot +0x10); P+0x18 <- 0x140eced70(entity, &goal))
-        : (pf+0x18 <- 0x14020ad94 (slot +0x08); P+0x18 <- 0x140eced9c)
+arrived ? (pf+0x18 <- 0x14019fbfc (slot +0x10); P+0x18 <- 0x140eced70(entity, &goal))
+        : (pf+0x18 <- 0x14019fc04 (slot +0x08); P+0x18 <- 0x140eced9c)
 ```
 `Pathfinding_Tick` `0x141dd9f70` (component tick, `vtable+0x50(dt)`, already named by another agent) - **arrival is checked every frame here too**:
 ```
@@ -187,9 +187,9 @@ A point Move's goal never moves (`pf+0x568 == *goal`): no tick replans. So `pf+0
 ### Actor's Pathfinding listener (Actor `+0x158`, vtable `0x1434eff78`, set in Actor ctor `0x142156500`)
 | slot | thunk fired by pf | impl |
 |---|---|---|
-| `+0x00` | `0x14025613c` path started | `Actor_OnPathStarted` `0x141e5ba50`: `A+0x2a0 |= 0x80` (**moving**), `A+0x2a1 |= 0x10`, move animation `0x141e65a70(A, anim 0x141e5d640, speed stat 0x6996, 0x5735/1000)`, `0x141e5d8a0(A,0)` |
-| `+0x08` | `0x14020ad94` ended, not arrived | `0x1416d5080` -> `Actor_OnPathEnded(A, 0)` |
-| `+0x10` | `0x14020ad50` arrived | `0x1416dd640` -> `Actor_OnPathEnded(A, 1)` |
+| `+0x00` | `0x14025bfe0` path started | `Actor_OnPathStarted` `0x141e5ba50`: `A+0x2a0 |= 0x80` (**moving**), `A+0x2a1 |= 0x10`, move animation `0x141e65a70(A, anim 0x141e5d640, speed stat 0x6996, 0x5735/1000)`, `0x141e5d8a0(A,0)` |
+| `+0x08` | `0x14019fc04` ended, not arrived | `0x1416dd650` -> `Actor_OnPathEnded(A, 0)` |
+| `+0x10` | `0x14019fbfc` arrived | `0x1416dd640` -> `Actor_OnPathEnded(A, 1)` |
 | `+0x18` | StepAlongPath request (`vfunc +0x18`) | `0x141e5bbd0` waypoint (group bounds, facing, orientation `P+0x1e3` from `M.vf100`) |
 
 `Actor_OnPathEnded` `0x141e5be90(A, arrived)`:
@@ -198,7 +198,7 @@ save/clear world+0x128; A+0x2a0 &= ~0x80; clear P+0x2a8..+0x2d8, P+0x330..+0x360
 if !arrived: (WASD Move with axes and not in plan) ? re-aim 0x141e5e210 : Actor_EndMoveAction(A, 0)
 else if A+0x240: Actor_OnPathArrived(A)
 if no slot0, no Move, A+0x2a1 bits 1,2 clear, A+0x2a0 bit6 clear, entity+0x8c bit0 clear, bit3 set, (A+0x210)+0x100 == 0:
-    world vfa0; Actor_StartQueuedAction(A); if still idle and Actor_CanStartAction(A,0,0,0) and !(A+0x2a1 bit1): A+0x18 <- 0x14020ad94(A, 0)
+    world vfa0; Actor_StartQueuedAction(A); if still idle and Actor_CanStartAction(A,0,0,0) and !(A+0x2a1 bit1): A+0x18 <- 0x14019fc04(A, 0)
 if 0x141e5c160(A, 0): idle animation 0x141e65a70
 restore world+0x128
 ```
@@ -223,7 +223,7 @@ if stop and A+0x2a0 bit7: Pathfinding_EndPath(pf, 0)                   // only s
 **Arrival frame:** the grid reaches the goal in the Positioned tick (frame step 1, `0x141de9b80`); the apply of that cell ends the line -> `Pathfinding_OnLineDone` -> arrived -> `Pathfinding_EndPath(pf,0)` -> `Actor_OnPathEnded(A,1)` -> `Actor_OnPathArrived` -> `Actor_EndMoveAction`: **the Move ends in the same tick as the last step**, before that frame's packets and Actor tick. `Pathfinding_Tick` catches the case where the goal is reached without a line end (frame order of the Pathfinding component not read).
 
 ## 3. Plan timer `+0x3dc` and replans of a target Move (Actor tick `0x141e508f0`)
-- Step 2 (lines 152-185 of the decompile): `(A+0x210)+0xe8 == -1`, no slot 0, Move type `0x2909` and `+0x3dc <= 0` -> `Actor_CanStartAction(A,0,0,0)` and `!(A+0x2a1 bit1)` -> listeners `A+0x18 <- 0x14020ad94(A, 0)`: "ready for the next action" (input queue). **No plan.** (`+0xe8 != -1`: `vf300` or timer > 0 skip; else same notify and `Actor_StartQueuedAction`.)
+- Step 2 (lines 152-185 of the decompile): `(A+0x210)+0xe8 == -1`, no slot 0, Move type `0x2909` and `+0x3dc <= 0` -> `Actor_CanStartAction(A,0,0,0)` and `!(A+0x2a1 bit1)` -> listeners `A+0x18 <- 0x14019fc04(A, 0)`: "ready for the next action" (input queue). **No plan.** (`+0xe8 != -1`: `vf300` or timer > 0 skip; else same notify and `Actor_StartQueuedAction`.)
 - Step 5: axes non-zero only (`0x64`); a click walk has axes 0.
 - Step 6: `mode == 1` (predictive) and Move and `!(A+0x2a0 bit7)` and no slot 0 and `+0x3dc <= 0` -> plan. **Not in lockstep.**
 - Step 8: `M.vf340` false -> no plan. Step 9: `+0x424` (action speed timer, scaled by `A+0x228+0x178`), `+0x428` (`param_1[0x85]`), the `+0x2a2` bit 3 / `+0x4a0` target block -> plan; none is armed by a click walk.

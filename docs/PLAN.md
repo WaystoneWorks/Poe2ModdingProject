@@ -9,7 +9,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
-| B4 | Slight snaps when interacting with checkpoints and waypoints (WIP, NOT GATED: rule ported, state in the spec) | O | [pre-p10.md](plans/pre-p10.md#b4-snaps-at-checkpoints-and-waypoints) | |
+| B4 | Slight snaps when interacting with checkpoints and waypoints (WIP, NOT GATED: rule ported, DLL crash and user test open, state in the spec) | O | [pre-p10.md](plans/pre-p10.md#b4-snaps-at-checkpoints-and-waypoints) | |
 | U4 | Launcher and web admin layout: reviewer loop to 9.5/10 with a consistency score, News "Read more" bug, version label on the left | O | [pre-p10.md](plans/pre-p10.md#u4-launcher-and-web-admin-layout) | |
 | U5 | DLL overlay layout: reviewer loop to 9.5/10 | O | [pre-p10.md](plans/pre-p10.md#u5-dll-overlay-layout) | |
 | CT | Capture checklist tool with user-set keybindings | O+S | [pre-p10.md](plans/pre-p10.md#ct-capture-checklist-tool) | |

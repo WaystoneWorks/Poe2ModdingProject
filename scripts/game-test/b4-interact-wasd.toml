@@ -1,0 +1,394 @@
+# B4 in WASD mode: clicks a waypoint and a checkpoint from near and far, and with a key held, so a
+# click in reach reached from a WASD walk is covered. Cells as in `b4-interact.toml`. After a key walk the client's
+# world position rests off its grid (up to about 1.7 cells), so those checks compare the grid: `same_cell`.
+# With a key held and the object out of reach the client starts no `Interaction` and walks on: only the
+# agreement at rest is checked there.
+description = "object clicks in WASD mode, also with a key held: no position correction"
+input_mode = "wasd"
+
+[server]
+"dev.drift_check" = true
+"dev.drift_interval_ms" = 100
+
+[[step]]
+name = "transfer to G1_town seed 1"
+cmd = "transfer G1_town 1"
+
+[[step]]
+name = "in the new instance"
+expect_log = "player entered the world"
+since = "action"
+timeout_s = 60
+
+[[step]]
+name = "in G1_town"
+expect_state = { area = "G1_town" }
+timeout_s = 60
+
+[[step]]
+name = "settled"
+wait_ms = 3000
+
+[[step]]
+name = "waypoint near: teleport"
+cmd = "teleport 290 258"
+
+[[step]]
+name = "waypoint near: there"
+expect_state = { near = [290, 258, 4] }
+
+[[step]]
+name = "waypoint near: settle"
+wait_ms = 800
+
+[[step]]
+name = "waypoint near: click"
+click_cell = [282, 252]
+
+[[step]]
+name = "waypoint near: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 8
+
+[[step]]
+name = "waypoint near: rest"
+keys = "wait:1500"
+
+[[step]]
+name = "waypoint near: no correction at rest"
+max_drift = 1
+
+[[step]]
+name = "waypoint near: close the panel"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "waypoint near: walk away with a key"
+keys = "indown:0x57 wait:500 inup:0x57"
+
+[[step]]
+name = "waypoint near: walk rest"
+wait_ms = 800
+
+[[step]]
+name = "waypoint near: walk rest window"
+keys = "wait:500"
+
+[[step]]
+name = "waypoint near: no correction after the walk"
+same_cell = true
+
+[[step]]
+name = "waypoint far: teleport"
+cmd = "teleport 312 282"
+
+[[step]]
+name = "waypoint far: there"
+expect_state = { near = [312, 282, 4] }
+
+[[step]]
+name = "waypoint far: settle"
+wait_ms = 800
+
+[[step]]
+name = "waypoint far: click"
+click_cell = [282, 252]
+
+[[step]]
+name = "waypoint far: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 8
+
+[[step]]
+name = "waypoint far: rest"
+keys = "wait:1500"
+
+[[step]]
+name = "waypoint far: no correction at rest"
+max_drift = 1
+
+[[step]]
+name = "waypoint far: close the panel"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "waypoint far: walk away with a key"
+keys = "indown:0x57 wait:500 inup:0x57"
+
+[[step]]
+name = "waypoint far: walk rest"
+wait_ms = 800
+
+[[step]]
+name = "waypoint far: walk rest window"
+keys = "wait:500"
+
+[[step]]
+name = "waypoint far: no correction after the walk"
+same_cell = true
+
+[[step]]
+name = "waypoint near, key held: teleport"
+cmd = "teleport 290 262"
+
+[[step]]
+name = "waypoint near, key held: there"
+expect_state = { near = [290, 262, 4] }
+
+[[step]]
+name = "waypoint near, key held: settle"
+wait_ms = 800
+
+[[step]]
+name = "waypoint near, key held: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "waypoint near, key held: hold the key"
+keys = "indown:0x57 wait:100"
+
+[[step]]
+name = "waypoint near, key held: click"
+click_cell = [282, 252]
+
+[[step]]
+name = "waypoint near, key held: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 20
+
+[[step]]
+name = "waypoint near, key held: release"
+keys = "inup:0x57 wait:3000"
+
+[[step]]
+name = "waypoint near, key held: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "waypoint near, key held: settled"
+keys = "wait:1500"
+
+[[step]]
+name = "waypoint near, key held: no correction at rest"
+same_cell = true
+
+[[step]]
+name = "waypoint near, key held: close the panel"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "waypoint far, key held: teleport"
+cmd = "teleport 306 276"
+
+[[step]]
+name = "waypoint far, key held: there"
+expect_state = { near = [306, 276, 4] }
+
+[[step]]
+name = "waypoint far, key held: settle"
+wait_ms = 800
+
+[[step]]
+name = "waypoint far, key held: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "waypoint far, key held: hold the key"
+keys = "indown:0x53 wait:100"
+
+[[step]]
+name = "waypoint far, key held: click"
+click_cell = [282, 252]
+
+[[step]]
+name = "waypoint far, key held: release"
+keys = "inup:0x53 wait:3000"
+
+[[step]]
+name = "waypoint far, key held: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "waypoint far, key held: settled"
+keys = "wait:1500"
+
+[[step]]
+name = "waypoint far, key held: no correction at rest"
+same_cell = true
+
+[[step]]
+name = "waypoint far, key held: close the panel"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "transfer to G1_2 seed 1"
+cmd = "transfer G1_2 1"
+
+[[step]]
+name = "in G1_2's new instance"
+expect_log = "player entered the world"
+since = "action"
+timeout_s = 60
+
+[[step]]
+name = "in G1_2"
+expect_state = { area = "G1_2" }
+timeout_s = 60
+
+[[step]]
+name = "settled in G1_2"
+wait_ms = 3000
+
+[[step]]
+name = "checkpoint near: teleport"
+cmd = "teleport 640 1375"
+
+[[step]]
+name = "checkpoint near: there"
+expect_state = { near = [640, 1375, 4] }
+
+[[step]]
+name = "checkpoint near: settle"
+wait_ms = 800
+
+[[step]]
+name = "checkpoint near: click"
+click_cell = [630, 1388]
+lift = 80
+
+[[step]]
+name = "checkpoint near: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 8
+
+[[step]]
+name = "checkpoint near: rest"
+keys = "wait:1500"
+
+[[step]]
+name = "checkpoint near: no correction at rest"
+max_drift = 1
+
+[[step]]
+name = "checkpoint near: close the panel"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "checkpoint near: walk away with a key"
+keys = "indown:0x57 wait:500 inup:0x57"
+
+[[step]]
+name = "checkpoint near: walk rest"
+wait_ms = 800
+
+[[step]]
+name = "checkpoint near: walk rest window"
+keys = "wait:500"
+
+[[step]]
+name = "checkpoint near: no correction after the walk"
+same_cell = true
+
+[[step]]
+name = "checkpoint far: teleport"
+cmd = "teleport 655 1363"
+
+[[step]]
+name = "checkpoint far: there"
+expect_state = { near = [655, 1363, 4] }
+
+[[step]]
+name = "checkpoint far: settle"
+wait_ms = 800
+
+[[step]]
+name = "checkpoint far: click"
+click_cell = [630, 1388]
+lift = 80
+
+[[step]]
+name = "checkpoint far: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 8
+
+[[step]]
+name = "checkpoint far: rest"
+keys = "wait:1500"
+
+[[step]]
+name = "checkpoint far: no correction at rest"
+max_drift = 1
+
+[[step]]
+name = "checkpoint far: close the panel"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "checkpoint far: walk away with a key"
+keys = "indown:0x57 wait:500 inup:0x57"
+
+[[step]]
+name = "checkpoint far: walk rest"
+wait_ms = 800
+
+[[step]]
+name = "checkpoint far: walk rest window"
+keys = "wait:500"
+
+[[step]]
+name = "checkpoint far: no correction after the walk"
+same_cell = true
+
+[[step]]
+name = "checkpoint far, key held: teleport"
+cmd = "teleport 655 1363"
+
+[[step]]
+name = "checkpoint far, key held: there"
+expect_state = { near = [655, 1363, 4] }
+
+[[step]]
+name = "checkpoint far, key held: settle"
+wait_ms = 800
+
+[[step]]
+name = "checkpoint far, key held: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "checkpoint far, key held: hold the key"
+keys = "indown:0x41 wait:100"
+
+[[step]]
+name = "checkpoint far, key held: click"
+click_cell = [630, 1388]
+lift = 80
+
+[[step]]
+name = "checkpoint far, key held: release"
+keys = "inup:0x41 wait:3000"
+
+[[step]]
+name = "checkpoint far, key held: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "checkpoint far, key held: settled"
+keys = "wait:1500"
+
+[[step]]
+name = "checkpoint far, key held: no correction at rest"
+same_cell = true
+
+[[step]]
+name = "checkpoint far, key held: close the panel"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

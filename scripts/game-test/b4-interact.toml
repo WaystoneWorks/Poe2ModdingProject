@@ -433,11 +433,11 @@ max_drift = 1
 
 [[step]]
 name = "through the checkpoint: teleport"
-cmd = "teleport 640 1375"
+cmd = "teleport 640 1378"
 
 [[step]]
 name = "through the checkpoint: there"
-expect_state = { near = [640, 1375, 4] }
+expect_state = { near = [640, 1378, 4] }
 
 [[step]]
 name = "through the checkpoint: settle"
@@ -445,11 +445,19 @@ wait_ms = 800
 
 [[step]]
 name = "through the checkpoint: walk"
-click_cell = [610, 1414]
+click_cell = [620, 1398]
+
+[[step]]
+name = "through the checkpoint: walked"
+wait_ms = 2000
+
+[[step]]
+name = "through the checkpoint: past it"
+expect_state = { near = [620, 1398, 4] }
 
 [[step]]
 name = "through the checkpoint: rest"
-keys = "wait:2500"
+keys = "wait:500"
 
 [[step]]
 name = "through the checkpoint: no correction at rest"
