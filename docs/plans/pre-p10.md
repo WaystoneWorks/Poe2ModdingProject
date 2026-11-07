@@ -13,7 +13,16 @@ Facts ([world-travel.md](../re/world-travel.md)): a far click gets official `Sta
 
 Done when: new game tests with `max_drift` show no correction in every case above, and the user's game test confirms (movement keeps user sign-off). Add the facts to world-travel.md.
 
-State (NOT GATED, only the user's game test is open): the rule is ported ([world-travel.md](../re/world-travel.md#clicking-an-object)). The DLL crash at "waypoint far" is fixed ([client-dll.md](../architecture/client-dll.md#entity-tracing-dump_object_types)). The user's first test still showed snaps; the two worst clicks of that session, read frame by frame, came from a click during the coast after a sprint (the server dropped it as a plain Move, the client walked). That is now ported; the user's next test decides whether any snap is left.
+State (NOT GATED): the rule is ported ([world-travel.md](../re/world-travel.md#clicking-an-object)), including clicks during the coast after a sprint (`b4-sprint-click`). The DLL crash at "waypoint far" is fixed. Open, from the user's test on 2026-11-07 (session `GameFiles/logs/poe-hook/2026-11-07_12-59-04_336`, server log `runtime/b4-user-server.log`; analysis scripts `runtime/b4/clicks.py <session> <log>`, `runtime/b4/window.py <session> <log> <t s> <span s>`):
+- **Click in reach with a WASD key held snaps and the panel does not stay open.** Every click of that session was in reach and acted at once (`0x1c8`, `0x1ca`, `0x98 2a`). The client stands after it; the server walks on with the held key (its `0x1c8` start cells (475,960), (475,944), (477,926) over 1 s at t 57.99-58.94), so each later click snaps the client up to 18 cells. Likely cause: `stop_for_interaction` ends the Move, so the sim's `start_wasd_walk` restarts the walk next tick, while the client's `Interaction` keeps the Move slot. Read when the client's `Interaction` ends and when the held key walks again (movement log), then port. The probe `runtime/b4/b4-held-probe.toml` missed the object (click while moving): click with time scale 0.1 as in `b4-interact-wasd` "key held".
+- Then rerun `b4-sprint-click`, `b4-interact`, `b4-interact-wasd`, `r4-click`, and the user's game test.
+
+## B5: checkpoints (user, 2026-11-07)
+1. Walking into a checkpoint lights it each time: once lit it must stay lit (no second `0x6b`/`0x2fc`), and an unlit checkpoint must not be interactable (check the official rule in the captures first).
+2. Lit checkpoints are not saved: leaving and rejoining the same instance must keep them.
+3. Travelling to a checkpoint places the player inside it: use the official arrival cell (captures).
+4. The pause menu's "respawn at checkpoint" does nothing: the user records a capture for it; port from that.
+Done when: unit tests, a hidden game test per item, the user's test, world-travel.md updated.
 
 ## U4: launcher and web admin layout
 The user finds the two inconsistent in layout and cluttered, with some things in the wrong order, after several attempts. U1 and U2 scored 9/10 and did not solve it: each reviewed one UI alone and mostly patched what was there. So this step changes the method. The style (Ash & Blood) is fine and stays; this is about layout.
