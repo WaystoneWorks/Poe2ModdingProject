@@ -391,6 +391,30 @@ same_cell = true
 # No panel to close: the client walked on and acted on nothing (an Escape here pauses the game).
 
 [[step]]
+name = "checkpoint, key walk into it: teleport"
+cmd = "teleport 616 1374"
+
+[[step]]
+name = "checkpoint, key walk into it: there"
+expect_state = { near = [616, 1374, 4] }
+
+[[step]]
+name = "checkpoint, key walk into it: settle"
+wait_ms = 800
+
+[[step]]
+name = "checkpoint, key walk into it: hold W past the checkpoint"
+keys = "indown:0x57 wait:2500 inup:0x57 wait:1500"
+
+[[step]]
+name = "checkpoint, key walk into it: went round it"
+expect_state = { moved = 15 }
+
+[[step]]
+name = "checkpoint, key walk into it: no correction at rest"
+same_cell = true
+
+[[step]]
 name = "checkpoint near, key kept held: teleport"
 cmd = "teleport 612 1384"
 
