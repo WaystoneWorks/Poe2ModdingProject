@@ -3,7 +3,7 @@
 
 Reads `packets.jsonl` written by the client DLL (official or local sessions) and prints the
 movement-related messages decoded, with the *frame* each lands in. Frames are counted from the
-server's `0x02f4` SimulationTick: a message that arrives after `n` ticks belongs to frame `n`
+server's SimulationTick (`0x02f7` in 0.5.5f, by name, so older captures work too): a message that arrives after `n` ticks belongs to frame `n`
 (server simulation messages arrive before the tick that closes their frame). A client message
 sent after `n` ticks is "input in frame n"; the server's earliest possible reply is applied by
 the client in frame n+1 or later, so the interesting number is `reply_frame - input_frame`.
@@ -264,7 +264,7 @@ def load(path):
             x.dir, x.op, x.name, x.hex = m["dir"], int(m["op"], 16), m["name"], m["hex"]
             x.frame = ticks
             x.d = decode(m)
-            if x.op == TICK and x.dir == "in":
+            if x.name == "SimulationTick" and x.dir == "in":
                 ticks += 1
             out.append(x)
     return out

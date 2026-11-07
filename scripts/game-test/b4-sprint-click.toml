@@ -1,0 +1,173 @@
+# B4: a click on an object during the coast after a sprint (the user's snaps of 2026-11-06). The
+# `Interaction` is no plain Move (vf70 = 0): `SprintEnd` does not drop it, so the client walks to the
+# ring at once. Time runs at 0.1 so the click lands inside the coast. Checkpoint at (630,1388), ring
+# 20: `area_objects G1_2 1`. In this world W moves +x,+y.
+description = "object clicks during the coast after a sprint: no position correction"
+input_mode = "wasd"
+
+[client_env]
+POE_HOOK_MOVEMENT_LOG = "1"
+
+[server]
+"dev.drift_check" = true
+"dev.drift_interval_ms" = 100
+
+[[step]]
+name = "transfer to G1_2 seed 1"
+cmd = "transfer G1_2 1"
+
+[[step]]
+name = "in the new instance"
+expect_log = "player entered the world"
+since = "action"
+timeout_s = 60
+
+[[step]]
+name = "in G1_2"
+expect_state = { area = "G1_2" }
+timeout_s = 60
+
+# In reach when clicked (the coast ends there). The panel opens.
+[[step]]
+name = "in reach: teleport"
+cmd = "teleport 560 1320"
+
+[[step]]
+name = "in reach: there"
+expect_state = { near = [560, 1320, 4] }
+
+[[step]]
+name = "in reach: settle"
+wait_ms = 800
+
+[[step]]
+name = "in reach: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "in reach: sprint, then release"
+keys = "indown:0x57 wait:2000 indown:0x20 down:0x20 wait:14000 up:0x20 inup:0x20 inup:0x57 wait:300"
+
+[[step]]
+name = "in reach: click during the coast"
+click_cell = [630, 1388]
+
+[[step]]
+name = "in reach: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 30
+
+[[step]]
+name = "in reach: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "in reach: settled"
+keys = "wait:1500"
+
+[[step]]
+name = "in reach: no correction at rest"
+same_cell = true
+
+[[step]]
+name = "in reach: close the panel"
+keys = "0x1b wait:800"
+
+# Out of reach when clicked: the click ends the coast, walks to the ring and acts.
+[[step]]
+name = "far: teleport"
+cmd = "teleport 560 1320"
+
+[[step]]
+name = "far: there"
+expect_state = { near = [560, 1320, 4] }
+
+[[step]]
+name = "far: settle"
+wait_ms = 800
+
+[[step]]
+name = "far: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "far: sprint, then release"
+keys = "indown:0x57 wait:2000 indown:0x20 down:0x20 wait:10000 up:0x20 inup:0x20 inup:0x57 wait:300"
+
+[[step]]
+name = "far: click"
+click_cell = [630, 1388]
+
+[[step]]
+name = "far: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 30
+
+[[step]]
+name = "far: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "far: settled"
+keys = "wait:1500"
+
+[[step]]
+name = "far: no correction at rest"
+same_cell = true
+
+[[step]]
+name = "far: close the panel"
+keys = "0x1b wait:800"
+
+# A waypoint, ring 26.
+[[step]]
+name = "waypoint far: teleport"
+cmd = "teleport 520 1275"
+
+[[step]]
+name = "waypoint far: there"
+expect_state = { near = [520, 1275, 4] }
+
+[[step]]
+name = "waypoint far: settle"
+wait_ms = 800
+
+[[step]]
+name = "waypoint far: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "waypoint far: sprint, then release"
+keys = "indown:0x57 wait:2000 indown:0x20 down:0x20 wait:10000 up:0x20 inup:0x20 inup:0x57 wait:300"
+
+[[step]]
+name = "waypoint far: click"
+click_cell = [580, 1340]
+
+[[step]]
+name = "waypoint far: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 30
+
+[[step]]
+name = "waypoint far: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "waypoint far: settled"
+keys = "wait:1500"
+
+[[step]]
+name = "waypoint far: no correction at rest"
+same_cell = true
+
+[[step]]
+name = "waypoint far: close the panel"
+keys = "0x1b wait:800"
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "

@@ -3,6 +3,7 @@
 Items kept from the earlier plan, word for word where possible. Ordered work is in [../PLAN.md](../PLAN.md).
 
 ## Movement follow-ups (not blocking; movement is gated by user test 6)
+- A mouse click during a sprint in WASD mode, then release: both rest one cell apart (client (623,1383), server (622,1382); `time scale 0.1`, `b4-sprint-click` 2026-11-06 before that case was dropped). No object involved.
 - Rule tests for: blocked step stops steering, clip keeps rate, early unlimited roll turn, sprint-off key without a 0x64, no turn-around at the sprint switch, no Bonk when the blocked re-aim finds no path.
 - Read why the early unlimited roll turn is 0.15 s (clientsim `roll_turn_to_target`: act `+0x244`, 0x14197fa55..0x14197fb68, 0x141d44b20) and which path listener turns off waypoint facing for key walks (`0x141dd9200` `FUN_140ecedc0`).
 - A second crazy-keys seed with held clicks.
@@ -22,6 +23,7 @@ Items kept from the earlier plan, word for word where possible. Ordered work is 
 - Server release after R2 (ask first).
 
 ## World travel follow-ups (P9)
+- Official `0x5a`, `0x98` come about 100 ms after the `ActionEvent` of an object click (slot 0's `Interaction` ends); ours in the same frame. No snap.
 Facts: [world-travel.md](../re/world-travel.md).
 - Wells: no captured blob and both guessed blobs hang the load, so they are not spawned (`[travel] skip_objects`); spawn and refill with P13.
 - Instance list (`0xce`) row fields: decode the `u64` and `u32` (rows show "Closed" and 1970 dates).
