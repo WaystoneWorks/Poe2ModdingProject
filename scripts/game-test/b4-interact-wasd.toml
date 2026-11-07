@@ -460,9 +460,112 @@ keys = "wait:600 inup:0x57 wait:1500"
 name = "checkpoint near, key kept held: no correction at rest"
 same_cell = true
 
+# The user's walk (2026-11-07): W+D held (+x) past the checkpoint, clicked three times in reach at
+# time scale 0.1 (at normal speed the walk passes the checkpoint before the click lands), then
+# released. The walk on takes the player away and the area map closes by itself, so no Escape
+# follows (with no panel open it would pause the game).
 [[step]]
-name = "checkpoint near, key kept held: close the panel"
-keys = "0x1b wait:800"
+name = "walk past, clicks: teleport"
+cmd = "teleport 612 1380"
+
+[[step]]
+name = "walk past, clicks: there"
+expect_state = { near = [612, 1380, 4] }
+
+[[step]]
+name = "walk past, clicks: settle"
+wait_ms = 800
+
+[[step]]
+name = "walk past, clicks: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "walk past, clicks: hold W and D"
+keys = "indown:0x57 indown:0x44 wait:100"
+
+[[step]]
+name = "walk past, clicks: click 1"
+click_cell = [630, 1388]
+
+[[step]]
+name = "walk past, clicks: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 10
+
+[[step]]
+name = "walk past, clicks: click 2"
+click_cell = [630, 1388]
+
+[[step]]
+name = "walk past, clicks: click 3"
+click_cell = [630, 1388]
+
+[[step]]
+name = "walk past, clicks: release"
+keys = "wait:300 inup:0x44 inup:0x57 wait:3000"
+
+[[step]]
+name = "walk past, clicks: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "walk past, clicks: settled"
+keys = "wait:1500"
+
+[[step]]
+name = "walk past, clicks: no correction at rest"
+same_cell = true
+
+# The user's sprint (2026-11-07): sprint with W, release the sprint key only, click the checkpoint
+# with W held, release W. The client's world position rests up to about 1.5 cells off its grid
+# after the walk-on, so only the grid is compared. Last case: no Escape follows.
+[[step]]
+name = "sprint, W held, click: teleport"
+cmd = "teleport 560 1320"
+
+[[step]]
+name = "sprint, W held, click: there"
+expect_state = { near = [560, 1320, 4] }
+
+[[step]]
+name = "sprint, W held, click: settle"
+wait_ms = 800
+
+[[step]]
+name = "sprint, W held, click: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "sprint, W held, click: sprint, release the sprint key only"
+keys = "indown:0x57 wait:2000 indown:0x20 down:0x20 wait:14000 up:0x20 inup:0x20"
+
+[[step]]
+name = "sprint, W held, click: click"
+click_cell = [630, 1388]
+
+[[step]]
+name = "sprint, W held, click: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 30
+
+[[step]]
+name = "sprint, W held, click: release W"
+keys = "wait:400 inup:0x57 wait:3000"
+
+[[step]]
+name = "sprint, W held, click: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "sprint, W held, click: settled"
+keys = "wait:1500"
+
+[[step]]
+name = "sprint, W held, click: no correction at rest"
+same_cell = true
 
 [[step]]
 name = "no server errors"
