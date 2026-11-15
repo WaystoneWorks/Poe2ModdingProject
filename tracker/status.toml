@@ -29,7 +29,7 @@
 "proj:capture" = { status = "fully_functional", link = "docs/re/captures.md" }
 "proj:characters" = { status = "implemented", note = "creation, selection, deletion; refusal codes unchecked in game", link = "docs/protocol/login.md" }
 "proj:chat" = { status = "partial", note = "channels and commands; whisper, party and trade chat missing", link = "docs/architecture/instance-world.md" }
-"proj:check_build" = { status = "fully_functional", link = "docs/guides/new-game-version.md" }
+"proj:check_build" = { status = "fully_functional", note = "0.5.5g: all 118 signatures, 65 offsets and 17 features resolve; game tests pass", link = "docs/guides/new-game-version.md" }
 "proj:client_mods" = { status = "implemented", link = "docs/guides/modding.md" }
 "proj:debug_commands" = { status = "partial", note = "framework, Help, Console, World and Players work; Character, Stats, Items, Monsters and Life wait for their steps", link = "docs/architecture/client-dll.md" }
 "proj:flasks" = { status = "not_implemented", note = "P14", link = "docs/plans/life-flasks.md" }

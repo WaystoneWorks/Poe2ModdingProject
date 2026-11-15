@@ -20,7 +20,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-VERSION = "0.5.5f"
+VERSION = "0.5.5g"
 ROOT = Path(__file__).resolve().parent.parent
 AREA = re.compile(r'Area \{ area: "([^"]+)"')
 

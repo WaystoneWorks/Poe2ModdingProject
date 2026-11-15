@@ -1,6 +1,6 @@
 # Documentation index
 
-Private server for Path of Exile 2 (client **0.5.5f**), in Rust. Rules: [../CLAUDE.md](../CLAUDE.md). Repositories: [overview.md](overview.md). Start with [guides/setup.md](guides/setup.md), then [architecture/overview.md](architecture/overview.md). Contributing, security, legal: [../CONTRIBUTING.md](../CONTRIBUTING.md), [../SECURITY.md](../SECURITY.md), [disclaimer](../README.md#disclaimer).
+Private server for Path of Exile 2 (client **0.5.5g**), in Rust. Rules: [../CLAUDE.md](../CLAUDE.md). Repositories: [overview.md](overview.md). Start with [guides/setup.md](guides/setup.md), then [architecture/overview.md](architecture/overview.md). Contributing, security, legal: [../CONTRIBUTING.md](../CONTRIBUTING.md), [../SECURITY.md](../SECURITY.md), [disclaimer](../README.md#disclaimer).
 
 ## Guides
 | Document | Contents |

@@ -3,7 +3,8 @@
 
 Sources, later ones win:
 1. Ghidra's named functions (MSVC runtime and library names), exported with the Ghidra MCP
-   `search_functions_enhanced(has_custom_name=true)` into dumps/<version>/ghidra/ghidra_named_functions_p*.json.
+   `search_functions_enhanced(has_custom_name=true)`, or scripts/re/ghidra/ExportNamedFunctions.java
+   (one file, no MCP paging), into dumps/<version>/ghidra/ghidra_named_functions_p*.json.
 2. Our documented addresses: the first column of every table row in
    docs/re/addresses.md (`| `0x14...` | description | ...`); the description
    becomes the name.

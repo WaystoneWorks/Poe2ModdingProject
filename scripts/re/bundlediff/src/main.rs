@@ -7,6 +7,7 @@
 //!
 //! Usage (docs/guides/new-game-version.md):
 //!   cargo run --release --manifest-path scripts/re/bundlediff/Cargo.toml -- <old game dir> <new game dir> > diff.tsv
+//!   ... -- --cat <game dir> <virtual path> > file    (one file's bytes, to diff a changed file)
 use std::{collections::HashMap, fs, path::{Path, PathBuf}};
 use poe_data_tools::file_parsers::{FileParser, bundle::BundleParser, bundle_index::{BundleIndexParser, types::BundleIndexFile}};
 use poe_data_tools::fs::{FS, FileSystem};
@@ -33,6 +34,12 @@ fn bsize(s: &Side, bi: u32) -> Option<u64> { fs::metadata(s.dir.join(format!("Bu
 
 fn main() {
     let a: Vec<String> = std::env::args().collect();
+    if a.get(1).map(String::as_str) == Some("--cat") {
+        use std::io::Write;
+        let fsys = FS::from_steam(PathBuf::from(&a[2])).unwrap();
+        std::io::stdout().write_all(&fsys.read(&a[3]).unwrap()).unwrap();
+        return;
+    }
     let (o, n) = (side(&a[1]), side(&a[2]));
     let mut cand: HashMap<u32, Vec<(u64, usize, usize)>> = HashMap::new(); // new bundle -> (hash, old file idx, new file idx)
     let mut nb_old: HashMap<u32, ()> = HashMap::new();
