@@ -3,7 +3,7 @@
 Lasting choices the user made, so nobody asks again. Keep one line per decision and replace a line when a decision changes. Limit: 1,800 words.
 
 ## Scope and order
-- Client 0.5.5h (`0.5.5h`) is the only supported build; 0.5.5g and older addresses are gone (2026-11-18).
+- Client 0.5.5h (`0.5.5h`) is the only supported build; 0.5.5g and older addresses and files are gone (2026-11-18).
 - Order (2026-11-04): the step table in [PLAN.md](PLAN.md); R4 goes where it fits best (before life and monsters). Items, stats and the rest no longer wait for R4.
 - PLAN.md is the ordered index; each step's detailed spec is a file in [plans/](plans/backlog.md), deleted when done (2026-11-04). No handoff files (2026-10-31). Agents at 300k hand off to a new T3 thread themselves; Opus delegates routine work to Sonnet (2026-10-31).
 
