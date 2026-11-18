@@ -9,6 +9,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
+| V3 | Client 0.5.5h (revision 329201) the only supported build; 0.5.5g removed (WIP, NOT GATED: version file, opcodes, signature table, check-build exit 0 done; addresses, Ghidra port, docs rename, `Actor_EndMoveAction` constant change, tests and deletions open) | O | [new-game-version.md](guides/new-game-version.md) | |
 | B4 | Slight snaps when interacting with checkpoints and waypoints (WIP, NOT GATED: coast clicks, DLL crash, held-key click in reach and blocking objects fixed; the user still sees snaps on clicks while sprinting or walking, state in the spec) | O | [pre-p10.md](plans/pre-p10.md#b4-snaps-at-checkpoints-and-waypoints) | |
 | B5 | Checkpoints: light once, saved per instance, arrival cell, pause-menu respawn (user, 2026-11-07; respawn needs the user's capture) | O | [pre-p10.md](plans/pre-p10.md#b5-checkpoints-user-2026-11-07) | |
 | U4 | Launcher and web admin layout: reviewer loop to 9.5/10 with a consistency score, News "Read more" bug, version label on the left | O | [pre-p10.md](plans/pre-p10.md#u4-launcher-and-web-admin-layout) | |
