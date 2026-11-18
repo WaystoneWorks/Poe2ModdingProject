@@ -460,6 +460,55 @@ keys = "wait:600 inup:0x57 wait:1500"
 name = "checkpoint near, key kept held: no correction at rest"
 same_cell = true
 
+# The user's snaps of 2026-11-18: sprint with W, click the checkpoint in reach with the sprint key
+# still held, then release it and walk on with W at normal speed (which also takes the player away
+# from the area map, so no Escape follows). The click is an `Interaction`, not an attack.
+[[step]]
+name = "sprinting click: teleport"
+cmd = "teleport 560 1320"
+
+[[step]]
+name = "sprinting click: there"
+expect_state = { near = [560, 1320, 4] }
+
+[[step]]
+name = "sprinting click: settle"
+wait_ms = 800
+
+[[step]]
+name = "sprinting click: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "sprinting click: sprint"
+keys = "indown:0x57 wait:2000 indown:0x20 down:0x20 wait:14000"
+
+[[step]]
+name = "sprinting click: click with the sprint key held"
+click_cell = [630, 1388]
+
+[[step]]
+name = "sprinting click: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 30
+
+[[step]]
+name = "sprinting click: release the sprint key"
+keys = "up:0x20 inup:0x20 wait:3000"
+
+[[step]]
+name = "sprinting click: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "sprinting click: walk on, release"
+keys = "wait:600 inup:0x57 wait:1500"
+
+[[step]]
+name = "sprinting click: no correction at rest"
+same_cell = true
+
 # The user's walk (2026-11-07): W+D held (+x) past the checkpoint, clicked three times in reach at
 # time scale 0.1 (at normal speed the walk passes the checkpoint before the click lands), then
 # released. The walk on takes the player away and the area map closes by itself, so no Escape
