@@ -9,7 +9,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | Step | What | Model | Spec | Needs |
 |---|---|---|---|---|
-| V3 | Client 0.5.5h (revision 329201) the only supported build; 0.5.5g removed (WIP, NOT GATED: version file, opcodes, signature table, check-build exit 0 done; addresses, Ghidra port, docs rename, `Actor_EndMoveAction` constant change, tests and deletions open) | O | [new-game-version.md](guides/new-game-version.md) | |
+| V3 | Client 0.5.5h (revision 329201) the only supported build; 0.5.5g removed. Done: version file `supported`, `client_hash` confirmed, opcodes, signatures, addresses, docs, tests, six game tests. **Open:** Ghidra port. Ghidra exited after auto-analysis of `/0.5.5h/PathOfExileSteam.exe` and did not save it. Next: analyse, save, run `PortFromAddrMap`, `ExportNamedFunctions`, `export_symbols.py`. Then delete `GameFiles-0.5.5g/`, `dumps/0.5.5g/` and the `/0.5.5g` program ([README](re/README.md#a-new-build-in-the-ghidra-project)) | O | [new-game-version.md](guides/new-game-version.md) | |
 | B4 | Slight snaps when interacting with checkpoints and waypoints (WIP, NOT GATED: coast clicks, DLL crash, held-key click in reach and blocking objects fixed; the user still sees snaps on clicks while sprinting or walking, state in the spec) | O | [pre-p10.md](plans/pre-p10.md#b4-snaps-at-checkpoints-and-waypoints) | |
 | B5 | Checkpoints: light once, saved per instance, arrival cell, pause-menu respawn (user, 2026-11-07; respawn needs the user's capture) | O | [pre-p10.md](plans/pre-p10.md#b5-checkpoints-user-2026-11-07) | |
 | U4 | Launcher and web admin layout: reviewer loop to 9.5/10 with a consistency score, News "Read more" bug, version label on the left | O | [pre-p10.md](plans/pre-p10.md#u4-launcher-and-web-admin-layout) | |
@@ -38,7 +38,7 @@ Steps run in this order, one per session (or several sessions for big ones). Mod
 
 | What | When |
 |---|---|
-| Official comparison on 0.5.5g ([new-game-version.md](guides/new-game-version.md), step 6.4) | next official session |
+| Official comparison on 0.5.5h ([new-game-version.md](guides/new-game-version.md), step 6.4) | next official session |
 | Capture **C2** (gameplay, 30-40 minutes, [checklist](re/captures.md#planned-capture-c2-for-gameplay-items-stats-life-flasks-passives-skills-monsters-loot-npcs)); it also covers the movement gaps #6 and #7 | after CT, before P10 |
 | G-PARTY capture (a friend answers party invite and trade request) | before P18 |
 | Windows tests (launcher install and update, Host a server, Play, restart); needs a machine or VM | when available |

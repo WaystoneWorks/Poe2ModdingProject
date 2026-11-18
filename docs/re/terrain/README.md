@@ -1,4 +1,4 @@
-# Terrain generation (0.5.5g)
+# Terrain generation (0.5.5h)
 
 What the client's terrain generator does, and the tools for porting it to the server
 (`modules/server/crates/poe-world`). Addresses are Ghidra addresses (image base `0x140000000`).
@@ -10,16 +10,16 @@ Port status: [../../status/terrain.md](../../status/terrain.md).
 | [tgr.md](tgr.md) | `.tgr` graph areas: generation order, node jitter, room placement, routing, smoothing, virtual edges, node tiles, edge tiles |
 | [dungeon.md](dungeon.md) | `.dgr` dungeon areas (most of act 1): call chain, file fields, rooms, corridors, tile pass |
 | [batch.md](batch.md) | Running the client's generator in a loop from the DLL (`gen_batch`): world, forced topology and orientation, threads, exceptions, files, addresses |
-| [doodads.md](doodads.md) | The doodad pass (cells, `.ao` picks, the doodad hash filter) and the collision grid (`0x141d1b520`: tile planes, doodad hulls) |
+| [doodads.md](doodads.md) | The doodad pass (cells, `.ao` picks, the doodad hash filter) and the collision grid (`0x141d1b770`: tile planes, doodad hulls) |
 | [shared-passes.md](shared-passes.md) | Passes both kinds use: topology choice, pruning, region orientation, lattice, fill, de-repetition, outer buffer, overlays |
 
 ## Where generation runs
 
-- `ClientWorld_LoadArea` `0x141683d00` (the in-game world) builds a client generator (base
-  constructor `TerrainGen_Construct` `0x141ffe550`, client vtable `0x14339b410`) and runs it
-  through `0x1415aa760` → `TerrainGen_Run` `0x14200d570`.
-- `HeadlessWorld_LoadArea` `0x14213eab0` (vtable data `0x14351de98`) is a second world class that
-  runs the **base** generator (vtable `0x1435045b0`) without rendering. It is server-side code
+- `ClientWorld_LoadArea` `0x141683f50` (the in-game world) builds a client generator (base
+  constructor `TerrainGen_Construct` `0x141ffe7a0`, client vtable `0x14339b4a0`) and runs it
+  through `0x1415aa9b0` → `TerrainGen_Run` `0x14200d7c0`.
+- `HeadlessWorld_LoadArea` `0x14213ed00` (vtable data `0x14351e1d8`) is a second world class that
+  runs the **base** generator (vtable `0x143504548`) without rendering. It is server-side code
   compiled into the client, and our server must reproduce it. The client subclass only overrides
   object creation and rendering slots (+0x20, +0x68, +0x78..+0xa8); every generation phase is shared.
 - World: +0x98 area row (`+0x2a` WorldAreas HASH16, `+0x1b4` area kind: 0x20/0x21/0x23 are
@@ -32,38 +32,38 @@ Port status: [../../status/terrain.md](../../status/terrain.md).
 
 | Address | Name (provisional) | Notes |
 |---|---|---|
-| `0x14200d420` | prepare | seeds the RNG with 0 and draws ~24 `range` values, before the real seeding |
-| `0x141faab40` | `TerrainRng_Seed(seed)` | the real seed (generation state +4) |
-| `0x14200b700` | | |
-| `0x14200af90` | `TerrainGen_Layout` | **almost all RNG draws** (11,000 of 11,300 for a Riverbank layout): tile placement |
-| `0x14200c6e0` | | only when generator +0xe |
-| `0x14200ca90`, `0x14200a560`, `0x141d1b520` | | |
-| vt+0x50 `0x142009750` | | |
-| vt+0x60 `0x142004080` | `TerrainGen_Doodads` | per region and tile placement: `TerrainGen_TileDoodads` `0x142001e40`; writes the doodad hash; no RNG on the client |
-| vt+0x28 `0x1420029e0`, vt+0x58 `0x142003260`, `0x142003680` | | |
-| `0x14200ccd0` | | height post-pass on tile records (+0x32/+0x33 nibbles) |
-| `0x141d21100` | `Terrain_TileHash` | the tile hash (world +0x11c; 1 if it comes out 0) |
+| `0x14200d670` | prepare | seeds the RNG with 0 and draws ~24 `range` values, before the real seeding |
+| `0x141faad90` | `TerrainRng_Seed(seed)` | the real seed (generation state +4) |
+| `0x14200b950` | | |
+| `0x14200b1e0` | `TerrainGen_Layout` | **almost all RNG draws** (11,000 of 11,300 for a Riverbank layout): tile placement |
+| `0x14200c930` | | only when generator +0xe |
+| `0x14200cce0`, `0x14200a7b0`, `0x141d1b770` | | |
+| vt+0x50 `0x1420099a0` | | |
+| vt+0x60 `0x1420042d0` | `TerrainGen_Doodads` | per region and tile placement: `TerrainGen_TileDoodads` `0x142002090`; writes the doodad hash; no RNG on the client |
+| vt+0x28 `0x142002c30`, vt+0x58 `0x1420034b0`, `0x1420038d0` | | |
+| `0x14200cf20` | | height post-pass on tile records (+0x32/+0x33 nibbles) |
+| `0x141d21350` | `Terrain_TileHash` | the tile hash (world +0x11c; 1 if it comes out 0) |
 
-The doodad pass has a second branch that runs only when the globals `0x1445e257d` /
+The doodad pass has a second branch that runs only when the globals `0x1445e25c5` /
 `0x1445a50c5` are set (they also suppress the "Generating …" log lines, so likely a headless
 server mode). It scatters objects found by type hash (`0x99e2009b`, `0x892aa9d3`, `0x407c7f95`,
-`0x9e3b9e73`) with the RNG and saves/restores the RNG state around it (`0x142cc9bc0`, 5000
+`0x9e3b9e73`) with the RNG and saves/restores the RNG state around it (`0x142cc9f00`, 5000
 bytes). Likely server-side placement (spawns), relevant for area entity loading.
 
 ## Random number generator
 
 - Thread-local (`TLS + 0x20190`): `u32 seed, u8 disabled, u32 index, u32 state[1248]`. It is
   MSVC's `std::mt19937` (buffered 2×624-word state, standard constants `0x9908b0df`, `0x6c078965`).
-- `TerrainRng_Seed` `0x141faab40(seed, disabled)`; `Mt19937_Next` `0x140a65f30(&index)`;
-  `UniformInt_Draw` `0x141f1bdd0(&{&index, bits=32, mask=0xffffffff}, n)` is MSVC's `uniform_int`
-  rejection loop (`_Rng_from_urng`); `TerrainRng_Below` `0x141faad90(n)` → `0..n` (n 0 is treated
-  as 1); `TerrainRng_Range` `0x141faae60(a, b)` → `a..=b`. With `disabled` set every draw returns
+- `TerrainRng_Seed` `0x141faad90(seed, disabled)`; `Mt19937_Next` `0x140a65f30(&index)`;
+  `UniformInt_Draw` `0x141f1c020(&{&index, bits=32, mask=0xffffffff}, n)` is MSVC's `uniform_int`
+  rejection loop (`_Rng_from_urng`); `TerrainRng_Below` `0x141faafe0(n)` → `0..n` (n 0 is treated
+  as 1); `TerrainRng_Range` `0x141fab0b0(a, b)` → `a..=b`. With `disabled` set every draw returns
   0 / `a`. Many callers inline the TLS access and call `UniformInt_Draw` directly.
 
 ## Hashes
 
 - `Murmur2_Utf16` `0x14041bf90(units, count, seed)`: MurmurHash2 over UTF-16 code units, two per
-  block; `Murmur2_Bytes` `0x1421a52e0(data, len, seed)`: standard MurmurHash2. Seed `0xf36b12` for
+  block; `Murmur2_Bytes` `0x1421a5530(data, len, seed)`: standard MurmurHash2. Seed `0xf36b12` for
   both hashes below.
 - **Tile hash:** for each tile record, column by column (x outer, y inner), skipping records with
   no sub-tile or with +0x34/+0x35 set: Murmur-style mix of `i16 +0x30` (height), `u8 +0x36`
@@ -82,7 +82,7 @@ bytes). Likely server-side placement (spawns), relevant for area entity loading.
 | +0x30 | `i16` height |
 | +0x32/+0x33 | 4-bit fields (set by the height post-pass) |
 | +0x34, +0x35 | skip flags (not hashed) |
-| +0x36 | orientation 0..7 (rotation and mirroring; tables at `0x142f161f8`) |
+| +0x36 | orientation 0..7 (rotation and mirroring; tables at `0x142f16228`) |
 | +0x37 | flags (bit 3 used by the height post-pass) |
 
 A tile is 23×23 cells; a `.tdt` tile spans `size` tiles (most 3×3, the encampment 15×18), and
@@ -99,13 +99,13 @@ give walkability: [shared-passes.md](shared-passes.md#corner-lattice).
 
 ## Doodads and tile entities
 
-`TerrainGen_TileDoodads` `0x142001e40(generator, &hash, placement, region, …)`:
+`TerrainGen_TileDoodads` `0x142002090(generator, &hash, placement, region, …)`:
 - the tile's doodads come from its data (+0x70..+0x78, 0x58-byte entries; +0x38 the art resource,
-  e.g. `Metadata/Terrain/Doodads/Woods/Clutter/Clutter_55_2.ao`); `0x141ff6400` computes the placed
+  e.g. `Metadata/Terrain/Doodads/Woods/Clutter/Clutter_55_2.ao`); `0x141ff6650` computes the placed
   cell and angle from the entry, the placement and the orientation;
 - the tile's entities come from tile data +0x1b8..+0x1c0 (0x30-byte entries: x, y, path, +0x28
-  angle) and are created with `0x141e7e320` (an entity of 0x280 bytes);
-- both reach the world through generator vfunc +0x38 `TerrainGen_AddObject` `0x1420062a0`.
+  angle) and are created with `0x141e7e570` (an entity of 0x280 bytes);
+- both reach the world through generator vfunc +0x38 `TerrainGen_AddObject` `0x1420064f0`.
 
 On the Riverbank the generator creates ~134 objects: `Doodad`/`DoodadNoBlocking`, flow markers
 (`Environment/NonDefaultFlows/…`), audio and camera-zoom markers. They are client-side objects,
@@ -117,12 +117,12 @@ not sent by the server. The port's doodad pass and collision grid: [doodads.md](
   hash is constant (`G1_town` gives `892597717`; the server should log `Tile hash: 892597717`),
   but the doodad hash varies between visits, so doodads depend on state such as quests.
 - **Terrain object:** at world +0x8f8; size in tiles at +0x18 (x) and +0x20 (y); tile records at
-  +0x28 (`0x141d1fe70` indexes them). Record +8 is the tile object, whose +8 is the `.tdt` path.
-  `0x141683d00` stores the hashes (world +0x11c/+0x118); world-map loads (kinds 0x20/0x21/0x23) log
+  +0x28 (`0x141d200c0` indexes them). Record +8 is the tile object, whose +8 is the `.tdt` path.
+  `0x141683f50` stores the hashes (world +0x11c/+0x118); world-map loads (kinds 0x20/0x21/0x23) log
   none. The DLL dumps the generated tile grid (raw records plus reachable `Metadata/` and `Art/`
-  paths) to `dumps/0.5.5g/client-tables/terrain_tiles.txt` when the player spawns.
+  paths) to `dumps/0.5.5h/client-tables/terrain_tiles.txt` when the player spawns.
 - **Late tiles:** the log line `Tried to SetExtraActivationRangeAroundTile() after level generation
-  was complete` (`0x141d1fe70`) is client-side noise (it widens the activation range of terrain
+  was complete` (`0x141d200c0`) is client-side noise (it widens the activation range of terrain
   tiles for objects that load late), not a server message.
 - **Start position:** the Riverbank (`G1_1`) topologies are
   `Metadata/Terrain/Gallows/Act1/1_1/Graphs/intro_{1..6}.tgr`; their nodes name rooms
@@ -134,14 +134,14 @@ not sent by the server. The port's doodad pass and collision grid: [doodads.md](
 - **Riverbank environment** (`Metadata/EnvironmentSettings/Gallows/1_1.env`): camera far plane
   3639, clouds fading only within 500 units of the player (`clouds_fade_radius`), rain attached to
   the player.
-- **Height:** the server never sends an entity's height. `0x141df2af0` (Positioned "get position
-  height") samples the terrain at the world position (`0x141d1a350`/`0x141d1a580`) unless an
+- **Height:** the server never sends an entity's height. `0x141df2d40` (Positioned "get position
+  height") samples the terrain at the world position (`0x141d1a5a0`/`0x141d1a7d0`) unless an
   explicit height is set (+0x440/+0x48c, Positioned flags0 bit 2).
 
 ## Tools
 
 - **DLL area export** (`[features] area_export`, on by default, read-only): every generated area
-  goes to `dumps/0.5.5g/terrain/area-exports/<session>/<n>_<hash16>_<seed>/`: `meta.txt`
+  goes to `dumps/0.5.5h/terrain/area-exports/<session>/<n>_<hash16>_<seed>/`: `meta.txt`
   (hashes, size, the recomputed tile and doodad hashes with match/MISMATCH), `layout.tsv`,
   `doodads.tsv`, `grids.bin` (`PWG1` format), `entities.tsv`, `probe.tsv` (walkability probe: per
   visited cell, each grid layer's value; a walkability layer is never 0 under the player). "Export
@@ -153,16 +153,16 @@ not sent by the server. The port's doodad pass and collision grid: [doodads.md](
 - **In-client batch generation** (`[gen_batch]`, `scripts/re/terrain_batch.py`): the DLL runs the
   client's generator for `area seed topology orientation` jobs on worker threads, with no login,
   and writes tile hash, doodad hash and size per job to `batch-results.tsv`: [batch.md](batch.md).
-- Ruled out: a second AreaInfo on one connection crashes the client (the old objects sample the regenerated terrain, `0x141d11de0`), so a seed sweep could use only one layout per session; the sweep is removed.
+- Ruled out: a second AreaInfo on one connection crashes the client (the old objects sample the regenerated terrain, `0x141d12030`), so a seed sweep could use only one layout per session; the sweep is removed.
 - **Server command** `area_info <area> <seed>` (`scripts/re/send_dev.py area_info G1_1 12345`)
   sends a new AreaInfo on a live connection; it crashes the client for the reason above.
 - **Port examples** (`cargo run --release -p poe-world --example <name> -- <args>`):
   - `area_trace <area> <seed> <trace dir> [topo[:o] | all]`: draws, layout and tile hash against a
-    client trace in `dumps/0.5.5g/terrain/traces/act1_traces/<area>_<seed>/`; `all`
+    client trace in `dumps/0.5.5h/terrain/traces/act1_traces/<area>_<seed>/`; `all`
     searches every topology and orientation.
   - `area_vectors <vectors.tsv> [all|build|>=N] [area] [--natural] [--threads N] [--hints F]
     [--probe F [--runnable-only]]`: regression against client tile hashes (for example
-    `dumps/0.5.5g/terrain/vectors/sweep-vectors.tsv`, or the play-log
+    `dumps/0.5.5h/terrain/vectors/sweep-vectors.tsv`, or the play-log
     `terrain_vectors.tsv`). Tries forced topologies when the natural choice fails, with
     `POE_VECTOR_BUDGET=<seconds>` per (area, seed).
   - `check_exports`: recomputes the tile and doodad hashes of every DLL area export.
@@ -181,7 +181,7 @@ not sent by the server. The port's doodad pass and collision grid: [doodads.md](
     bounding box, the first N in generation order (piece index) with tile, orientation, sub-tile
     and height on both sides; `--map auto` / `--ppm auto` write a text / PPM diff map to
     `runtime/layout_diff/<job>.*`. On a run dir (for example
-    `dumps/0.5.5g/terrain/batch/fails1/exports`) it prints one line per job (`match`,
+    `dumps/0.5.5h/terrain/batch/fails1/exports`) it prints one line per job (`match`,
     `diff` with the first cell, or the port's error).
   - `town_check <town export> 1 <trace>`: the room-pass placements of Clearfell Encampment.
   - `river_gen <export> 1000`: Riverbank graph layout (jitter, room nodes, routing).
@@ -217,7 +217,7 @@ the seed (fill tiles and orientations are random), the doodad hash does not.
 
 ## Town trace (seed 1, about 1,860 draws)
 
-24 draws in prepare (seed 0), the real seed, one draw over the whole u32 range (`0x1420081c8`), one
-`n=8` (orientation), ~40 small draws (`n` 1/2/8, `0x141f9d86d`), 990 draws of `n=1024`, then pairs
-of a weighted fill-tile pick (`0x141f9ebc7`; `n` = the fill group's total weight, 300 for `default`
-= `Blank.tdt`, 3 for the three `Slash` fills) and an orientation (`0x141f9f904`, `n=8`).
+24 draws in prepare (seed 0), the real seed, one draw over the whole u32 range (`0x142008418`), one
+`n=8` (orientation), ~40 small draws (`n` 1/2/8, `0x141f9dabd`), 990 draws of `n=1024`, then pairs
+of a weighted fill-tile pick (`0x141f9ee17`; `n` = the fill group's total weight, 300 for `default`
+= `Blank.tdt`, 3 for the three `Slash` fills) and an orientation (`0x141f9fb54`, `n=8`).

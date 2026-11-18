@@ -3,7 +3,7 @@
 
 Reads `packets.jsonl` written by the client DLL (official or local sessions) and prints the
 movement-related messages decoded, with the *frame* each lands in. Frames are counted from the
-server's SimulationTick (`0x02f7` in 0.5.5g, by name, so older captures work too): a message that arrives after `n` ticks belongs to frame `n`
+server's SimulationTick (`0x02f7` in 0.5.5h, by name, so older captures work too): a message that arrives after `n` ticks belongs to frame `n`
 (server simulation messages arrive before the tick that closes their frame). A client message
 sent after `n` ticks is "input in frame n"; the server's earliest possible reply is applied by
 the client in frame n+1 or later, so the interesting number is `reply_frame - input_frame`.
@@ -16,7 +16,7 @@ Usage:
                                                          per-scenario sequences (see SCENARIOS)
   movement_sequences.py never  [session ...]            S->C opcodes that are never sent for movement
 
-`session` is a folder name under dumps/0.5.5g/captures/official/ (or local/ with --local), a path
+`session` is a folder name under dumps/0.5.5h/captures/official/ (or local/ with --local), a path
 to a session folder, or a path to a packets.jsonl. Without sessions, all official ones are used.
 Analysis only: nothing here connects to anything.
 

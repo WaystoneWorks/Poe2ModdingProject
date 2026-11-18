@@ -5,7 +5,7 @@ Everything the client DLL says to our instance server outside the game protocol:
 Code: `modules/client-hook/poe-hook-shared/src/sidechannel.rs` (framing, keys, replay window; one implementation for both sides), DLL `poe-hook-core/src/{side,position_sync,devlink}.rs`, server `modules/server/servers/instance-server/src/{sync,side_stream}.rs`.
 
 ## Session keys
-Both sides hold the instance session's 64-byte **key material**: the server issues it in the ticket (`Ticket::keys`, random per hand-off) and sends it in `InstanceDetails` (login stream, encrypted); the client passes it to the instance cipher builder `0x14212af90` (`rdx` = `InstanceDetails + 0x38`), which the DLL hooks ([../re/crypto.md](../re/crypto.md#side-channel-keys)). Every transfer to another instance is a new ticket, so a new session.
+Both sides hold the instance session's 64-byte **key material**: the server issues it in the ticket (`Ticket::keys`, random per hand-off) and sends it in `InstanceDetails` (login stream, encrypted); the client passes it to the instance cipher builder `0x14212b1e0` (`rdx` = `InstanceDetails + 0x38`), which the DLL hooks ([../re/crypto.md](../re/crypto.md#side-channel-keys)). Every transfer to another instance is a new ticket, so a new session.
 
 From the material `m` (HMAC-SHA256 with `m` as the key):
 
@@ -71,7 +71,7 @@ tile	client 0x1a2b3c4d  server 0x5e6f7081
 doodad	client 0x11111111  server 0x11111111
 reason	tile hash differs
 dest	previous instance 7 (G1_1 Riverbank)
-report	terrain-mismatch build=0.5.5g server=<git describe> area=G1_2 seed=123456789 topo=3 orient=1 tile=1a2b3c4d/5e6f7081 doodad=11111111/11111111 reason=tile_hash_differs
+report	terrain-mismatch build=0.5.5h server=<git describe> area=G1_2 seed=123456789 topo=3 orient=1 tile=1a2b3c4d/5e6f7081 doodad=11111111/11111111 reason=tile_hash_differs
 end
 ```
 `none` stands for hashes the client never sent. The DLL (`poe_hook_shared::alert::parse_terrain_mismatch`, `devlink.rs`) exports the client's layout, answers with a Command `ack export <folder>` (or `ack export failed <why>`) and shows the popup ([client-dll.md](../architecture/client-dll.md#alert-popups)). The server waits 3 s for the ack. Alerts are sent once; a lost datagram means no popup (the kick still happens).
