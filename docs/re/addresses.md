@@ -78,7 +78,7 @@ Imports: `VERSION.dll` (`GetFileVersionInfoW`, `GetFileVersionInfoSizeW`, `VerQu
 | Address | What |
 |---|---|
 | `0x14212f0f0` | game-session send (`packet->vtable[1](packet, stream)`); senders build the packet on the stack (opcode at +8) |
-| `0x142159130` | Actor component simulation handler: `0x64` WASD, `0x65`, `0x1c8` start action, `0x1c9`..`0x1ce`, `0x1d8`/`0x1d9` skill stats, `0x1f9`..`0x1fc`, `0x2e7`, `0x30e` action update, `0x316`..`0x324`. `0x64` (`0x14215929e`): non-zero and cell != grid +0x444: snap `0x141de8e70` (predictive mode only: <46 cells, `0x844`, bends instead) |
+| `0x142159130` | Actor component simulation handler: `0x64` WASD, `0x65`, `0x1c8` start action, `0x1c9`..`0x1ce`, `0x1d8`/`0x1d9` skill stats, `0x1f9`..`0x1fc`, `0x2e7`, `0x311` action update, `0x319`/`0x31b`/`0x31c`/`0x327` ([warnings](debug-features.md#3-action-desync-warnings-in-clienttxt)). `0x64` (`0x14215929e`): non-zero and cell != grid +0x444: snap `0x141de8e70` (predictive mode only: <46 cells, `0x844`, bends instead) |
 | `0x141f79e50` | S->C `0x64` MoveDirectionUpdate reader |
 | `0x141f78420` | S->C `0x1c8` StartAction reader |
 | `0x141e50030` (`0x141e500f0`) | StartAction apply: same 46-cell snap threshold |
