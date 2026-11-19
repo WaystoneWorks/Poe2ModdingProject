@@ -35,6 +35,7 @@ Execution is in `exec.rs` (`InstanceServer::run_command`). Admin commands are ch
 | `instance close <id>` | `close` | admin | World | Closes an instance (its players are disconnected). |
 | `instance reset` |  | admin | World | A fresh instance of this area, with you inside. |
 | `tp <x\|player> [y]` | `teleport` | admin | World | Moves you to a grid cell or to a player. |
+| `warp <x> <y>` | | admin | World | Warps you as the World panel does, to the waypoint or checkpoint nearest a cell. |
 | `time scale [factor]` |  | admin | World | Slows this whole instance down (client and server together). |
 | `league list` |  | admin | World | Lists the leagues with state and character count. |
 | `league end <league> <target>` |  | admin | World | Ends a league family and moves its characters into the target. |

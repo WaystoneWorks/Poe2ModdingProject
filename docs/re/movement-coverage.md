@@ -12,7 +12,7 @@ Status:
 
 Session columns: player frames with an `UNPORTED` line for the function (`scripts/re/unported.py`). `snap-known` is `runtime/game-test/snap-known-20261119-174004` (warp onto a checkpoint, walk out), `walk` is `runtime/game-test/walk-20261119-174920` (open ground, a wall stop, a roll: no hits).
 
-Totals: 309 functions; cited 105, partial 2, no 3, not cited 199.
+Totals: 309 functions; cited 109, partial 3, no 2, not cited 195.
 
 | Address | Name | Docs | Status | Server | snap-known | walk |
 |---|---|---|---|---|---|---|
@@ -26,8 +26,8 @@ Totals: 309 functions; cited 105, partial 2, no 3, not cited 199.
 | `140135140` | `DeadTimer_Read` | roll sprint |  |  |  |  |
 | `14013f780` |  | positioned |  |  |  |  |
 | `140145100` | `Action_ReturnOne` | click |  |  |  |  |
-| `1401528a0` | `Math_Min` | click positioned |  |  |  |  |
-| `1401528b0` | `Math_Max` | positioned roll |  |  |  |  |
+| `1401528a0` | `Math_Min` | click positioned | cited | `clientpath.rs` |  |  |
+| `1401528b0` | `Math_Max` | positioned roll | cited | `clientpath.rs` |  |  |
 | `140153400` | `Math_Clamp` | positioned |  |  |  |  |
 | `140168860` | `Math_Floor` | positioned roll |  |  |  |  |
 | `14016cb30` | `Vec2_LengthSquared` | click | cited | `clientsim.rs`, `poe-game/tests/rules.rs` |  |  |
@@ -147,8 +147,8 @@ Totals: 309 functions; cited 105, partial 2, no 3, not cited 199.
 | `141d1a3d0` | `Terrain_Height` | click positioned |  |  |  |  |
 | `141d1af50` | `Terrain_Walkability` | click positioned roll |  |  |  |  |
 | `141d1ccf0` | `Terrain_RebuildGrid` | path roll | cited | `clientpath.rs` |  |  |
-| `141d1d070` | `Terrain_LineOfWalk` | click |  |  |  |  |
-| `141d1d4f0` | `Terrain_LineOfSight` | click |  |  |  |  |
+| `141d1d070` | `Terrain_LineOfWalk` | click | cited | `clientpath.rs` |  |  |
+| `141d1d4f0` | `Terrain_LineOfSight` | click | cited | `clientpath.rs` |  |  |
 | `141d25ce0` | `Terrain_SideProbe` | positioned |  |  |  |  |
 | `141d395b0` | `AnimPlayer_StartClip` | roll |  |  |  |  |
 | `141d44b30` | `Anim_CurveMeta` | roll |  |  |  |  |
@@ -196,7 +196,7 @@ Totals: 309 functions; cited 105, partial 2, no 3, not cited 199.
 | `141decc60` | `Group_ClampGoal` | click positioned |  |  |  |  |
 | `141dee770` | `Positioned_PushablesBlocked` | positioned |  |  |  |  |
 | `141dee9e0` | `Positioned_PushTest` | unported_log | no (`push_test`) |  | 0 | 0 |
-| `141df03c0` | `Positioned_CanPush` | path positioned unported_log | partial (`can_push`) | `clientpath.rs` | 47 | 0 |
+| `141df03c0` | `Positioned_CanPush` | path positioned unported_log | partial (`can_push`) | `clientpath.rs` | 19 | 0 |
 | `141df09d0` | `Positioned_MoveToWaypoint` | positioned roll sprint | cited | `clientsim.rs` |  |  |
 | `141df23f0` | `Positioned_NotifyTarget` | positioned sprint |  |  |  |  |
 | `141df2460` | `Positioned_StopLine` | click roll travel | cited | `clientsim.rs`, `poe-game/tests/rules.rs` |  |  |
@@ -209,7 +209,7 @@ Totals: 309 functions; cited 105, partial 2, no 3, not cited 199.
 | `141df3860` | `Positioned_RootOffsetToCell` | sprint | cited | `clientsim.rs` |  |  |
 | `141dfc230` | `Positioned_LineOfWalk` | click |  |  |  |  |
 | `141dfd740` | `Positioned_RunBlockedDelegates` | positioned roll | cited | `clientsim.rs` |  |  |
-| `141dfdb80` | `Positioned_StepEntityHit` | path positioned unported_log | no (`step_entity_hit`) |  | 6 | 0 |
+| `141dfdb80` | `Positioned_StepEntityHit` | path positioned unported_log | no (`step_entity_hit`) |  | 4 | 0 |
 | `141dfddb0` | `Positioned_StepCheckPass2` | positioned |  |  |  |  |
 | `141dfdfe0` | `Positioned_OwnCellBlocked` | positioned |  |  |  |  |
 | `141e00b30` | `Positioned_CollectBlockers` | positioned |  |  |  |  |
@@ -281,8 +281,8 @@ Totals: 309 functions; cited 105, partial 2, no 3, not cited 199.
 | `141edb790` | `MoveCurve_SegmentValue` | roll |  |  |  |  |
 | `141edbb30` | `AnimCurve_RootValue` | sprint |  |  |  |  |
 | `141edc060` |  | sprint |  |  |  |  |
-| `141edc7d0` | `Pathfinding_AStarGeneral` | path unported_log | no (`astar_fallback`) |  | 7 | 0 |
-| `141edeb10` | `Pathfinding_Search` | path positioned roll | cited | `clientsim.rs` |  |  |
+| `141edc7d0` | `Pathfinding_AStarGeneral` | path unported_log | partial (`astar_fallback`) | `clientpath.rs` | 3 | 0 |
+| `141edeb10` | `Pathfinding_Search` | path positioned roll | cited | `clientpath.rs`, `clientsim.rs` |  |  |
 | `141ee0180` | `Pathfinding_EntityFilter` | path | cited | `clientpath.rs`, `poe-world/src/objects.rs` |  |  |
 | `141ee03a0` | `Pathfinding_StartInEntity` | path |  |  |  |  |
 | `141ee0930` | `Pathfinding_CloseWindowRing` | path | cited | `clientpath.rs`, `poe-game/tests/rules.rs` |  |  |

@@ -7,7 +7,8 @@ The session logs no raw keys or mouse events, so the input is rebuilt from what 
   0x2e6 held / released -> Space down / up (roll, sprint)
   0x62 aim (mode 2)     -> cursor moved to that cell's screen point (inmove)
   0x1a5 with an entity  -> left button pressed at the cursor, released with the next 0x1ac
-  0x356 WarpRequest     -> `tp` to the arrival cell (the World panel's click cannot be replayed)
+  0x356 WarpRequest     -> `warp` to the object nearest the original arrival cell (the server's
+                          own arrival; the World panel's click cannot be replayed)
 Screen points come from the original player's position (movement log `frame #` lines) and the
 game test's fixed projection (2560 x 1440, xtask game_test.rs `screen_of_cell`). Entries carry
 `at:<ms>` from --from, so the DLL plays them as a timeline.
@@ -90,7 +91,7 @@ def main():
             arrive = next((q for q in msgs[n:] if q.dir == "in" and q.op == 0x64 and q.d
                            and (q.d["dx"], q.d["dy"]) != (0, 0) and q.t - m.t < 500), None)
             if arrive:
-                emit(m.t, [f"cmd:tp {arrive.d['gx']} {arrive.d['gy']}"], "warp")
+                emit(m.t, [f"cmd:warp {arrive.d['gx']} {arrive.d['gy']}"], "warp")
             continue
         if m.op == 0x5B:
             sys.exit(f"a waypoint travel at {m.t}: the window must stay in one area")
@@ -144,7 +145,7 @@ def main():
 # replay's positions with the original's (replay_compare.py).
 description = "replay of {name} {o.start}-{o.end}"
 input_mode = "wasd"
-after = ["python3 scripts/re/snaps.py {{session}} --expect", "python3 scripts/re/replay_compare.py {o.session} {{session}} --from {o.start} --to {o.end}"]
+after = ["python3 scripts/re/snaps.py {{session}}", "python3 scripts/re/replay_compare.py {o.session} {{session}} --from {o.start} --to {o.end}"]
 
 [client_env]
 POE_HOOK_MOVEMENT_LOG = "1"

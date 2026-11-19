@@ -1,11 +1,11 @@
-# T1 step 1: a known snap for the snap detector (feature `snap_log`). A teleport onto the G1_2 seed 1
-# checkpoint's own cell (630,1388) puts the player inside its blocking ring, as a checkpoint warp does
-# (B4 user test 4). The client's path search hands a start inside an entity to the A* fallback
-# 0x141edc7d0, which the server's copy lacks, so a walk out of the ring diverges and the next
-# position the server sends snaps the client. `after` passes when snaps.py finds at least one snap.
-description = "snap detector: a walk out of a checkpoint's ring snaps"
+# T1: a walk out of a checkpoint's ring. A teleport onto the G1_2 seed 1 checkpoint's own cell
+# (630,1388) puts the player inside its blocking ring (a warp now arrives outside it, at (630,1381)).
+# The client's path search hands a start inside an entity to the general A* 0x141edc7d0, which the
+# server ports (clientpath.rs Search::astar), so the walk out must not snap. `after` passes when
+# snaps.py finds no snap and unported.py sees the client run the A*.
+description = "a walk out of a checkpoint's ring (the A* fallback) does not snap"
 input_mode = "wasd"
-after = ["python3 scripts/re/snaps.py {session} --expect", "python3 scripts/re/unported.py {session} --expect astar_fallback", "python3 scripts/re/first_divergence.py {session} --config {dir}/server.toml --out {dir}/first-divergence --no-fail"]
+after = ["python3 scripts/re/snaps.py {session}", "python3 scripts/re/unported.py {session} --expect astar_fallback", "python3 scripts/re/first_divergence.py {session} --config {dir}/server.toml --out {dir}/first-divergence --no-fail"]
 
 [client_env]
 POE_HOOK_MOVEMENT_LOG = "1"
