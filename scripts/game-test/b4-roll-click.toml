@@ -9,7 +9,7 @@
 # (click_cell waits 400 ms, the state file lags up to 250 ms); `lift` puts the click on the
 # checkpoint's model (ground clicks on its cell were not sent as clicks on it). `max_drift` after
 # the Space release catches a split the walk on would heal before `same_cell` (the old one: 30
-# cells); its limit of 5 allows the client's object-walk slow, which the model does not port yet
+# cells); its limit of 5 allows the client's slow walk back from the sprint's end, not ported yet
 # (the client lags up to 3.4 cells and meets the server at the ring; pre-p10.md B4). The walk on
 # takes the player away and the area map closes by itself: no Escape. `world_jumps.py` counts
 # client world jumps outside the teleports from the movement log.
