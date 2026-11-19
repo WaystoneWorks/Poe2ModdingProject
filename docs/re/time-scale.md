@@ -21,7 +21,7 @@ There is no time-scale message, but `frame_ms` works as one, because the client'
 
 Private-server result (game test `commands`, same walk at both factors): at factor 0.5 the walk covers about 58% of the distance (21.2 cells against 36.8), and the drift stays low (max 0.71 and 1.51 cells, under the test's limit of 2).
 
-Not reviewed: the `*_FRAMES` constants in `poe-game` `locomotion.rs` and `clientsim.rs` (for example `ATTACK_CANCEL_FRAMES`, `TAP_END_FRAMES`) were measured at 33 ms; beyond the drift test they were not checked at other frame lengths.
+The roll's timeline in `poe-game` `locomotion.rs` keeps game time: `TAP_END_FRAMES`, `ATTACK_CANCEL_FRAMES`, `MUST_SPRINT_END_FRAMES` and `WALL_STUN_OFF_FRAMES` were measured at 33 ms and are stretched to the frame length (`game_frames`), like the roll's own clock. In frames, at 3 ms `must_sprint` went off before the sprint started and a click queued in the roll was dropped (game test `b4-roll-click`; rules test `a_scaled_frame_keeps_the_roll_timeline_in_game_time`). Input cadences (`CLICK_RESTART_FRAMES`, `STALE_FRAMES`, `RELEASE_WINDOW_FRAMES`) and the `clientsim.rs` frame counts stay in frames (not checked at other frame lengths).
 
 ## Still real time
 Client timer list world +0x878 (decremented with real `dt` in `0x14213fac0`, purpose unknown), the session's report and latency logic (`0x1421303e0`; +0x11c read at `0x142130938` as `rtt + 2 * frame_ms`), AimTarget's 33 ms cadence, audio, UI. Effects of these untested.

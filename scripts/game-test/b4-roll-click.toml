@@ -1,0 +1,158 @@
+# B4, the user's checkpoint jumps of 2026-11-19 (12:03:46): a roll with Space held while W+D walk,
+# then a checkpoint click in reach during `must_sprint` (35 frames from the roll start; the user
+# clicked 0.78 s after the roll press). The click's `StartAction` waits for the sprint to let go;
+# in reach then it is an `Interaction`, out of reach (the sprint carried the player past the ring)
+# a walk back to the ring (world-travel.md "Clicking an object"). W+D walks +x along y 1380, open
+# ground 8 cells from the checkpoint (630,1388), outside its blocking ring of 6 (`wall_probe G1_2 1
+# --at 630 1388`). The clicks land about 0.73 s (the user's timing) and 0.5 s of game time after
+# the roll press (one 0.27 s or 0.97 s after it was not sent by the client). Time scale 0.1
+# (click_cell waits 400 ms, the state file lags up to 250 ms); `lift` puts the click on the
+# checkpoint's model (ground clicks on its cell were not sent as clicks on it). `max_drift` after
+# the Space release catches a split the walk on would heal before `same_cell` (the old one: 30
+# cells); its limit of 5 allows the client's object-walk slow, which the model does not port yet
+# (the client lags up to 3.4 cells and meets the server at the ring; pre-p10.md B4). The walk on
+# takes the player away and the area map closes by itself: no Escape. `world_jumps.py` counts
+# client world jumps outside the teleports from the movement log.
+description = "checkpoint click in reach during must_sprint after a roll with Space held: no position correction"
+input_mode = "wasd"
+after = ["python3 scripts/re/world_jumps.py {session}"]
+
+[client_env]
+POE_HOOK_MOVEMENT_LOG = "1"
+
+[server]
+"dev.drift_check" = true
+"dev.drift_interval_ms" = 100
+
+[[step]]
+name = "transfer to G1_2 seed 1"
+cmd = "transfer G1_2 1"
+
+[[step]]
+name = "in G1_2's new instance"
+expect_log = "player entered the world"
+since = "action"
+timeout_s = 60
+
+[[step]]
+name = "in G1_2"
+expect_state = { area = "G1_2" }
+timeout_s = 60
+
+[[step]]
+name = "settled in G1_2"
+wait_ms = 3000
+
+[[step]]
+name = "0.73 s: teleport"
+cmd = "teleport 596 1380"
+
+[[step]]
+name = "0.73 s: there"
+expect_state = { near = [596, 1380, 4] }
+
+[[step]]
+name = "0.73 s: settle"
+wait_ms = 800
+
+[[step]]
+name = "0.73 s: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "0.73 s: walk with W+D, roll with Space held"
+keys = "indown:0x57 indown:0x44 wait:2000 indown:0x20 down:0x20 wait:5400"
+
+[[step]]
+name = "0.73 s: click in must_sprint"
+click_cell = [630, 1388]
+lift = 80
+
+[[step]]
+name = "0.73 s: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 30
+
+[[step]]
+name = "0.73 s: hold on"
+keys = "wait:3000"
+
+[[step]]
+name = "0.73 s: release Space"
+keys = "up:0x20 inup:0x20 wait:3000"
+
+[[step]]
+name = "0.73 s: no drift after the release"
+max_drift = 5
+
+[[step]]
+name = "0.73 s: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "0.73 s: walk on, release"
+keys = "wait:600 inup:0x44 inup:0x57 wait:1500"
+
+[[step]]
+name = "0.73 s: no correction at rest"
+same_cell = true
+
+[[step]]
+name = "0.5 s: teleport"
+cmd = "teleport 604 1380"
+
+[[step]]
+name = "0.5 s: there"
+expect_state = { near = [604, 1380, 4] }
+
+[[step]]
+name = "0.5 s: settle"
+wait_ms = 800
+
+[[step]]
+name = "0.5 s: slow time"
+cmd = "time scale 0.1"
+
+[[step]]
+name = "0.5 s: walk with W+D, roll with Space held"
+keys = "indown:0x57 indown:0x44 wait:2000 indown:0x20 down:0x20 wait:2900"
+
+[[step]]
+name = "0.5 s: click in must_sprint"
+click_cell = [630, 1388]
+lift = 80
+
+[[step]]
+name = "0.5 s: server saw it"
+expect_log = "object clicked"
+since = "action"
+timeout_s = 30
+
+[[step]]
+name = "0.5 s: hold on"
+keys = "wait:3000"
+
+[[step]]
+name = "0.5 s: release Space"
+keys = "up:0x20 inup:0x20 wait:3000"
+
+[[step]]
+name = "0.5 s: no drift after the release"
+max_drift = 5
+
+[[step]]
+name = "0.5 s: normal time"
+cmd = "time scale 1"
+
+[[step]]
+name = "0.5 s: walk on, release"
+keys = "wait:600 inup:0x44 inup:0x57 wait:1500"
+
+[[step]]
+name = "0.5 s: no correction at rest"
+same_cell = true
+
+[[step]]
+name = "no server errors"
+reject_log = " ERROR "
