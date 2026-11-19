@@ -5,7 +5,7 @@
 # position the server sends snaps the client. `after` passes when snaps.py finds at least one snap.
 description = "snap detector: a walk out of a checkpoint's ring snaps"
 input_mode = "wasd"
-after = ["python3 scripts/re/snaps.py {session} --expect", "python3 scripts/re/first_divergence.py {session} --config {dir}/server.toml --out {dir}/first-divergence --no-fail"]
+after = ["python3 scripts/re/snaps.py {session} --expect", "python3 scripts/re/unported.py {session} --expect astar_fallback", "python3 scripts/re/first_divergence.py {session} --config {dir}/server.toml --out {dir}/first-divergence --no-fail"]
 
 [client_env]
 POE_HOOK_MOVEMENT_LOG = "1"

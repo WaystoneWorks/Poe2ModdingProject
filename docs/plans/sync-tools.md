@@ -14,14 +14,7 @@ Model: O+S. Opus for the DLL hooks and the replay design, Sonnet agents for docs
 2. Done (2026-11-19): `scripts/re/first_divergence.py <session>` ([movement.md](../protocol/movement.md#test-tooling)); the movement log's `frame #N` line now ends with `dest (x, y) speed s` (signature fields `positioned.dest_*`, `positioned.speed_*`). Runs as an `after` report of `snap-known` and the `b4-*` tests. Results:
    - User test 4 (`GameFiles/logs/poe-hook/2026-11-19_14-15-23_336`): the replayed server sends the same messages as the live one in every compared frame. First divergences, all 1 to 1.4 cells and all in a roll steered by WASD (the client restarts its line every frame; the model runs about half a cell ahead): G1_2 visit 1 log frame 392, visit 2 frame 249, visit 3 frame 519; the town visit has none. These come before the user's jumps (frames 992 to 1101 in visit 1) and are a separate gap from the ring.
    - `snap-known`: first divergence at log frame 208 (client steps out of the checkpoint ring cell by cell, the model stays at (632,1391): the A* fallback), before its 44-cell snap at frame 300.
-3. **Unported-code flags.** The DLL counts and logs (with the frame) hits on client functions not ported:
-   - the A* fallback `0x141edc7d0` (start inside an entity);
-   - the push test `0x141dee9e0` / `0x141df03c0`;
-   - the step check's entity collision `0x141dfdb80`;
-   - the clipped branch of the SprintEnd move event end `0x141f70e30`.
-
-   The list lives in the coverage table (step 4).
-   Done when: a warp onto the checkpoint logs the fallback.
+3. Done (2026-11-19): the DLL's `unported_log` feature (on by default, [client-dll.md](../architecture/client-dll.md)) and `scripts/re/unported.py <session> [--expect fn,...]`; sites `astar_fallback` `0x141edc7d0`, `push_test` `0x141dee9e0`, `can_push` `0x141df03c0`, `step_entity_hit` (`0x141dfdb80` blocks a step, site `0x141deadc1`), `move_event_clipped` `0x141f70e30`. `snap-known` (run `runtime/game-test/snap-known-20261119-174004`) expects `astar_fallback` and finds, all against the checkpoint at (630,1388): `astar_fallback` 7 frames (215 to 405, caller `0x141ee00f2`), `can_push` 47 frames (38 from the search `0x141ee0a4f`), `step_entity_hit` 6 frames (217 to 220 while the client walks out cell by cell from (630,1388) to (633,1391), and 317, 405). The divergence at frame 208 to 220 is therefore the A* fallback plus the step check's entity collision, both unported.
 4. **Coverage table** `docs/re/movement-coverage.md`: one row per client movement function with address, name, ported (where in `clientsim`/`clientpath`) or not, and hits per session from step 3.
    Done when: it lists every function named in `docs/re/movement-*.md`, `pathfinding.md` and the "Clicking an object" section of `world-travel.md`.
 5. **Record and replay user sessions.** The game-test runner gets a mode that plays a session's logged keys and mouse events (screen coordinates, same timing) into a hidden client. Risk: clicks land differently if the camera differs; the step 2 report shows where the replay left the original.
