@@ -1,0 +1,59 @@
+# T1 step 1: a known snap for the snap detector (feature `snap_log`). A teleport onto the G1_2 seed 1
+# checkpoint's own cell (630,1388) puts the player inside its blocking ring, as a checkpoint warp does
+# (B4 user test 4). The client's path search hands a start inside an entity to the A* fallback
+# 0x141edc7d0, which the server's copy lacks, so a walk out of the ring diverges and the next
+# position the server sends snaps the client. `after` passes when snaps.py finds at least one snap.
+description = "snap detector: a walk out of a checkpoint's ring snaps"
+input_mode = "wasd"
+after = ["python3 scripts/re/snaps.py {session} --expect"]
+
+[client_env]
+POE_HOOK_MOVEMENT_LOG = "1"
+
+[server]
+"dev.drift_check" = true
+"dev.drift_interval_ms" = 100
+
+
+[[step]]
+name = "transfer to G1_2 seed 1"
+cmd = "transfer G1_2 1"
+
+[[step]]
+name = "in the new instance"
+expect_log = "player entered the world"
+since = "action"
+timeout_s = 60
+
+[[step]]
+name = "in G1_2"
+expect_state = { area = "G1_2" }
+timeout_s = 60
+
+[[step]]
+name = "settled"
+wait_ms = 3000
+
+[[step]]
+name = "teleport onto the checkpoint"
+cmd = "teleport 630 1388"
+
+[[step]]
+name = "there"
+expect_state = { near = [630, 1388, 2] }
+
+[[step]]
+name = "settle"
+wait_ms = 800
+
+[[step]]
+name = "walk W out of the ring"
+keys = "indown:0x57 wait:1200 inup:0x57 wait:600"
+
+[[step]]
+name = "walk D"
+keys = "indown:0x44 wait:800 inup:0x44 wait:600"
+
+[[step]]
+name = "walk S"
+keys = "indown:0x53 wait:800 inup:0x53 wait:1000"

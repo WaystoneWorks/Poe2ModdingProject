@@ -84,7 +84,7 @@ Every server-to-client class has a full serializer in vtable slot 1, next to the
 
 ## Suggested follow-up
 1. **Port the A* fallback** (`0x141edc7d0` with `0x141ede210`/`0x141ede680`, push test `0x141dee9e0`) into `clientpath`, with rules tests for a start inside the checkpoint's ring. B4's warp-arrival fix avoids the case, but any start inside a ring still makes the server and the client disagree.
-2. **Snap predictor in the drift check:** since a snap is exact cell inequality at the apply frame, log for every non-zero `0x64` and every `StartAction` the server's cell next to the client's grid from the movement log at that frame, and count the unequal ones. This gives each snap its packet and frame without `snaps.py` heuristics.
+2. Done: the DLL's snap detector (`snap_log`, [client-dll.md](../architecture/client-dll.md)) logs every apply with both cells; `scripts/re/snaps.py` lists the snaps.
 3. **Read the push test** `0x141dee9e0` and `0x141df03c0` before monsters or other players move. Pushing decides whether an entity is a wall, which matters for drift as soon as two movers meet.
 4. **Mine `IfIsServer` blocks** in the `.ot`/`.otc` scripts (checkpoints, waypoints, doors) for B5 and object behaviour, starting from the parser in `0x1426dfbf0`.
 5. Open RE items: the `IfIsServer` lambda's body (no vtable found through RTTI), the `0x64` predictive bend formula (not needed in lockstep), and `0x141edc720` (the player-like test that selects the 50-cell bound).

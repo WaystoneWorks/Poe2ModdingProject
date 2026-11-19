@@ -4,6 +4,8 @@
 # 28 free cells, then solid).
 description = "walk_to, a walk and a roll into a wall (G1_town seed 1, generated grid)"
 input_mode = "wasd"
+# The snap detector (T1): no snap in the whole walk.
+after = ["python3 scripts/re/snaps.py {session}"]
 
 [server]
 "dev.drift_check" = true
