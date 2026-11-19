@@ -5,6 +5,7 @@
 # (3.5 s at 0.1): a click during it is aimed from a stale cell while the camera still moves, and
 # lands 28 cells off (2026-11-19, twice); the in-reach case clicks during the coast.
 description = "object clicks during the coast after a sprint: no position correction"
+after = ["python3 scripts/re/first_divergence.py {session} --config {dir}/server.toml --out {dir}/first-divergence --no-fail"]
 input_mode = "wasd"
 
 [client_env]

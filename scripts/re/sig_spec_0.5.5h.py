@@ -88,6 +88,8 @@ SIGS = [
     dict(name="load_area_headless", addr=0x14213ED00, features=DUMP + BATCH,
          note="HeadlessWorld_LoadArea (base world vfunc +0x1e0): the sequence gen_batch repeats; anchor of the world generation fields"),
     dict(name="positioned_reader", addr=0x141DE6120, features=DUMP + EXPORT),
+    dict(name="positioned_debug_info", addr=0x141dec130, features=DUMP,
+         note="Positioned debug printer (=== Positioned Info ===, never called); anchor of the movement destination and speed fields"),
     dict(name="terrain_construct", addr=0x1415AC750, features=DUMP + EXPORT,
          note="sets the terrain vtable; anchor of terrain_vtable"),
     dict(name="terrain_vtable", addr=0x14339B108, kind="ref", anchor="terrain_construct",
@@ -250,6 +252,16 @@ FIELDS = [
     dict(anchor="positioned_reader", features=ENT, items=[
         dict(name="world.vt_terrain", disp=0x1A8, at=0x141DE62CC,
              note="world vtable slot: returns the terrain object")]),
+    dict(anchor="positioned_debug_info", features=DUMP, items=[
+        dict(name="positioned.dest_y", disp=0x240, at=0x141dec8be,
+             note="i32; the destination is (+0x23c, or +0x244 when dest_alt is set; this), swapped when dest_swap is set"),
+        dict(name="positioned.dest_alt", disp=0x22E, at=0x141dec8cf, note="byte"),
+        dict(name="positioned.dest_swap", disp=0x22D, at=0x141dec8de, note="byte"),
+    ]),
+    dict(anchor="positioned_debug_info", features=DUMP, items=[
+        dict(name="positioned.speed_num", disp=0x274, at=0x141dec9a7, note="f32; Movement Speed = speed_num / speed_den"),
+        dict(name="positioned.speed_den", disp=0x278, at=0x141dec9b0, note="f32"),
+    ]),
     # ---- Actor ----
     dict(anchor="actor_sim_handler", features=PS + INSPECT, items=[
         dict(name="actor.action0", disp=0x238, at=0x142159df4),

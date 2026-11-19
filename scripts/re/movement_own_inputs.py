@@ -3,8 +3,9 @@
 in, for the end-to-end check: examples/own_replay feeds them to our server and our messages to a
 client model. An input is answered in the batch of its first reply; one without a reply (a stop the
 server does not answer) in the frame it was sent.
+A private session also gets our server's teleports of the player (`op: teleport`).
 Usage: movement_own_inputs.py <session dir> <out.json>"""
-import json, os, sys
+import collections, json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import movement_fixtures as mf
 import movement_sequences as ms
@@ -52,6 +53,16 @@ for r in out:
     if r["op"] == "wasd" and (r["x"], r["y"]) == (0, 0) and r["sent"] in released:
         r["f"] = released[r["sent"]]
     del r["sent"]
+# A private session: our server's teleports (warps, respawns, admin teleports) of the player, a
+# 0x64 with a vector then a zero one on the same cell in the same or next frame (as scripts/re/snaps.py).
+acks = [q for q in msgs if q.dir == "in" and q.op == 0x64 and q.d]
+if acks:
+    me = collections.Counter(q.d["ent"] for q in acks).most_common(1)[0][0]
+    acks = [q for q in acks if q.d["ent"] == me]
+    for q, z in zip(acks, acks[1:]):
+        if (q.d["dx"], q.d["dy"]) != (0, 0) and (z.d["dx"], z.d["dy"]) == (0, 0) \
+                and (q.d["gx"], q.d["gy"]) == (z.d["gx"], z.d["gy"]) and z.frame - q.frame <= 1:
+            out.append(dict(f=q.frame, op="teleport", x=q.d["gx"], y=q.d["gy"]))
 out.sort(key=lambda r: r["f"])
 json.dump(out, open(sys.argv[2], "w"))
 print(len(out), "inputs,", unanswered, "unanswered")

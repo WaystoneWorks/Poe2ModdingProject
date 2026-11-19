@@ -7,6 +7,7 @@
 # for the `Interaction`'s 0.1 s and walks on. The walk passes 10 cells beside the checkpoint: it blocks
 # (`blocking = true`), which the server's grid does not port yet.
 description = "object clicks in WASD mode, also with a key held: no position correction"
+after = ["python3 scripts/re/first_divergence.py {session} --config {dir}/server.toml --out {dir}/first-divergence --no-fail"]
 input_mode = "wasd"
 
 [server]

@@ -15,7 +15,7 @@
 # client world jumps outside the teleports from the movement log.
 description = "checkpoint click in reach during must_sprint after a roll with Space held: no position correction"
 input_mode = "wasd"
-after = ["python3 scripts/re/world_jumps.py {session}"]
+after = ["python3 scripts/re/world_jumps.py {session}", "python3 scripts/re/first_divergence.py {session} --config {dir}/server.toml --out {dir}/first-divergence --no-fail"]
 
 [client_env]
 POE_HOOK_MOVEMENT_LOG = "1"

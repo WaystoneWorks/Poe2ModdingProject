@@ -2,6 +2,7 @@
 # and logs every drift line so each snap has a frame, a distance and a cause. Cells:
 # `area_objects G1_town 1`, `area_objects G1_2 1`.
 description = "object clicks from near, far and moving: no position correction"
+after = ["python3 scripts/re/first_divergence.py {session} --config {dir}/server.toml --out {dir}/first-divergence --no-fail"]
 input_mode = "mouse_and_keyboard"
 
 [server]
