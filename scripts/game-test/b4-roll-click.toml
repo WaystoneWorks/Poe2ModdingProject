@@ -2,15 +2,15 @@
 # then a checkpoint click in reach during `must_sprint` (35 frames from the roll start; the user
 # clicked 0.78 s after the roll press). The click's `StartAction` waits for the sprint to let go;
 # in reach then it is an `Interaction`, out of reach (the sprint carried the player past the ring)
-# a walk back to the ring (world-travel.md "Clicking an object"). W+D walks +x along y 1380, open
+# a Move to the ring that the sprint-off ends: the `SprintEnd` clip coasts toward the checkpoint
+# and nothing acts (world-travel.md "Clicking an object"). W+D walks +x along y 1380, open
 # ground 8 cells from the checkpoint (630,1388), outside its blocking ring of 6 (`wall_probe G1_2 1
 # --at 630 1388`). The clicks land about 0.73 s (the user's timing) and 0.5 s of game time after
 # the roll press (one 0.27 s or 0.97 s after it was not sent by the client). Time scale 0.1
 # (click_cell waits 400 ms, the state file lags up to 250 ms); `lift` puts the click on the
 # checkpoint's model (ground clicks on its cell were not sent as clicks on it). `max_drift` after
 # the Space release catches a split the walk on would heal before `same_cell` (the old one: 30
-# cells); its limit of 5 allows the client's slow walk back from the sprint's end, not ported yet
-# (the client lags up to 3.4 cells and meets the server at the ring; pre-p10.md B4). The walk on
+# cells; then 3.4 cells while the model walked to the ring and the client coasted). The walk on
 # takes the player away and the area map closes by itself: no Escape. `world_jumps.py` counts
 # client world jumps outside the teleports from the movement log.
 description = "checkpoint click in reach during must_sprint after a roll with Space held: no position correction"
@@ -84,7 +84,7 @@ keys = "up:0x20 inup:0x20 wait:3000"
 
 [[step]]
 name = "0.73 s: no drift after the release"
-max_drift = 5
+max_drift = 1.5
 
 [[step]]
 name = "0.73 s: normal time"
@@ -139,7 +139,7 @@ keys = "up:0x20 inup:0x20 wait:3000"
 
 [[step]]
 name = "0.5 s: no drift after the release"
-max_drift = 5
+max_drift = 1.5
 
 [[step]]
 name = "0.5 s: normal time"
