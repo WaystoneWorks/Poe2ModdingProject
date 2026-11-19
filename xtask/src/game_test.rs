@@ -745,6 +745,12 @@ ta_token "$ACCT" "$(ta_web_port "$CFG")"
         fs::rename(&tmp, &file)?;
         self.wait_until(Duration::from_secs(15), || !file.exists())
             .context("the DLL did not read poe-hook.keys")?;
+        // A timeline (`at:<ms>` entries, the DLL skips the other pauses): until its last entry.
+        let last_at = entries.split_whitespace().filter_map(|e| e.strip_prefix("at:")?.parse::<u64>().ok()).max();
+        if let Some(ms) = last_at {
+            std::thread::sleep(Duration::from_millis(ms + 300));
+            return Ok(());
+        }
         let busy: u64 = entries
             .split_whitespace()
             .filter_map(|e| {

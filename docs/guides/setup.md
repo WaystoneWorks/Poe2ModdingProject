@@ -271,6 +271,7 @@ Each entry is one line; the DLL reads the file and posts the input to the game w
 - **`indown:<vk>` / `inup:<vk>` / `wait:<ms>`** hold and release a key while other input arrives.
 - **`inmove:x,y` / `inclick:x,y`** make the hooked `GetCursorPos` return that client position, then post the mouse messages.
 - **`inpress:x,y` / `inrelease:x,y`** hold and release the left button at a client position (held click-to-move); the hooked `GetKeyState` reports `VK_LBUTTON` held meanwhile.
+- **`at:<ms>`**: a timeline entry, no other pauses ([replays](../protocol/movement.md#test-tooling)).
 - **`text:<chars>`** posts one `WM_CHAR` per character, for text boxes such as the character name.
 - **`POE_HOOK_KEYS_FILE=<name or absolute path>`** (environment variable of the client process) makes that DLL read its input entries from another file than `GameFiles/poe-hook.keys`, so two clients on one GameFiles get one file each (`poe-hook.1.keys`, `poe-hook.2.keys` in `scripts/test-mp.sh`). The DLL logs `input file: ...` at start.
 - **`0x77` (F8)** takes a game screenshot into the test prefix's `My Games/Path of Exile 2/Screenshots`, which shows the game even when its window is not visible.
