@@ -61,6 +61,7 @@ Private server for Path of Exile 2 (client **0.5.5h**), in Rust. Rules: [../CLAU
 | [re/movement-roll.md](re/movement-roll.md) | Exact port: dodge roll |
 | [re/movement-capture-index.md](re/movement-capture-index.md) | Movement capture indexes (2026-10-20, 2026-11-02 sessions) |
 | [re/movement-sprint.md](re/movement-sprint.md) | Exact port: sprint, end, coast |
+| [re/movement-coverage.md](re/movement-coverage.md) | Generated: client movement functions, server port status, `unported_log` hits |
 | [re/world-travel.md](re/world-travel.md) | Transitions, waypoints, checkpoints, world panel: client facts |
 | [re/debug-features.md](re/debug-features.md) | Debug features left in the client: performance overlay, desync warnings, command table, ranked for B4 |
 | [re/server-code.md](re/server-code.md) | Server-related client code: correction rule, A* fallback, resync, predictive mode, leftovers |
