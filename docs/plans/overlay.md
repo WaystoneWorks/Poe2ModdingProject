@@ -38,3 +38,11 @@ Monsters: monster search, count, rarity, level, `[Spawn]`, `[Kill all]`, toggles
 Life: life, mana, ES bars with `[Heal]`, `[Damage N type]`, toggles `god`, `no cost`; `[Kill me]`, `[Revive]`; flask charges `[Refill]`.
 
 Players gains `[Inspect]` per row (P10).
+
+## D1: light radius and minimap
+User, 2026-11-19 (runs after U5, so the tab follows its layout rules):
+- **Light radius:** a debug override of the player's light radius stat, as a command and an overlay control (Stats tab, ahead of the full stat editor), large enough to reveal the whole map. Check first in the client whether light radius alone lifts the map's fog or a separate reveal is needed.
+- **Minimap tab:** a new Minimap page (the old one was removed in the league fixes) with new visuals: the server's walkable grid, the player, objects and transitions.
+- **Teleport:** right-clicking a cell on it teleports there through the existing `teleport` command (walkable cells only).
+
+Done when: unit tests, a hidden game test (override set, the map revealed, a right-click teleport lands on the cell), `overlay-pages` covers the tab, client-dll.md and server-admin.md updated.

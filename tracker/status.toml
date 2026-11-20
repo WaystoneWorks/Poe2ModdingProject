@@ -35,7 +35,7 @@
 "proj:flasks" = { status = "not_implemented", note = "P14", link = "docs/plans/life-flasks.md" }
 "proj:game_test" = { status = "fully_functional", link = "docs/guides/setup.md" }
 "proj:ghidra_naming" = { status = "fully_functional", note = "G1: RTTI slot names, lib tags, str hints, doc and DLL names; rename-as-you-read rule", link = "docs/re/README.md" }
-"proj:instances" = { status = "fully_functional", link = "docs/protocol/instance.md" }
+"proj:instances" = { status = "implemented", note = "hideouts crash the client (B6); a transfer reconnects and freezes (B7)", link = "docs/protocol/instance.md" }
 "proj:items" = { status = "not_implemented", note = "P10", link = "docs/plans/items-stats.md" }
 "proj:launcher_deploy" = { status = "implemented", link = "docs/guides/launcher.md" }
 "proj:launcher_host" = { status = "partial", note = "Host a server untested on Windows", link = "docs/guides/launcher.md" }
@@ -70,7 +70,7 @@
 "proj:tracker" = { status = "implemented", note = "this site", link = "docs/guides/tracker.md" }
 "proj:trade" = { status = "not_implemented", link = "docs/plans/backlog.md" }
 "proj:time_scale" = { status = "implemented", note = "factors 1/33 to 1 only; run at 0.5", link = "docs/re/time-scale.md" }
-"proj:transitions" = { status = "implemented", note = "P9: gates, waypoints, checkpoints; wells not spawned", link = "docs/re/world-travel.md" }
+"proj:transitions" = { status = "implemented", note = "P9: gates, waypoints, checkpoints; wells not spawned; world map state wrong (M1); unused areas unreachable (W1)", link = "docs/re/world-travel.md" }
 "proj:vendors" = { status = "not_implemented", note = "P19", link = "docs/plans/npcs-vendors.md" }
 "proj:web_accounts" = { status = "implemented", link = "docs/architecture/web-api.md" }
 "proj:web_api" = { status = "implemented", note = "no TLS in the server itself", link = "docs/architecture/web-api.md" }

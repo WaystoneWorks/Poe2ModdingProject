@@ -76,7 +76,7 @@ Private server for Path of Exile 2 (client **0.5.5h**), in Rust. Rules: [../CLAU
 | Document | Contents |
 |---|---|
 | [PLAN.md](PLAN.md) | **What is left to do and the current state: start here** |
-| [plans/sync-tools.md](plans/sync-tools.md) | Plan T1: movement sync tools (snap detector, first-divergence report, coverage) |
+| [plans/world-fixes.md](plans/world-fixes.md) | Plans B6, B7, M1, W1: hideouts, transfers, world map state, unused areas |
 | [plans/overlay.md](plans/overlay.md) | Debug tab mockups still to build (feature steps) |
 | [plans/commands.md](plans/commands.md) | Commands still to add per step (registry v2 is current) |
 | [plans/items-stats.md](plans/items-stats.md) | Plan P10-P11: items, currency |
