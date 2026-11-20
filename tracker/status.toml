@@ -34,7 +34,7 @@
 "proj:debug_commands" = { status = "partial", note = "framework, Help, Console, World and Players work; Character, Stats, Items, Monsters and Life wait for their steps", link = "docs/architecture/client-dll.md" }
 "proj:flasks" = { status = "not_implemented", note = "P14", link = "docs/plans/life-flasks.md" }
 "proj:game_test" = { status = "fully_functional", link = "docs/guides/setup.md" }
-"proj:ghidra_naming" = { status = "partial", note = "G1 in progress", link = "docs/plans/ghidra-naming.md" }
+"proj:ghidra_naming" = { status = "fully_functional", note = "G1: RTTI slot names, lib tags, str hints, doc and DLL names; rename-as-you-read rule", link = "docs/re/README.md" }
 "proj:instances" = { status = "fully_functional", link = "docs/protocol/instance.md" }
 "proj:items" = { status = "not_implemented", note = "P10", link = "docs/plans/items-stats.md" }
 "proj:launcher_deploy" = { status = "implemented", link = "docs/guides/launcher.md" }
