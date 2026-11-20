@@ -183,6 +183,7 @@ rows = [
   { id = "proj:mod_sdk", group = "Modding", name = "Mod SDK and mod index" },
   { id = "proj:release_mirror", group = "Modding", name = "Release mirror (static release source)" },
   { id = "proj:tracker", group = "Tooling", name = "This tracker" },
+  { id = "proj:ghidra_naming", group = "Tooling", name = "Ghidra naming pass and rename-as-you-read rule" },
 ]
 
 [[section]]
